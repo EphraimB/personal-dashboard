@@ -1,0 +1,111 @@
+# ==============================================================================
+# PhotoPrism Docker Compose Configuration
+# ==============================================================================
+# Optimized for Raspberry Pi. Defaults to SQLite for lightweight resource usage.
+# To use MariaDB, uncomment the mariadb service definition below and update
+# PHOTOPRISM_DATABASE_DRIVER=mysql in your .env file.
+#
+# Documentation: https://docs.photoprism.app/getting-started/docker-compose/
+# ==============================================================================
+
+services:
+  photoprism:
+    image: photoprism/photoprism:latest
+    container_name: photoprism
+    # To run on Raspberry Pi 3 or older, you may need a specific older tag,
+    # but Pi 4 and 5 are fully supported by photoprism/photoprism:latest.
+    restart: unless-stopped
+    
+    # Expose the port defined in your .env file
+    ports:
+      - "${PHOTOPRISM_HTTP_PORT:-2342}:2342"
+    
+    # Required security options for container execution on some ARM kernels
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+
+    # Hardware acceleration for Raspberry Pi (experimental / optional)
+    # Uncomment the lines below to enable hardware video transcoding on Raspberry Pi 3/4
+    # devices:
+    #   - "/dev/video11:/dev/video11"
+
+    environment:
+      # Application passwords and config loaded from .env
+      PHOTOPRISM_ADMIN_PASSWORD: "${PHOTOPRISM_ADMIN_PASSWORD}"
+      PHOTOPRISM_SITE_URL: "${PHOTOPRISM_SITE_URL:-http://localhost:2342/}"
+      
+      # Internal directories
+      PHOTOPRISM_ORIGINALS_PATH: "/photoprism/originals"
+      PHOTOPRISM_STORAGE_PATH: "/photoprism/storage"
+      PHOTOPRISM_IMPORT_PATH: "/photoprism/import"
+      PHOTOPRISM_BACKUP_PATH: "/photoprism/backup"
+      
+      # Performance tuning for Raspberry Pi (crucial to prevent crashes)
+      PHOTOPRISM_WORKERS: "${PHOTOPRISM_WORKERS:-2}"
+      PHOTOPRISM_DISABLE_FACES: "${PHOTOPRISM_DISABLE_FACES:-false}"
+      PHOTOPRISM_DISABLE_CLASSIFICATION: "${PHOTOPRISM_DISABLE_CLASSIFICATION:-false}"
+      PHOTOPRISM_FFMPEG_ENCODER: "${PHOTOPRISM_FFMPEG_ENCODER:-}"
+
+      # Database Configuration (SQLite by default, MySQL/MariaDB if configured)
+      PHOTOPRISM_DATABASE_DRIVER: "${PHOTOPRISM_DATABASE_DRIVER:-sqlite}"
+      PHOTOPRISM_DATABASE_SERVER: "${PHOTOPRISM_DATABASE_SERVER:-}"
+      PHOTOPRISM_DATABASE_NAME: "${PHOTOPRISM_DATABASE_NAME:-}"
+      PHOTOPRISM_DATABASE_USER: "${PHOTOPRISM_DATABASE_USER:-}"
+      PHOTOPRISM_DATABASE_PASSWORD: "${PHOTOPRISM_DATABASE_PASSWORD:-}"
+
+    # Mount storage locations on host to container folders
+    volumes:
+      - "${PHOTOPRISM_ORIGINALS_PATH:-~/Pictures}:/photoprism/originals"
+      - "${PHOTOPRISM_STORAGE_PATH:-./storage}:/photoprism/storage"
+      - "${PHOTOPRISM_IMPORT_PATH:-./import}:/photoprism/import"
+      - "${PHOTOPRISM_BACKUP_PATH:-./backup}:/photoprism/backup"
+
+    # Health check to ensure the application starts and serves requests
+    healthcheck:
+      test: ["CMD", "curl", "-sFo", "/dev/null", "http://localhost:2342/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    # Uncomment this if you uncomment the MariaDB service below
+    # depends_on:
+    #   mariadb:
+    #     condition: service_healthy
+
+  # ----------------------------------------------------------------------------
+  # MariaDB Database Service (Optional)
+  # ----------------------------------------------------------------------------
+  # Uncomment the lines below to run a dedicated MariaDB database container.
+  # Make sure to update PHOTOPRISM_DATABASE_DRIVER=mysql in your .env file.
+  #
+  # mariadb:
+  #   image: mariadb:10.11
+  #   container_name: photoprism-db
+  #   restart: unless-stopped
+  #   security_opt:
+  #     - seccomp:unconfined
+  #     - apparmor:unconfined
+  #   # Performance commands optimized for MariaDB on low-resource environments:
+  #   # - Reduced buffer pool size (512M is sufficient for most home libraries)
+  #   # - Connection limits reduced to save RAM overhead
+  #   command: >
+  #     --innodb-buffer-pool-size=512M
+  #     --transaction-isolation=READ-COMMITTED
+  #     --character-set-server=utf8mb4
+  #     --collation-server=utf8mb4_unicode_ci
+  #     --max-connections=100
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
+  #     MYSQL_DATABASE: "${PHOTOPRISM_DATABASE_NAME:-photoprism}"
+  #     MYSQL_USER: "${PHOTOPRISM_DATABASE_USER:-photoprism}"
+  #     MYSQL_PASSWORD: "${PHOTOPRISM_DATABASE_PASSWORD}"
+  #   volumes:
+  #     - "./database:/var/lib/mysql"
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${PHOTOPRISM_DATABASE_USER:-photoprism}", "-p${PHOTOPRISM_DATABASE_PASSWORD}"]
+  #     interval: 15s
+  #     timeout: 5s
+  #     retries: 3
+  #     start_period: 30s
