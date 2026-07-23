@@ -48,6 +48,8 @@ services:
     environment:
       # Application passwords and config loaded from .env
       PHOTOPRISM_ADMIN_PASSWORD: "${PHOTOPRISM_ADMIN_PASSWORD}"
+      PHOTOPRISM_PUBLIC: "${PHOTOPRISM_PUBLIC:-true}"
+      PHOTOPRISM_READONLY: "${PHOTOPRISM_READONLY:-false}"
       PHOTOPRISM_SITE_URL: "${PHOTOPRISM_SITE_URL:-http://localhost:2342/}"
       
       # Internal directories

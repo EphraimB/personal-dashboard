@@ -7,8 +7,15 @@
 
   // --- Configuration Management ---
   const STORAGE_KEY = 'ares_tv_dashboard_config';
+
+  function getDynamicDefaultUrl() {
+    const host = (window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+    const protocol = (window.location && window.location.protocol) ? window.location.protocol : 'http:';
+    return `${protocol}//${host}:2342`;
+  }
+
   const DEFAULT_CONFIG = {
-    photoprismUrl: 'http://localhost:2342',
+    photoprismUrl: getDynamicDefaultUrl(),
     password: '',
     filterScreenshots: true,
     albumQuery: '',
@@ -19,6 +26,7 @@
   };
 
   let config = loadConfig();
+  let sessionToken = '';
 
   // --- High-Resolution Fallback Demo Photos ---
   const DEMO_PHOTOS = [
@@ -76,7 +84,7 @@
   let slideTimer = null;
   let progressInterval = null;
   let slideStartTime = 0;
-  let activeLayer = 1; // 1 or 2
+  let activeLayer = 1;
   let isConnectedToPhotoPrism = false;
 
   // --- DOM Elements ---
@@ -101,7 +109,6 @@
   const elMetaCamera = document.getElementById('meta-camera');
   const elMetaExif = document.getElementById('meta-exif');
   const elProgressBar = document.getElementById('slide-progress');
-  const elMetaCard = document.getElementById('photo-meta-card');
 
   // Controls
   const btnPrev = document.getElementById('btn-prev');
@@ -137,11 +144,18 @@
     fetchPhotosAndStart();
   }
 
-  // --- Config Helpers ---
   function loadConfig() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? { ...DEFAULT_CONFIG, ...JSON.parse(saved) } : { ...DEFAULT_CONFIG };
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Migration: If photoprismUrl was saved as 'http://localhost:2342' but we are accessing via IP, update default
+        if (parsed.photoprismUrl === 'http://localhost:2342' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+          parsed.photoprismUrl = getDynamicDefaultUrl();
+        }
+        return { ...DEFAULT_CONFIG, ...parsed };
+      }
+      return { ...DEFAULT_CONFIG };
     } catch (e) {
       return { ...DEFAULT_CONFIG };
     }
@@ -172,15 +186,14 @@
     }
   }
 
-  // --- Real-time Clock & Ares Sol Calculator ---
+  // --- Real-time Clock ---
   function updateClock() {
     const now = new Date();
     
-    // 12-Hour format with AM/PM
     let hours = now.getHours();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
-    hours = hours ? hours : 12; // hour 0 should be 12
+    hours = hours ? hours : 12;
     const hStr = String(hours).padStart(2, '0');
     const mStr = String(now.getMinutes()).padStart(2, '0');
     const sStr = String(now.getSeconds()).padStart(2, '0');
@@ -188,39 +201,54 @@
     elClockTime.textContent = `${hStr}:${mStr}:${sStr}`;
     elClockAmPm.textContent = ampm;
 
-    // Date
     const options = { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' };
     elClockDate.textContent = now.toLocaleDateString('en-US', options).toUpperCase();
 
-    // Ares Sol Calculation (Mars Solar Date formula)
-    // MSD = (Julian Date UT - 2451549.5) / 1.027491252 + 44796.0
     const julianDate = (now.getTime() / 86400000) + 2440587.5;
     const msd = (julianDate - 2451549.5) / 1.027491252 + 44796.0;
     elAresSol.textContent = `ARES SOL: ${msd.toFixed(3)}`;
   }
 
-  // --- PhotoPrism API Client & Smart Filter ---
+  // --- PhotoPrism Auth & API Client ---
+  async function authenticateSession(baseUrl) {
+    if (!config.password) return '';
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'admin', password: config.password })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.id || data.token || '';
+      }
+    } catch (e) {
+      console.warn('Session auth failed:', e);
+    }
+    return '';
+  }
+
   async function fetchPhotosAndStart() {
     setSystemStatus('CONNECTING...', false);
     photoList = [];
 
-    let fetched = await fetchFromPhotoPrism();
+    const result = await fetchFromPhotoPrismWithFallback();
 
-    if (fetched && fetched.length > 0) {
-      photoList = fetched;
+    if (result.success && result.photos && result.photos.length > 0) {
+      photoList = result.photos;
       isConnectedToPhotoPrism = true;
       elSourceBadge.textContent = 'PHOTOPRISM';
       elSourceBadge.className = 'stat-value source-connected';
-      setSystemStatus('SYSTEM ONLINE', true);
+      setSystemStatus(`ONLINE (${photoList.length} PHOTOS)`, true);
     } else if (config.enableFallbackDemo) {
       photoList = DEMO_PHOTOS;
       isConnectedToPhotoPrism = false;
       elSourceBadge.textContent = 'DEMO STREAM';
       elSourceBadge.className = 'stat-value';
-      setSystemStatus('DEMO MODE', true);
+      setSystemStatus(`DEMO MODE (${result.reason || 'NOT CONNECTED'})`, false);
     } else {
-      setSystemStatus('NO PHOTOS FOUND', false);
-      elPhotoTitle.textContent = 'No photos match your filter settings';
+      setSystemStatus(`ERROR: ${result.reason || 'NO PHOTOS'}`, false);
+      elPhotoTitle.textContent = result.reason || 'No photos available';
       return;
     }
 
@@ -229,44 +257,84 @@
     startSlideshowTimer();
   }
 
-  async function fetchFromPhotoPrism() {
+  async function fetchFromPhotoPrismWithFallback() {
+    // Try primary URL, then proxy fallback
+    const primaryUrl = config.photoprismUrl.replace(/\/$/, '');
+    const proxyUrl = '/photoprism-api';
+
+    const urlsToTry = [primaryUrl];
+    if (!primaryUrl.includes('/photoprism-api')) {
+      urlsToTry.push(proxyUrl);
+    }
+
+    for (const baseUrl of urlsToTry) {
+      const res = await tryFetchFromUrl(baseUrl);
+      if (res.success) return res;
+      // If we got a specific error like 0 photos indexed or 401 auth failed, keep reason
+      if (res.reason && !res.reason.includes('Unreachable')) {
+        return res;
+      }
+    }
+
+    return { success: false, reason: 'Unreachable server or CORS issue' };
+  }
+
+  async function tryFetchFromUrl(baseUrl) {
     try {
-      const baseUrl = config.photoprismUrl.replace(/\/$/, '');
+      sessionToken = await authenticateSession(baseUrl);
+
       let endpoint = `${baseUrl}/api/v1/photos?count=500&order=newest`;
-      
       if (config.albumQuery.trim()) {
         endpoint += `&q=${encodeURIComponent(config.albumQuery.trim())}`;
       }
 
       const headers = {};
-      if (config.password) {
-        headers['X-Auth-Token'] = config.password;
+      const token = sessionToken || config.password;
+      if (token) {
+        headers['X-Session-Id'] = token;
+        headers['X-Auth-Token'] = token;
       }
 
       const response = await fetch(endpoint, { headers });
-      if (!response.ok) return null;
+      if (response.status === 401 || response.status === 403) {
+        return { success: false, reason: 'Authentication required (Check password or enable PHOTOPRISM_PUBLIC)' };
+      }
+
+      if (!response.ok) {
+        return { success: false, reason: `HTTP Error ${response.status}` };
+      }
 
       const data = await response.json();
-      if (!Array.isArray(data)) return null;
+      if (!Array.isArray(data)) {
+        return { success: false, reason: 'Invalid API response format' };
+      }
+
+      if (data.length === 0) {
+        return { success: false, reason: '0 Photos in PhotoPrism (Run: docker compose exec photoprism photoprism index)' };
+      }
 
       // Filter photos
-      return data
+      const filtered = data
         .filter(item => {
           if (!config.filterScreenshots) return true;
           return isRealCameraPhoto(item);
         })
         .map(item => transformPhotoItem(item, baseUrl));
+
+      if (filtered.length === 0) {
+        return { success: false, reason: `All ${data.length} photos were filtered out as screenshots/AI. Uncheck Screenshot Filter in settings!` };
+      }
+
+      return { success: true, photos: filtered };
     } catch (e) {
-      console.warn('PhotoPrism fetch failed:', e);
-      return null;
+      console.warn(`Fetch error for ${baseUrl}:`, e);
+      return { success: false, reason: `Network error connecting to ${baseUrl}` };
     }
   }
 
   function isRealCameraPhoto(item) {
-    // Check type
     if (item.Type && item.Type !== 'image') return false;
 
-    // String search targets
     const searchTarget = [
       item.Title,
       item.Name,
@@ -277,7 +345,6 @@
       ...(item.Labels ? item.Labels.map(l => l.Name || '') : [])
     ].join(' ').toLowerCase();
 
-    // Screenshot & AI exclusion terms
     const forbiddenTerms = [
       'screenshot', 'screen_shot', 'screen shot', 'captura de pantalla',
       'ai', 'midjourney', 'dall-e', 'dalle', 'stable_diffusion', 'sd_out',
@@ -288,10 +355,8 @@
       if (searchTarget.includes(term)) return false;
     }
 
-    // Dimension check: Screenshots usually match exact screen aspect ratios with no camera EXIF model
     if (!item.CameraModel && item.Width && item.Height) {
       const ratio = item.Width / item.Height;
-      // Standard mobile/desktop screenshot ratios without camera info
       if (Math.abs(ratio - 16/9) < 0.01 || Math.abs(ratio - 9/16) < 0.01 || Math.abs(ratio - 19.5/9) < 0.01) {
         return false;
       }
@@ -301,10 +366,12 @@
   }
 
   function transformPhotoItem(item, baseUrl) {
-    // PhotoPrism image URL construction
-    const photoUrl = `${baseUrl}/api/v1/photos/${item.Hash}/dl?t=${item.Secret || ''}`;
+    const token = sessionToken || config.password;
+    const tokenParam = token ? `&t=${encodeURIComponent(token)}` : '';
     
-    // EXIF formatting
+    // PhotoPrism download / thumbnail URL
+    const photoUrl = `${baseUrl}/api/v1/photos/${item.Hash}/dl?${tokenParam}`;
+    
     const exifParts = [];
     if (item.FocalLength) exifParts.push(`${item.FocalLength}mm`);
     if (item.FNumber) exifParts.push(`f/${item.FNumber}`);
@@ -313,11 +380,11 @@
 
     return {
       id: item.ID || item.Hash,
-      title: item.Title || item.Name || 'Photo Asset',
+      title: item.Title || item.Name || 'SSD Photo Asset',
       date: item.TakenAt ? item.TakenAt.replace('T', ' ').substring(0, 16) : 'Unknown Date',
       location: [item.City, item.Country].filter(Boolean).join(', ') || 'Earth',
       camera: item.CameraModel || item.CameraMake || 'Digital Camera',
-      exif: exifParts.length > 0 ? exifParts.join(' • ') : 'Standard Capture',
+      exif: exifParts.length > 0 ? exifParts.join(' • ') : 'Camera Capture',
       url: photoUrl
     };
   }
@@ -338,25 +405,20 @@
     const photo = photoList[index];
     elPhotoCounter.textContent = `${String(index + 1).padStart(2, '0')} / ${String(photoList.length).padStart(2, '0')}`;
 
-    // Update Photo Meta Card
     elPhotoTitle.textContent = photo.title;
     elMetaDate.textContent = photo.date;
     elMetaLocation.textContent = photo.location;
     elMetaCamera.textContent = photo.camera;
     elMetaExif.textContent = photo.exif;
 
-    // Cross-fade between Layer 1 and Layer 2 with Ken Burns
     const nextLayer = activeLayer === 1 ? elLayer2 : elLayer1;
     const currentLayer = activeLayer === 1 ? elLayer1 : elLayer2;
 
-    // Set background image
     nextLayer.style.backgroundImage = `url("${photo.url}")`;
 
-    // Toggle Ken Burns animation class
     const kenburnsClass = (index % 2 === 0) ? 'kenburns-1' : 'kenburns-2';
     nextLayer.className = `photo-layer ${config.enableKenBurns ? kenburnsClass : ''}`;
     
-    // Trigger opacity cross-fade
     setTimeout(() => {
       nextLayer.classList.add('active');
       currentLayer.classList.remove('active');
@@ -454,7 +516,6 @@
       fetchPhotosAndStart();
     });
 
-    // Keyboard & TV Remote Navigation
     window.addEventListener('keydown', (e) => {
       if (modalSettings.classList.contains('active')) {
         if (e.key === 'Escape') modalSettings.classList.remove('active');
@@ -498,15 +559,29 @@
 
     const testUrl = inputUrl.value.trim().replace(/\/$/, '');
     const headers = {};
-    if (inputPassword.value.trim()) {
-      headers['X-Auth-Token'] = inputPassword.value.trim();
+    const token = await authenticateSession(testUrl) || inputPassword.value.trim();
+    if (token) {
+      headers['X-Session-Id'] = token;
+      headers['X-Auth-Token'] = token;
     }
 
     try {
       const res = await fetch(`${testUrl}/api/v1/ping`, { headers });
       if (res.ok) {
-        elTestResult.textContent = '✓ Connected to PhotoPrism!';
-        elTestResult.className = 'test-result-msg success';
+        const countRes = await fetch(`${testUrl}/api/v1/photos?count=1`, { headers });
+        if (countRes.ok) {
+          const photos = await countRes.json();
+          if (Array.isArray(photos) && photos.length > 0) {
+            elTestResult.textContent = '✓ Connected! Photos found on server.';
+            elTestResult.className = 'test-result-msg success';
+          } else {
+            elTestResult.textContent = '⚠ Connected to PhotoPrism, but 0 photos indexed yet. Run indexing command!';
+            elTestResult.className = 'test-result-msg error';
+          }
+        } else {
+          elTestResult.textContent = `✓ Ping OK, but photo list returned HTTP ${countRes.status}`;
+          elTestResult.className = 'test-result-msg error';
+        }
       } else {
         elTestResult.textContent = `✗ HTTP Error ${res.status}`;
         elTestResult.className = 'test-result-msg error';
@@ -529,7 +604,6 @@
     }
   }
 
-  // Run on page load
   document.addEventListener('DOMContentLoaded', init);
 
 })();
