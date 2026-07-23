@@ -1,6 +1,6 @@
-# PhotoPrism Headless on Raspberry Pi
+# PhotoPrism Headless & TV Dashboard on Raspberry Pi
 
-This directory contains a pre-configured Docker Compose setup for running [PhotoPrism](https://photoprism.app/) as a headless background service, optimized specifically for the Raspberry Pi.
+This directory contains a pre-configured Docker Compose setup for running [PhotoPrism](https://photoprism.app/) as a headless background service alongside a **TV Dashboard** inspired by the **Ares City OS theme** (`https://ephraimbecker.com/`).
 
 ---
 
@@ -44,16 +44,61 @@ Before running PhotoPrism on a Raspberry Pi, ensure your host environment meets 
    * **Change the admin password:** Modify `PHOTOPRISM_ADMIN_PASSWORD` to a secure password (minimum 8 characters).
    * **Adjust paths:** Point `PHOTOPRISM_ORIGINALS_PATH` to your actual photos directory on the host (e.g., `/mnt/ssd/Pictures`).
    * **Configure workers:** Ensure `PHOTOPRISM_WORKERS` matches your Raspberry Pi model (default `2` is recommended for Pi 4/5).
-3. **Start the service in headless (detached) mode:**
+3. **Start the services in headless (detached) mode:**
    ```bash
    docker compose up -d
    ```
-4. **Access the Web Interface:**
-   Open your browser and navigate to:
-   ```text
-   http://<your-raspberry-pi-ip>:2342
+4. **Access the Interfaces:**
+   * **TV Dashboard (Ares City OS Theme):** `http://<your-raspberry-pi-ip>:8080`
+   * **PhotoPrism Admin Console:** `http://<your-raspberry-pi-ip>:2342`
+
+---
+
+## 📺 Setting Up Chromium Kiosk Mode on your Pi TV
+
+To automatically launch the TV Dashboard in full-screen Kiosk mode whenever your Raspberry Pi boots up and connects to your TV:
+
+1. **Install Chromium & unclutter (to hide mouse cursor):**
+   ```bash
+   sudo apt update && sudo apt install -y chromium-browser unclutter
    ```
-   Log in with the username `admin` and the password you set in `.env`.
+2. **Configure autostart script:**
+   Create or edit `~/.config/openbox/autostart` or `/etc/xdg/lxsession/LXDE-pi/autostart`:
+   ```bash
+   # Hide mouse cursor after 3 seconds of inactivity
+   unclutter -idle 3 &
+
+   # Prevent screen sleeping/blanking
+   xset s off
+   xset -dpms
+   xset s noblank
+
+   # Launch Chromium in Kiosk mode pointing to the local dashboard container
+   chromium-browser --noerrdialogs --disable-infobars --kiosk http://localhost:8080 &
+   ```
+3. **Reboot the Raspberry Pi:**
+   ```bash
+   sudo reboot
+   ```
+
+---
+
+## 🎮 TV Dashboard Features & Keybindings
+
+The TV Dashboard streams photos from PhotoPrism while automatically filtering out screenshots, AI-generated images, and documents.
+
+* **Ken Burns Effect:** Smooth 15-second slow pan & zoom transition per photo asset.
+* **Ares City HUD:** Displays real-time Earth Date, Local Time, and calculated Ares Sol Clock.
+* **Smart Filter:** Excludes screenshots (`screenshot`, `screen_shot`), AI art (`midjourney`, `dall-e`, `stable_diffusion`), and text documents.
+
+### Keybindings & Remote Shortcuts
+| Key | Action |
+| :--- | :--- |
+| `◀` / `▶` | Skip to Previous / Next photo |
+| `Space` / `Enter` | Pause / Play slideshow |
+| `F` | Toggle Fullscreen mode |
+| `S` | Toggle CRT Scanline HUD effect |
+| `M` or `C` | Open / Close Configuration Modal |
 
 ---
 
@@ -76,54 +121,30 @@ Before running PhotoPrism on a Raspberry Pi, ensure your host environment meets 
     4. Fill in the MariaDB connection credentials.
 
 ### CPU Worker Optimization
-To prevent the Pi from freezing during indexing, you must limit worker threads:
+To prevent the Pi from freezing during indexing, limit worker threads:
 * **Pi 4/5 (4GB/8GB RAM):** Use `PHOTOPRISM_WORKERS=2` (recommended).
 * **Pi 3 or Pi 4 (2GB RAM):** Use `PHOTOPRISM_WORKERS=1` to prevent CPU lockups.
-
-### Disable CPU-Heavy AI Features
-If indexing is too slow or consumes too much memory, you can disable faces and image classification features in your `.env` file:
-```ini
-PHOTOPRISM_DISABLE_FACES=true
-PHOTOPRISM_DISABLE_CLASSIFICATION=true
-```
 
 ---
 
 ## 🛠️ CLI Operations Guide
 
-Since this container runs headlessly, management tasks are done using the Docker command line:
-
 ### View Application Logs
-To monitor what the indexer is doing or troubleshoot issues:
 ```bash
-docker compose logs -f photoprism
+docker compose logs -f
 ```
 
 ### Trigger Photo Indexing via CLI
-While indexing can be triggered from the web UI, you can also run it directly in the background:
 ```bash
 docker compose exec photoprism photoprism index
 ```
 
 ### Reset Admin Password
-If you forget your administrator password and cannot log in:
 ```bash
 docker compose exec photoprism photoprism passwd admin
 ```
 
-### Create a Database Backup
-To backup your SQLite or MariaDB database metadata:
-```bash
-docker compose exec photoprism photoprism backup
-```
-The backup file will be created in your configured backup directory (defaults to `./backup`).
-
-### Stopping the Container
-To stop all PhotoPrism services:
+### Stopping the Services
 ```bash
 docker compose down
-```
-To stop the services and delete the container images/volumes (retaining your photos/database data):
-```bash
-docker compose down -v
 ```

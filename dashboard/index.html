@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Ares City OS — TV Dashboard & Photo Stream</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Google Fonts: Orbitron, Fira Code, Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="ares-theme">
+
+  <!-- Background Image Viewport Canvas for Ken Burns Photo Slideshow -->
+  <div id="slideshow-viewport" class="slideshow-viewport">
+    <div id="bg-layer-1" class="photo-layer active kenburns-1"></div>
+    <div id="bg-layer-2" class="photo-layer kenburns-2"></div>
+    <div class="photo-overlay-vignette"></div>
+  </div>
+
+  <!-- Tactical HUD Scanline & Grid Overlays -->
+  <div class="city-matrix-underlay"></div>
+  <div id="hud-scanline" class="hud-scanline"></div>
+
+  <!-- Screen Framing Corner Brackets -->
+  <div class="avatar-corner avatar-corner--tl"></div>
+  <div class="avatar-corner avatar-corner--tr"></div>
+  <div class="avatar-corner avatar-corner--bl"></div>
+  <div class="avatar-corner avatar-corner--br"></div>
+
+  <!-- Top Tactical System HUD Bar -->
+  <header class="system-hud-bar">
+    <div class="hud-left-sector">
+      <span class="hud-badge-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 3v18M3 12h18"/>
+        </svg>
+      </span>
+      <div class="hud-title-stack">
+        <span class="hud-sys-tag">// ARES CITY OS</span>
+        <span class="hud-sys-name">CITIZEN TV DASHBOARD</span>
+      </div>
+      <span class="status-pill online">
+        <span class="active-pulse-dot"></span>
+        <span id="sys-status-text">SYSTEM ONLINE</span>
+      </span>
+    </div>
+
+    <!-- Center Clock & Telemetry Readout -->
+    <div class="hud-clock-sector">
+      <div class="time-main-display">
+        <span id="clock-time">00:00:00</span>
+        <span id="clock-ampm">AM</span>
+      </div>
+      <div class="clock-sub-details">
+        <span id="clock-date" class="hud-text-highlight">MON, JAN 01, 2026</span>
+        <span class="hud-divider">|</span>
+        <span id="ares-sol-text" class="hud-text-dim">ARES SOL: 38.402</span>
+      </div>
+    </div>
+
+    <!-- Right System Controls & Indicators -->
+    <div class="hud-right-sector">
+      <div class="hud-stat-box">
+        <span class="stat-label">PHOTOS</span>
+        <span id="photo-index-counter" class="stat-value">00 / 00</span>
+      </div>
+      <div class="hud-stat-box">
+        <span class="stat-label">SOURCE</span>
+        <span id="source-badge" class="stat-value source-connected">PHOTOPRISM</span>
+      </div>
+      <button id="btn-open-settings" class="hud-btn" title="Open Settings (Shortcut: M)">
+        [ ⚙ CONFIG ]
+      </button>
+    </div>
+  </header>
+
+  <!-- Bottom Photo Metadata HUD Card -->
+  <main class="hud-bottom-overlay">
+    <div id="photo-meta-card" class="photo-meta-card">
+      <div class="card-corner card-corner--tl"></div>
+      <div class="card-corner card-corner--tr"></div>
+      <div class="card-corner card-corner--bl"></div>
+      <div class="card-corner card-corner--br"></div>
+
+      <div class="meta-card-header">
+        <div class="meta-title-group">
+          <span class="meta-sector-label">// TELEMETRY // CURRENT ASSET</span>
+          <h2 id="photo-title" class="photo-title">Ares Habitat Panorama</h2>
+        </div>
+        <div class="meta-controls-quick">
+          <button id="btn-prev" class="hud-btn hud-btn-icon" title="Previous Photo (Left Arrow)">◀</button>
+          <button id="btn-pause" class="hud-btn hud-btn-icon" title="Pause / Play (Spacebar)">⏸</button>
+          <button id="btn-next" class="hud-btn hud-btn-icon" title="Next Photo (Right Arrow)">▶</button>
+          <button id="btn-scanline" class="hud-btn hud-btn-icon" title="Toggle Scanlines (S)">⚡</button>
+          <button id="btn-fullscreen" class="hud-btn hud-btn-icon" title="Toggle Fullscreen (F)">⛶</button>
+        </div>
+      </div>
+
+      <!-- EXIF Telemetry Row -->
+      <div class="meta-telemetry-grid">
+        <div class="telemetry-item">
+          <span class="t-label">DATE TAKEN</span>
+          <span id="meta-date" class="t-value">2026-07-21 14:30</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="t-label">LOCATION</span>
+          <span id="meta-location" class="t-value">New York, USA</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="t-label">CAMERA</span>
+          <span id="meta-camera" class="t-value">Sony A7 IV</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="t-label">EXIF</span>
+          <span id="meta-exif" class="t-value">35mm • f/2.8 • 1/500s • ISO 100</span>
+        </div>
+      </div>
+
+      <!-- Slide Progress Bar -->
+      <div class="progress-bar-container">
+        <div id="slide-progress" class="progress-bar-fill"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Interactive Configuration Modal -->
+  <div id="settings-modal" class="modal-backdrop">
+    <div class="modal-hud-console">
+      <div class="card-corner card-corner--tl"></div>
+      <div class="card-corner card-corner--tr"></div>
+      <div class="card-corner card-corner--bl"></div>
+      <div class="card-corner card-corner--br"></div>
+
+      <div class="modal-header">
+        <div class="modal-title-stack">
+          <span class="modal-sub">// DASHBOARD CONFIGURATION</span>
+          <h3 class="modal-title">ARES CITY TV DASHBOARD SETTINGS</h3>
+        </div>
+        <button id="btn-close-settings" class="hud-btn custom-close-btn">[ ✕ CLOSE ]</button>
+      </div>
+
+      <div class="modal-body custom-scroll">
+        <form id="settings-form">
+          <!-- Connection Settings -->
+          <div class="settings-group">
+            <h4 class="group-title">// PHOTOPRISM CONNECTION</h4>
+            <div class="form-row">
+              <label for="cfg-photoprism-url">PhotoPrism URL:</label>
+              <input type="text" id="cfg-photoprism-url" placeholder="http://localhost:2342" value="http://localhost:2342" />
+            </div>
+            <div class="form-row">
+              <label for="cfg-admin-password">Admin Password / Auth Token:</label>
+              <input type="password" id="cfg-admin-password" placeholder="Leave empty if public/no auth" />
+            </div>
+            <div class="form-row">
+              <button type="button" id="btn-test-connection" class="hud-btn">TEST CONNECTION</button>
+              <span id="connection-test-result" class="test-result-msg"></span>
+            </div>
+          </div>
+
+          <!-- Photo Filtering Options -->
+          <div class="settings-group">
+            <h4 class="group-title">// PHOTO FILTERING & SELECTION</h4>
+            <div class="form-row checkbox-row">
+              <input type="checkbox" id="cfg-filter-screenshots" checked />
+              <label for="cfg-filter-screenshots">
+                <strong>Smart Screenshot & AI Filter:</strong> Exclude screenshots, documents, AI art, drawings, and non-photos automatically
+              </label>
+            </div>
+            <div class="form-row">
+              <label for="cfg-album-query">Target Album / Search Query:</label>
+              <input type="text" id="cfg-album-query" placeholder="e.g. album:vacation or camera:&quot;Sony&quot;" />
+              <span class="input-hint">Leave blank to load all camera photos in library</span>
+            </div>
+          </div>
+
+          <!-- Slideshow Behavior -->
+          <div class="settings-group">
+            <h4 class="group-title">// SLIDESHOW & DISPLAY</h4>
+            <div class="form-row">
+              <label for="cfg-slide-duration">Slide Duration (Seconds):</label>
+              <input type="number" id="cfg-slide-duration" min="3" max="120" value="15" />
+            </div>
+            <div class="form-row checkbox-row">
+              <input type="checkbox" id="cfg-enable-kenburns" checked />
+              <label for="cfg-enable-kenburns">Enable 15s Ken Burns Pan & Zoom Animation</label>
+            </div>
+            <div class="form-row checkbox-row">
+              <input type="checkbox" id="cfg-enable-scanlines" checked />
+              <label for="cfg-enable-scanlines">Enable CRT Scanline HUD Effect</label>
+            </div>
+            <div class="form-row checkbox-row">
+              <input type="checkbox" id="cfg-fallback-demo" checked />
+              <label for="cfg-fallback-demo">Enable High-Res Demo Photos if PhotoPrism is offline</label>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <div class="shortcuts-hint">
+          <span class="hint-key">◀/▶</span> Skip &nbsp;
+          <span class="hint-key">SPACE</span> Pause &nbsp;
+          <span class="hint-key">F</span> Fullscreen &nbsp;
+          <span class="hint-key">S</span> Scanline &nbsp;
+          <span class="hint-key">M</span> Settings
+        </div>
+        <button id="btn-save-settings" class="hud-btn btn-primary">[ SAVE & APPLY ]</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

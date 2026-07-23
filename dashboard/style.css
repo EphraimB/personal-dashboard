@@ -1,0 +1,659 @@
+/* ==============================================================================
+   ARES CITY OS — TV DASHBOARD DESIGN SYSTEM
+   Inspired by https://ephraimbecker.com/ (Citizen Suite / Ares City OS Theme)
+   ============================================================================== */
+
+:root {
+  --font-title: 'Orbitron', 'Fira Code', monospace;
+  --font-mono: 'Fira Code', monospace, var(--font-tech);
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Color System */
+  --color-bg-dark: #04060c;
+  --color-hud-bg: rgba(4, 6, 12, 0.78);
+  --color-hud-border: rgba(255, 87, 34, 0.35);
+  --color-hud-border-cyan: rgba(0, 240, 255, 0.35);
+  
+  --color-orange: #ff5722;
+  --color-orange-glow: rgba(255, 87, 34, 0.4);
+  --color-cyan: #00f0ff;
+  --color-cyan-glow: rgba(0, 240, 255, 0.4);
+  --color-green: #00ff88;
+  --color-green-glow: rgba(0, 255, 136, 0.4);
+  --color-gold: #ffb300;
+  
+  --color-text-main: #ffffff;
+  --color-text-sub: rgba(255, 255, 255, 0.75);
+  --color-text-dim: rgba(255, 255, 255, 0.45);
+
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.4s ease;
+  --transition-fade: 1.5s ease-in-out;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--color-bg-dark);
+  font-family: var(--font-mono);
+  color: var(--color-text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==============================================================================
+   Slideshow Viewport & Ken Burns Engine
+   ============================================================================== */
+.slideshow-viewport {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: #000;
+  overflow: hidden;
+}
+
+.photo-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity var(--transition-fade);
+  will-change: transform, opacity;
+}
+
+.photo-layer.active {
+  opacity: 1;
+}
+
+/* Ken Burns Keyframes */
+.photo-layer.kenburns-1.active {
+  animation: kenburnsZoomIn 16s ease-in-out forwards;
+}
+
+.photo-layer.kenburns-2.active {
+  animation: kenburnsZoomOut 16s ease-in-out forwards;
+}
+
+@keyframes kenburnsZoomIn {
+  0% {
+    transform: scale(1) translate(0%, 0%);
+  }
+  100% {
+    transform: scale(1.12) translate(-1.5%, -1%);
+  }
+}
+
+@keyframes kenburnsZoomOut {
+  0% {
+    transform: scale(1.12) translate(1%, 1.5%);
+  }
+  100% {
+    transform: scale(1) translate(0%, 0%);
+  }
+}
+
+.photo-overlay-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 40%, rgba(4, 6, 12, 0.75) 90%),
+              linear-gradient(to bottom, rgba(4, 6, 12, 0.8) 0%, transparent 20%, transparent 80%, rgba(4, 6, 12, 0.85) 100%);
+  pointer-events: none;
+}
+
+/* ==============================================================================
+   Tactical Overlays & Corner Brackets
+   ============================================================================== */
+.city-matrix-underlay {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(0, 240, 255, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.6;
+}
+
+.hud-scanline {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0, 0, 0, 0.3) 50%,
+    rgba(0, 0, 0, 0.3)
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.75;
+  transition: opacity var(--transition-fast);
+}
+
+.hud-scanline.disabled {
+  opacity: 0;
+}
+
+/* Corner Brackets */
+.avatar-corner, .card-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.avatar-corner--tl, .card-corner--tl {
+  top: 10px;
+  left: 10px;
+  border-top: 2.5px solid var(--color-orange);
+  border-left: 2.5px solid var(--color-orange);
+}
+
+.avatar-corner--tr, .card-corner--tr {
+  top: 10px;
+  right: 10px;
+  border-top: 2.5px solid var(--color-orange);
+  border-right: 2.5px solid var(--color-orange);
+}
+
+.avatar-corner--bl, .card-corner--bl {
+  bottom: 10px;
+  left: 10px;
+  border-bottom: 2.5px solid var(--color-orange);
+  border-left: 2.5px solid var(--color-orange);
+}
+
+.avatar-corner--br, .card-corner--br {
+  bottom: 10px;
+  right: 10px;
+  border-bottom: 2.5px solid var(--color-orange);
+  border-right: 2.5px solid var(--color-orange);
+}
+
+/* ==============================================================================
+   Top Tactical System HUD Bar
+   ============================================================================== */
+.system-hud-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  padding: 0 24px;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-hud-bg);
+  border-bottom: 1.5px solid var(--color-hud-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.hud-left-sector {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hud-badge-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--color-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 6px var(--color-orange-glow));
+}
+
+.hud-title-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-sys-tag {
+  font-size: 0.58rem;
+  color: var(--color-orange);
+  letter-spacing: 1.5px;
+  font-weight: 700;
+}
+
+.hud-sys-name {
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--color-text-main);
+}
+
+/* Status Pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid var(--color-green);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-green);
+  letter-spacing: 1px;
+}
+
+.status-pill.offline {
+  background: rgba(255, 87, 34, 0.08);
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+}
+
+.active-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-green);
+  box-shadow: 0 0 8px var(--color-green);
+  animation: pulse-dot 1.2s infinite alternate;
+}
+
+.status-pill.offline .active-pulse-dot {
+  background: var(--color-orange);
+  box-shadow: 0 0 8px var(--color-orange);
+}
+
+@keyframes pulse-dot {
+  0% { opacity: 0.4; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Clock Sector */
+.hud-clock-sector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.time-main-display {
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--color-cyan);
+  text-shadow: 0 0 12px var(--color-cyan-glow);
+  line-height: 1;
+}
+
+#clock-ampm {
+  font-size: 0.8rem;
+  color: var(--color-orange);
+  margin-left: 4px;
+}
+
+.clock-sub-details {
+  font-size: 0.68rem;
+  letter-spacing: 1px;
+  margin-top: 3px;
+  display: flex;
+  gap: 8px;
+}
+
+.hud-text-highlight {
+  color: var(--color-text-main);
+  font-weight: 600;
+}
+
+.hud-divider {
+  color: var(--color-hud-border);
+}
+
+.hud-text-dim {
+  color: var(--color-gold);
+}
+
+/* Right Sector Controls */
+.hud-right-sector {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hud-stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.stat-label {
+  font-size: 0.55rem;
+  color: var(--color-text-dim);
+  letter-spacing: 1px;
+}
+
+.stat-value {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-cyan);
+}
+
+.stat-value.source-connected {
+  color: var(--color-green);
+}
+
+/* HUD Button Styling */
+.hud-btn {
+  background: rgba(4, 6, 12, 0.85);
+  border: 1.5px solid var(--color-orange);
+  color: var(--color-orange);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 0 10px rgba(255, 87, 34, 0.1);
+}
+
+.hud-btn:hover, .hud-btn:focus {
+  background: var(--color-orange);
+  color: #000;
+  box-shadow: 0 0 15px var(--color-orange-glow);
+  outline: none;
+}
+
+.hud-btn-icon {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+
+/* ==============================================================================
+   Bottom Photo Metadata HUD Card
+   ============================================================================== */
+.hud-bottom-overlay {
+  position: absolute;
+  bottom: 24px;
+  left: 32px;
+  right: 32px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.photo-meta-card {
+  position: relative;
+  background: var(--color-hud-bg);
+  border: 1.5px solid var(--color-hud-border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+  pointer-events: auto;
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+}
+
+.meta-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.meta-sector-label {
+  font-size: 0.58rem;
+  color: var(--color-orange);
+  letter-spacing: 1.5px;
+  font-weight: 700;
+}
+
+.photo-title {
+  font-family: var(--font-title);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.meta-controls-quick {
+  display: flex;
+  gap: 8px;
+}
+
+/* Telemetry Grid */
+.meta-telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+
+}
+
+.telemetry-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.t-label {
+  font-size: 0.58rem;
+  color: var(--color-text-dim);
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+
+.t-value {
+  font-size: 0.75rem;
+  color: var(--color-cyan);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Progress Bar */
+.progress-bar-container {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  margin-top: 14px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--color-orange), var(--color-cyan));
+  box-shadow: 0 0 8px var(--color-cyan);
+  transition: width 0.2s linear;
+}
+
+/* ==============================================================================
+   Modal Configuration Console
+   ============================================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 6, 12, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-hud-console {
+  position: relative;
+  width: 680px;
+  max-width: 90vw;
+  max-height: 85vh;
+  background: rgba(6, 10, 20, 0.95);
+  border: 1.5px solid var(--color-orange);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(255, 87, 34, 0.25);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1.5px solid var(--color-hud-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.modal-sub {
+  font-size: 0.58rem;
+  color: var(--color-orange);
+  letter-spacing: 1.5px;
+  font-weight: 700;
+}
+
+.modal-title {
+  font-family: var(--font-title);
+  font-size: 1.05rem;
+  color: var(--color-text-main);
+  letter-spacing: 1px;
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.group-title {
+  font-size: 0.68rem;
+  color: var(--color-cyan);
+  letter-spacing: 1px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-row.checkbox-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-row label {
+  font-size: 0.72rem;
+  color: var(--color-text-sub);
+}
+
+.form-row input[type="text"],
+.form-row input[type="password"],
+.form-row input[type="number"] {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--color-hud-border-cyan);
+  color: var(--color-cyan);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.form-row input:focus {
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 10px var(--color-cyan-glow);
+}
+
+.input-hint {
+  font-size: 0.6rem;
+  color: var(--color-text-dim);
+}
+
+.test-result-msg {
+  font-size: 0.7rem;
+  margin-left: 10px;
+}
+
+.test-result-msg.success { color: var(--color-green); }
+.test-result-msg.error { color: var(--color-orange); }
+
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1.5px solid var(--color-hud-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.shortcuts-hint {
+  font-size: 0.65rem;
+  color: var(--color-text-dim);
+}
+
+.hint-key {
+  color: var(--color-orange);
+  background: rgba(255, 87, 34, 0.1);
+  padding: 2px 5px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 87, 34, 0.3);
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: var(--color-orange);
+  color: #000;
+}
+
+.btn-primary:hover {
+  background: #ff7043;
+  box-shadow: 0 0 20px var(--color-orange-glow);
+}
+
+/* Custom Scrollbars */
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-orange);
+  border-radius: 3px;
+}
