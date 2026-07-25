@@ -147,11 +147,11 @@
   }
 
   function startSsdAndPhotoPolling() {
-    // Poll every 20 seconds for newly connected SSDs / newly indexed photos
+    // Poll every 10 seconds for newly connected SSDs / newly indexed photos / auto-reconnect
     setInterval(async () => {
       const result = await fetchFromPhotoPrismWithFallback();
       if (result.success && result.photos && result.photos.length > 0) {
-        if (!isConnectedToPhotoPrism) {
+        if (!isConnectedToPhotoPrism || photoList === DEMO_PHOTOS) {
           photoList = result.photos;
           isConnectedToPhotoPrism = true;
           elSourceBadge.textContent = 'PHOTOPRISM';
@@ -161,6 +161,7 @@
             elSsdBadge.textContent = 'CONNECTED';
             elSsdBadge.className = 'stat-value ssd-connected';
           }
+          currentIndex = 0;
           showPhoto(0);
         } else if (result.photos.length !== photoList.length) {
           console.log(`[SSD Sync] Library updated! Old count: ${photoList.length}, New count: ${result.photos.length}`);
@@ -178,7 +179,7 @@
         elSsdBadge.textContent = 'AUTO DETECT';
         elSsdBadge.className = 'stat-value ssd-idle';
       }
-    }, 20000);
+    }, 10000);
   }
 
   function loadConfig() {
