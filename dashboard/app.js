@@ -295,32 +295,32 @@
   }
 
   async function fetchFromPhotoPrismWithFallback() {
-    // Try primary URL, then proxy fallback
-    const primaryUrl = config.photoprismUrl.replace(/\/$/, '');
-    const proxyUrl = '/photoprism-api';
+    const configuredUrl = config.photoprismUrl.replace(/\/$/, '');
+    const dynamicUrl = getDynamicDefaultUrl();
+    const proxyUrl = `${window.location.protocol}//${window.location.host}/photoprism-api`;
+    const localhostUrl = 'http://localhost:2342';
 
-    const urlsToTry = [primaryUrl];
-    if (!primaryUrl.includes('/photoprism-api')) {
-      urlsToTry.push(proxyUrl);
-    }
+    // Deduplicate candidate endpoints
+    const urlsToTry = Array.from(new Set([configuredUrl, dynamicUrl, proxyUrl, localhostUrl])).filter(Boolean);
+
+    let lastReason = 'Unreachable server or CORS issue';
 
     for (const baseUrl of urlsToTry) {
       const res = await tryFetchFromUrl(baseUrl);
       if (res.success) return res;
-      // If we got a specific error like 0 photos indexed or 401 auth failed, keep reason
-      if (res.reason && !res.reason.includes('Unreachable')) {
-        return res;
+      if (res.reason && !res.reason.includes('Unreachable') && !res.reason.includes('Network error')) {
+        lastReason = res.reason;
       }
     }
 
-    return { success: false, reason: 'Unreachable server or CORS issue' };
+    return { success: false, reason: lastReason };
   }
 
   async function tryFetchFromUrl(baseUrl) {
     try {
       sessionToken = await authenticateSession(baseUrl);
 
-      let endpoint = `${baseUrl}/api/v1/photos?count=500&order=newest`;
+      let endpoint = `${baseUrl}/api/v1/photos?count=1000&order=newest`;
       if (config.albumQuery.trim()) {
         endpoint += `&q=${encodeURIComponent(config.albumQuery.trim())}`;
       }
@@ -332,7 +332,7 @@
         headers['X-Auth-Token'] = token;
       }
 
-      const response = await fetch(endpoint, { headers });
+      let response = await fetch(endpoint, { headers });
       if (response.status === 401 || response.status === 403) {
         return { success: false, reason: 'Authentication required (Check password or enable PHOTOPRISM_PUBLIC)' };
       }
@@ -341,28 +341,39 @@
         return { success: false, reason: `HTTP Error ${response.status}` };
       }
 
-      const data = await response.json();
+      let data = await response.json();
       if (!Array.isArray(data)) {
         return { success: false, reason: 'Invalid API response format' };
       }
 
+      // If main query returned 0, try s:all query
+      if (data.length === 0 && !config.albumQuery.trim()) {
+        const fallbackRes = await fetch(`${baseUrl}/api/v1/photos?count=1000&q=s:all`, { headers });
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          if (Array.isArray(fallbackData) && fallbackData.length > 0) {
+            data = fallbackData;
+          }
+        }
+      }
+
       if (data.length === 0) {
-        return { success: false, reason: '0 Photos in PhotoPrism (Run: docker compose exec photoprism photoprism index)' };
+        return { success: false, reason: '0 Photos in PhotoPrism library' };
       }
 
-      // Filter photos
-      const filtered = data
-        .filter(item => {
-          if (!config.filterScreenshots) return true;
-          return isRealCameraPhoto(item);
-        })
-        .map(item => transformPhotoItem(item, baseUrl));
+      // Filter photos (safely without dropping real photos)
+      let filtered = data.filter(item => {
+        if (!config.filterScreenshots) return true;
+        return isRealCameraPhoto(item);
+      });
 
+      // Safety fallback: if filter drops everything, use all photos
       if (filtered.length === 0) {
-        return { success: false, reason: `All ${data.length} photos were filtered out as screenshots/AI. Uncheck Screenshot Filter in settings!` };
+        filtered = data;
       }
 
-      return { success: true, photos: filtered };
+      const transformed = filtered.map(item => transformPhotoItem(item, baseUrl));
+      return { success: true, photos: transformed };
     } catch (e) {
       console.warn(`Fetch error for ${baseUrl}:`, e);
       return { success: false, reason: `Network error connecting to ${baseUrl}` };
@@ -372,24 +383,14 @@
   function isRealCameraPhoto(item) {
     if (item.Type && item.Type !== 'image') return false;
 
-    const searchTarget = [
-      item.Title,
-      item.Name,
-      item.FileName,
-      item.Path,
-      item.Description,
-      ...(item.Keywords || []),
-      ...(item.Labels ? item.Labels.map(l => l.Name || '') : [])
-    ].join(' ').toLowerCase();
+    const titleAndName = [item.Title, item.Name, item.FileName].filter(Boolean).join(' ').toLowerCase();
 
-    const forbiddenTerms = [
-      'screenshot', 'screen_shot', 'screen shot', 'captura de pantalla',
-      'ai', 'midjourney', 'dall-e', 'dalle', 'stable_diffusion', 'sd_out',
-      'document', 'doc_', 'receipt', 'invoice', 'text', 'drawing', 'illustration', 'vector'
+    const explicitScreenshotTerms = [
+      'screenshot', 'screen_shot', 'screen shot', 'captura de pantalla'
     ];
 
-    for (const term of forbiddenTerms) {
-      if (searchTarget.includes(term)) return false;
+    for (const term of explicitScreenshotTerms) {
+      if (titleAndName.includes(term)) return false;
     }
 
     return true;
@@ -398,9 +399,10 @@
   function transformPhotoItem(item, baseUrl) {
     const token = sessionToken || config.password;
     const tokenParam = token ? `&t=${encodeURIComponent(token)}` : '';
+    const uid = item.UID || item.ID || item.Hash;
     
-    // PhotoPrism download / thumbnail URL
-    const photoUrl = `${baseUrl}/api/v1/photos/${item.Hash}/dl?${tokenParam}`;
+    // PhotoPrism photo download / view URL
+    const photoUrl = `${baseUrl}/api/v1/photos/${uid}/dl?${tokenParam}`;
     
     const exifParts = [];
     if (item.FocalLength) exifParts.push(`${item.FocalLength}mm`);
@@ -409,7 +411,7 @@
     if (item.Iso) exifParts.push(`ISO ${item.Iso}`);
 
     return {
-      id: item.ID || item.Hash,
+      id: uid,
       title: item.Title || item.Name || 'SSD Photo Asset',
       date: item.TakenAt ? item.TakenAt.replace('T', ' ').substring(0, 16) : 'Unknown Date',
       location: [item.City, item.Country].filter(Boolean).join(', ') || 'Earth',
