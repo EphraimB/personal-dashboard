@@ -85,7 +85,13 @@ fi
 if [ -f "$ENV_FILE" ]; then
   echo "📌 Pointing PhotoPrism originals path to exact SSD partition: $EXISTING_MOUNT"
   sed -i "s|^PHOTOPRISM_ORIGINALS_PATH=.*|PHOTOPRISM_ORIGINALS_PATH=$EXISTING_MOUNT|" "$ENV_FILE"
-  sed -i "s|^PHOTOPRISM_STORAGE_PATH=.*|PHOTOPRISM_STORAGE_PATH=./storage|" "$ENV_FILE"
+
+  if [ -d "$EXISTING_MOUNT/photoprism_storage" ]; then
+    echo "📌 Pointing PhotoPrism storage path to existing database: $EXISTING_MOUNT/photoprism_storage"
+    sed -i "s|^PHOTOPRISM_STORAGE_PATH=.*|PHOTOPRISM_STORAGE_PATH=$EXISTING_MOUNT/photoprism_storage|" "$ENV_FILE"
+  elif [ -d "./storage" ]; then
+    sed -i "s|^PHOTOPRISM_STORAGE_PATH=.*|PHOTOPRISM_STORAGE_PATH=./storage|" "$ENV_FILE"
+  fi
 fi
 
 # 7. Trigger immediate scan of existing mounted drives
