@@ -32,12 +32,10 @@ EOF
 }
 
 trigger_photoprism_index() {
-  echo "[SSD Detector] Triggering PhotoPrism Auto-Index..."
+  echo "[SSD Detector] Triggering PhotoPrism Auto-Index via CLI..."
   if command -v docker >/dev/null 2>&1; then
-    echo "[SSD Detector] Running docker exec photoprism index..."
     docker exec photoprism photoprism index >/dev/null 2>&1 &
   fi
-  curl -s -X POST "${PHOTOPRISM_URL}/api/v1/index" 2>/dev/null || true
 }
 
 scan_and_index_drive() {
@@ -48,16 +46,18 @@ scan_and_index_drive() {
   update_status "SCANNING" "$dev_name" 0 "Scanning drive for photos..."
 
   # Find photo media extensions
-  IMAGE_COUNT=$(find "$mount_dir" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.heic" -o -iname "*.webp" -o -iname "*.cr2" -o -iname "*.nef" -o -iname "*.arw" -o -iname "*.dng" \) 2>/dev/null | wc -l)
+  IMAGE_COUNT=$(find "$mount_dir" -maxdepth 5 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.heic" -o -iname "*.webp" -o -iname "*.cr2" -o -iname "*.nef" -o -iname "*.arw" -o -iname "*.dng" \) 2>/dev/null | wc -l)
 
   echo "[SSD Detector] Discovered $IMAGE_COUNT photo files on external storage."
 
   if [ "$IMAGE_COUNT" -gt 0 ]; then
-    # Ensure originals path exists on host
-    mkdir -p "$ORIGINALS_PATH" 2>/dev/null || true
-    TARGET_LINK="$ORIGINALS_PATH/External_SSD"
-    echo "[SSD Detector] Symlinking $mount_dir to $TARGET_LINK..."
-    ln -sfn "$mount_dir" "$TARGET_LINK" 2>/dev/null || cp -rs "$mount_dir"/* "$ORIGINALS_PATH/" 2>/dev/null || true
+    # If mount_dir is different from ORIGINALS_PATH, link it
+    if [ "$mount_dir" != "$ORIGINALS_PATH" ] && [[ "$ORIGINALS_PATH" != "$mount_dir"* ]]; then
+      mkdir -p "$ORIGINALS_PATH" 2>/dev/null || true
+      TARGET_LINK="$ORIGINALS_PATH/External_SSD"
+      echo "[SSD Detector] Symlinking $mount_dir to $TARGET_LINK..."
+      ln -sfn "$mount_dir" "$TARGET_LINK" 2>/dev/null || true
+    fi
 
     update_status "CONNECTED" "$dev_name" "$IMAGE_COUNT" "Plug & Play SSD active with $IMAGE_COUNT photos."
     trigger_photoprism_index

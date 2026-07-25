@@ -65,7 +65,22 @@ if [ -f "$SERVICE_FILE" ]; then
   echo "✅ Enabled and started ssd-automount.service daemon"
 fi
 
-# 6. Trigger immediate scan of existing mounted drives
+# 6. Ensure photoprism/.env exists
+ENV_FILE="$SCRIPT_DIR/../photoprism/.env"
+ENV_EXAMPLE="$SCRIPT_DIR/../photoprism/.env.example"
+if [ ! -f "$ENV_FILE" ] && [ -f "$ENV_EXAMPLE" ]; then
+  echo "📝 Creating photoprism/.env from template..."
+  cp "$ENV_EXAMPLE" "$ENV_FILE"
+fi
+
+# Detect existing SSD mount point if present
+EXISTING_MOUNT=$(grep -E "/mnt/|/media/" /proc/mounts | grep -v "tmpfs" | grep -v "proc" | awk '{print $2}' | grep -v "/media/external_ssd" | head -n 1)
+if [ -n "$EXISTING_MOUNT" ] && [ -f "$ENV_FILE" ]; then
+  echo "📌 Pointing PhotoPrism originals path to detected SSD: $EXISTING_MOUNT"
+  sed -i "s|^PHOTOPRISM_ORIGINALS_PATH=.*|PHOTOPRISM_ORIGINALS_PATH=$EXISTING_MOUNT|" "$ENV_FILE"
+fi
+
+# 7. Trigger immediate scan of existing mounted drives
 echo "🔍 Triggering initial scan of connected drives..."
 /usr/local/bin/ssd-auto-detector.sh mount /dev/sda1 2>/dev/null || /usr/local/bin/ssd-auto-detector.sh mount /dev/sdb1 2>/dev/null || true
 

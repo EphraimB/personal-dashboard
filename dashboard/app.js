@@ -347,13 +347,21 @@
         return { success: false, reason: 'Invalid API response format' };
       }
 
-      // If main query returned 0, try s:all query
+      // If main query returned 0, try fallback search queries (quality:0, s:all, merged:true)
       if (data.length === 0 && !config.albumQuery.trim()) {
-        const fallbackRes = await fetch(`${baseUrl}/api/v1/photos?count=1000&q=s:all`, { headers });
-        if (fallbackRes.ok) {
-          const fallbackData = await fallbackRes.json();
-          if (Array.isArray(fallbackData) && fallbackData.length > 0) {
-            data = fallbackData;
+        const candidateQueries = [
+          `${baseUrl}/api/v1/photos?count=1000&q=quality:0`,
+          `${baseUrl}/api/v1/photos?count=1000&q=s:all`,
+          `${baseUrl}/api/v1/photos?count=1000&q=merged:true`
+        ];
+        for (const fallbackUrl of candidateQueries) {
+          const fallbackRes = await fetch(fallbackUrl, { headers });
+          if (fallbackRes.ok) {
+            const fallbackData = await fallbackRes.json();
+            if (Array.isArray(fallbackData) && fallbackData.length > 0) {
+              data = fallbackData;
+              break;
+            }
           }
         }
       }
