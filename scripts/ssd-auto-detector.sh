@@ -32,8 +32,12 @@ EOF
 }
 
 trigger_photoprism_index() {
-  echo "[SSD Detector] Triggering PhotoPrism Auto-Index via CLI..."
   if command -v docker >/dev/null 2>&1; then
+    if docker exec photoprism pgrep -f "photoprism index" >/dev/null 2>&1; then
+      echo "[SSD Detector] Indexing is already running. Skipping duplicate trigger."
+      return 0
+    fi
+    echo "[SSD Detector] Triggering PhotoPrism Auto-Index via CLI..."
     docker exec photoprism photoprism index >/dev/null 2>&1 &
   fi
 }

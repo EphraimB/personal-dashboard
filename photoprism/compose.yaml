@@ -90,29 +90,7 @@ services:
       retries: 3
       start_period: 30s
 
-  # ----------------------------------------------------------------------------
-  # Plug & Play External SSD Auto-Detector Service (Sidecar Container)
-  # ----------------------------------------------------------------------------
-  ssd-watcher:
-    image: alpine:latest
-    container_name: ssd-watcher
-    restart: unless-stopped
-    command: >
-      sh -c "apk add --no-cache bash curl findutils util-linux &&
-             chmod +x /scripts/ssd-auto-detector.sh &&
-             /scripts/ssd-auto-detector.sh daemon"
-    environment:
-      PHOTOPRISM_URL: "http://photoprism:2342"
-      MOUNT_BASE: "/media/external_ssd"
-      PHOTOPRISM_ORIGINALS_PATH: "/photoprism/originals"
-    volumes:
-      - "../scripts:/scripts:ro"
-      - "/media:/media"
-      - "/mnt:/mnt"
-      - "/dev:/dev"
-      - "${PHOTOPRISM_ORIGINALS_PATH:-~/Pictures}:/photoprism/originals"
-    depends_on:
-      - photoprism
+ 
 
     # Uncomment this if you uncomment the MariaDB service below
     # depends_on:
