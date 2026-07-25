@@ -21,7 +21,9 @@ fi
 # 1. Install necessary automount tools (udisks2, ntfs-3g, exfat-fuse)
 echo "📦 Installing file system utilities and udisks2..."
 apt-get update -qq
-apt-get install -y -qq udisks2 ntfs-3g exfat-fuse hfsplus hfsutils curl inotify-tools > /dev/null
+for pkg in udisks2 ntfs-3g exfat-fuse curl inotify-tools hfsplus; do
+  apt-get install -y -qq "$pkg" > /dev/null 2>&1 || true
+done
 
 # 2. Create standard mount point directories
 MOUNT_BASE="/media/external_ssd"
