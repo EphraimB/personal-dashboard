@@ -54,6 +54,26 @@ Before running PhotoPrism on a Raspberry Pi, ensure your host environment meets 
 
 ---
 
+## 🔌 Plug & Play External SSD Setup
+
+The system includes automatic USB SSD detection. When you plug an external SSD or USB flash drive into the Raspberry Pi:
+1. The host/container automatically detects the drive insertion.
+2. It auto-mounts the file system and scans for photos (`.jpg`, `.heic`, `.png`, `.raw`, etc.).
+3. PhotoPrism automatically indexes the new media.
+4. The TV Dashboard instantly updates its photo stream without requiring browser reloads.
+
+### Setup Plug & Play Automounting (One-Time Setup):
+To enable system-level udev automounting on host Linux/Raspberry Pi OS:
+
+```bash
+# Run host setup script (installs udev rules & ssd-automount service)
+sudo ../scripts/setup-plug-and-play.sh
+```
+
+Alternatively, Docker Compose includes the containerized `ssd-watcher` sidecar service out-of-the-box which monitors connected USB media drives.
+
+---
+
 ## 📺 Setting Up Chromium Kiosk Mode on your Pi TV
 
 To automatically launch the TV Dashboard in full-screen Kiosk mode whenever your Raspberry Pi boots up and connects to your TV:

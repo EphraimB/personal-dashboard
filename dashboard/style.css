@@ -350,6 +350,29 @@ html, body {
   color: var(--color-green);
 }
 
+.stat-value.ssd-idle {
+  color: var(--color-text-dim);
+}
+
+.stat-value.ssd-connected {
+  color: var(--color-green);
+  text-shadow: 0 0 6px rgba(0, 255, 136, 0.4);
+}
+
+.stat-value.ssd-syncing {
+  color: var(--color-gold);
+  animation: pulse-sync 1.5s infinite alternate;
+}
+
+.stat-value.ssd-error {
+  color: var(--color-orange);
+}
+
+@keyframes pulse-sync {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+
 /* HUD Button Styling */
 .hud-btn {
   background: rgba(4, 6, 12, 0.85);

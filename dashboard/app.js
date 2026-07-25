@@ -102,6 +102,7 @@
   const elStatusPill = document.querySelector('.status-pill');
   const elPhotoCounter = document.getElementById('photo-index-counter');
   const elSourceBadge = document.getElementById('source-badge');
+  const elSsdBadge = document.getElementById('ssd-status-badge');
 
   const elPhotoTitle = document.getElementById('photo-title');
   const elMetaDate = document.getElementById('meta-date');
@@ -142,6 +143,42 @@
 
     setupEventListeners();
     fetchPhotosAndStart();
+    startSsdAndPhotoPolling();
+  }
+
+  function startSsdAndPhotoPolling() {
+    // Poll every 20 seconds for newly connected SSDs / newly indexed photos
+    setInterval(async () => {
+      const result = await fetchFromPhotoPrismWithFallback();
+      if (result.success && result.photos && result.photos.length > 0) {
+        if (!isConnectedToPhotoPrism) {
+          photoList = result.photos;
+          isConnectedToPhotoPrism = true;
+          elSourceBadge.textContent = 'PHOTOPRISM';
+          elSourceBadge.className = 'stat-value source-connected';
+          setSystemStatus(`ONLINE (${photoList.length} PHOTOS)`, true);
+          if (elSsdBadge) {
+            elSsdBadge.textContent = 'CONNECTED';
+            elSsdBadge.className = 'stat-value ssd-connected';
+          }
+          showPhoto(0);
+        } else if (result.photos.length !== photoList.length) {
+          console.log(`[SSD Sync] Library updated! Old count: ${photoList.length}, New count: ${result.photos.length}`);
+          photoList = result.photos;
+          setSystemStatus(`ONLINE (${photoList.length} PHOTOS)`, true);
+          if (elSsdBadge) {
+            elSsdBadge.textContent = `SSD (${photoList.length})`;
+            elSsdBadge.className = 'stat-value ssd-connected';
+          }
+        } else if (elSsdBadge) {
+          elSsdBadge.textContent = 'PLUG & PLAY';
+          elSsdBadge.className = 'stat-value ssd-connected';
+        }
+      } else if (!isConnectedToPhotoPrism && elSsdBadge) {
+        elSsdBadge.textContent = 'AUTO DETECT';
+        elSsdBadge.className = 'stat-value ssd-idle';
+      }
+    }, 20000);
   }
 
   function loadConfig() {
