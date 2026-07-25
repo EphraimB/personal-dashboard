@@ -73,10 +73,17 @@ if [ ! -f "$ENV_FILE" ] && [ -f "$ENV_EXAMPLE" ]; then
   cp "$ENV_EXAMPLE" "$ENV_FILE"
 fi
 
-# Detect existing SSD mount point if present
-EXISTING_MOUNT=$(grep -E "/mnt/|/media/" /proc/mounts | grep -v "tmpfs" | grep -v "proc" | awk '{print $2}' | grep -v "/media/external_ssd" | head -n 1)
-if [ -n "$EXISTING_MOUNT" ] && [ -f "$ENV_FILE" ]; then
-  echo "📌 Pointing PhotoPrism originals path to detected SSD: $EXISTING_MOUNT"
+# Detect exact USB SSD partition mount point (e.g. /media/external_ssd/sda1)
+EXISTING_MOUNT=$(grep -E "/media/external_ssd/|/media/pi/|/mnt/" /proc/mounts | awk '{print $2}' | grep -E "sd[a-z][0-9]" | head -n 1)
+if [ -z "$EXISTING_MOUNT" ]; then
+  EXISTING_MOUNT=$(ls -d /media/external_ssd/sd* 2>/dev/null | head -n 1)
+fi
+if [ -z "$EXISTING_MOUNT" ]; then
+  EXISTING_MOUNT="/media/external_ssd/sda1"
+fi
+
+if [ -f "$ENV_FILE" ]; then
+  echo "📌 Pointing PhotoPrism originals path to exact SSD partition: $EXISTING_MOUNT"
   sed -i "s|^PHOTOPRISM_ORIGINALS_PATH=.*|PHOTOPRISM_ORIGINALS_PATH=$EXISTING_MOUNT|" "$ENV_FILE"
 fi
 
