@@ -406,12 +406,15 @@
   }
 
   function transformPhotoItem(item, baseUrl) {
-    const token = sessionToken || config.password;
-    const tokenParam = token ? `&t=${encodeURIComponent(token)}` : '';
+    const token = sessionToken || config.password || 'public';
     const uid = item.UID || item.ID || item.Hash;
+    const hash = item.Hash || item.FileHash || uid;
     
-    // PhotoPrism photo download / view URL
-    const photoUrl = `${baseUrl}/api/v1/photos/${uid}/dl?${tokenParam}`;
+    // Use PhotoPrism /api/v1/t/:hash/:token/fit_2048 image stream endpoint.
+    // Avoid /api/v1/photos/:uid/dl which sets Content-Disposition: attachment
+    const photoUrl = hash 
+      ? `${baseUrl}/api/v1/t/${hash}/${token}/fit_2048`
+      : `${baseUrl}/api/v1/photos/${uid}/view`;
     
     const exifParts = [];
     if (item.FocalLength) exifParts.push(`${item.FocalLength}mm`);
