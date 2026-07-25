@@ -32,19 +32,12 @@ EOF
 }
 
 trigger_photoprism_index() {
-  echo "[SSD Detector] Triggering PhotoPrism Auto-Index via REST API..."
-  # Try triggering via HTTP API
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${PHOTOPRISM_URL}/api/v1/index" 2>/dev/null || echo "000")
-  
-  if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 204 ]; then
-    echo "[SSD Detector] PhotoPrism index triggered successfully (HTTP $HTTP_CODE)."
-  else
-    # Fallback to docker compose exec if running on host
-    if command -v docker >/dev/null 2>&1; then
-      echo "[SSD Detector] API call returned $HTTP_CODE. Attempting Docker CLI indexing fallback..."
-      docker exec photoprism photoprism index --all >/dev/null 2>&1 &
-    fi
+  echo "[SSD Detector] Triggering PhotoPrism Auto-Index..."
+  if command -v docker >/dev/null 2>&1; then
+    echo "[SSD Detector] Running docker exec photoprism index..."
+    docker exec photoprism photoprism index >/dev/null 2>&1 &
   fi
+  curl -s -X POST "${PHOTOPRISM_URL}/api/v1/index" 2>/dev/null || true
 }
 
 scan_and_index_drive() {
@@ -60,12 +53,11 @@ scan_and_index_drive() {
   echo "[SSD Detector] Discovered $IMAGE_COUNT photo files on external storage."
 
   if [ "$IMAGE_COUNT" -gt 0 ]; then
-    # Create symlink or subfolder in originals path if originals path exists
-    if [ -d "$ORIGINALS_PATH" ]; then
-      TARGET_LINK="$ORIGINALS_PATH/External_SSD"
-      echo "[SSD Detector] Symlinking $mount_dir to $TARGET_LINK..."
-      ln -sfn "$mount_dir" "$TARGET_LINK" 2>/dev/null || cp -rs "$mount_dir"/* "$ORIGINALS_PATH/" 2>/dev/null || true
-    fi
+    # Ensure originals path exists on host
+    mkdir -p "$ORIGINALS_PATH" 2>/dev/null || true
+    TARGET_LINK="$ORIGINALS_PATH/External_SSD"
+    echo "[SSD Detector] Symlinking $mount_dir to $TARGET_LINK..."
+    ln -sfn "$mount_dir" "$TARGET_LINK" 2>/dev/null || cp -rs "$mount_dir"/* "$ORIGINALS_PATH/" 2>/dev/null || true
 
     update_status "CONNECTED" "$dev_name" "$IMAGE_COUNT" "Plug & Play SSD active with $IMAGE_COUNT photos."
     trigger_photoprism_index

@@ -392,13 +392,6 @@
       if (searchTarget.includes(term)) return false;
     }
 
-    if (!item.CameraModel && item.Width && item.Height) {
-      const ratio = item.Width / item.Height;
-      if (Math.abs(ratio - 16/9) < 0.01 || Math.abs(ratio - 9/16) < 0.01 || Math.abs(ratio - 19.5/9) < 0.01) {
-        return false;
-      }
-    }
-
     return true;
   }
 

@@ -65,6 +65,10 @@ if [ -f "$SERVICE_FILE" ]; then
   echo "✅ Enabled and started ssd-automount.service daemon"
 fi
 
+# 6. Trigger immediate scan of existing mounted drives
+echo "🔍 Triggering initial scan of connected drives..."
+/usr/local/bin/ssd-auto-detector.sh mount /dev/sda1 2>/dev/null || /usr/local/bin/ssd-auto-detector.sh mount /dev/sdb1 2>/dev/null || true
+
 echo "------------------------------------------------------------------"
 echo "✨ Plug & Play Setup Complete!"
 echo "📌 External USB SSDs will now auto-mount to $MOUNT_BASE"
