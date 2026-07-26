@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const DEMO_PHOTOS = [
   {
     id: 'demo-1',
@@ -154,20 +157,36 @@ async function fetchGraphPhotos(token, folder, query, filterScreenshots) {
       endpoint = `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(query.trim())}')?$expand=thumbnails&$top=500`;
     }
 
-    const response = await fetch(endpoint, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    let items = [];
+    let currentEndpoint = endpoint;
+    let pageCount = 0;
 
-    if (response.status === 401 || response.status === 403) {
-      return { success: false, reason: 'OneDrive Token Expired / Access Denied. Re-run ./scripts/onedrive-login.sh' };
+    // Follow @odata.nextLink pagination loop to fetch all photo pages
+    while (currentEndpoint && pageCount < 10) {
+      pageCount++;
+      const response = await fetch(currentEndpoint, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache'
+        },
+        cache: 'no-store'
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        return { success: false, reason: 'OneDrive Token Expired / Access Denied. Re-run ./scripts/onedrive-login.sh' };
+      }
+
+      if (!response.ok) {
+        return { success: false, reason: `Microsoft Graph API Error HTTP ${response.status}` };
+      }
+
+      const data = await response.json();
+      if (data.value && data.value.length > 0) {
+        items = items.concat(data.value);
+      }
+
+      currentEndpoint = data['@odata.nextLink'] || null;
     }
-
-    if (!response.ok) {
-      return { success: false, reason: `Microsoft Graph API Error HTTP ${response.status}` };
-    }
-
-    const data = await response.json();
-    const items = data.value || [];
 
     if (items.length === 0) {
       return { success: false, reason: '0 Photos found in specified OneDrive location' };

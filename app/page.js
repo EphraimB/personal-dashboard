@@ -222,10 +222,11 @@ export default function TvDashboard() {
         folder: config.onedriveFolder,
         query: config.albumQuery,
         token: config.onedriveToken,
-        filterScreenshots: config.filterScreenshots ? 'true' : 'false'
+        filterScreenshots: config.filterScreenshots ? 'true' : 'false',
+        _t: Date.now().toString()
       });
 
-      const res = await fetch(`/api/onedrive/photos?${params.toString()}`);
+      const res = await fetch(`/api/onedrive/photos?${params.toString()}`, { cache: 'no-store' });
       const data = await res.json();
 
       if (data.success && data.photos && data.photos.length > 0) {
