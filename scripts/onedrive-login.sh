@@ -8,7 +8,8 @@
 
 set -e
 
-CLIENT_ID="${ONEDRIVE_CLIENT_ID:-1950a258-227b-4e31-a9cf-717495945fc2}" # Microsoft Public App Client ID
+# Default Client ID: Microsoft Office / OneDrive Public Client ID (Supports all Personal OneDrive & Work accounts)
+CLIENT_ID="${ONEDRIVE_CLIENT_ID:-d3590ed6-52b3-4102-aeff-aad2292ab01c}" 
 TENANT="${ONEDRIVE_TENANT:-consumers}" # 'consumers' for Personal OneDrive, 'common' or 'organizations' for Work/School
 SCOPE="offline_access Files.Read User.Read"
 TOKEN_FILE="$(dirname "$0")/../dashboard/onedrive_tokens.json"
@@ -19,7 +20,7 @@ echo "=================================================================="
 echo ""
 
 # 1. Request Device Code from Microsoft OAuth2 Endpoint
-echo "📡 Requesting Device Code from Microsoft (${TENANT})..."
+echo "📡 Requesting Device Code from Microsoft..."
 RESP=$(curl -s -X POST "https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/devicecode" \
   -d "client_id=${CLIENT_ID}&scope=offline_access%20Files.Read%20User.Read")
 
@@ -28,6 +29,17 @@ VERIFICATION_URI=$(echo "$RESP" | grep -o '"verification_uri":"[^"]*' | cut -d'"
 DEVICE_CODE=$(echo "$RESP" | grep -o '"device_code":"[^"]*' | cut -d'"' -f4)
 INTERVAL=$(echo "$RESP" | grep -o '"interval":[^,}]*' | cut -d':' -f2 | tr -d ' ')
 EXPIRES_IN=$(echo "$RESP" | grep -o '"expires_in":[^,}]*' | cut -d':' -f2 | tr -d ' ')
+
+if [ -z "$USER_CODE" ] || [ -z "$DEVICE_CODE" ]; then
+  # Fallback to common endpoint if consumers failed
+  RESP=$(curl -s -X POST "https://login.microsoftonline.com/common/oauth2/v2.0/devicecode" \
+    -d "client_id=14d82eec-204b-4c2f-b7e8-296a70dab67e&scope=offline_access%20Files.Read%20User.Read")
+  USER_CODE=$(echo "$RESP" | grep -o '"user_code":"[^"]*' | cut -d'"' -f4)
+  VERIFICATION_URI=$(echo "$RESP" | grep -o '"verification_uri":"[^"]*' | cut -d'"' -f4)
+  DEVICE_CODE=$(echo "$RESP" | grep -o '"device_code":"[^"]*' | cut -d'"' -f4)
+  CLIENT_ID="14d82eec-204b-4c2f-b7e8-296a70dab67e"
+  TENANT="common"
+fi
 
 if [ -z "$USER_CODE" ] || [ -z "$DEVICE_CODE" ]; then
   echo "❌ Failed to retrieve Device Code from Microsoft."

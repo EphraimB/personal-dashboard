@@ -248,7 +248,7 @@
 
   async function refreshOneDriveAccessToken(refreshToken, clientId, tenant) {
     try {
-      const cId = clientId || '1950a258-227b-4e31-a9cf-717495945fc2';
+      const cId = clientId || 'd3590ed6-52b3-4102-aeff-aad2292ab01c';
       const t = tenant || activeTenant || 'consumers';
       const params = new URLSearchParams();
       params.append('client_id', cId);
@@ -311,7 +311,7 @@
   async function fetchFromOneDrive() {
     let token = config.onedriveToken.trim();
     let refreshToken = '';
-    let clientId = '1950a258-227b-4e31-a9cf-717495945fc2';
+    let clientId = 'd3590ed6-52b3-4102-aeff-aad2292ab01c';
     let tenant = 'consumers';
 
     // Check local token file created by ./scripts/onedrive-login.sh over SSH
