@@ -6,17 +6,23 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-1',
     title: 'Ares Habitat Surface Survey',
+    description: 'Atmospheric survey over the eastern flank of Ares Crater during late afternoon solar alignment.',
     date: '2026-07-21 18:45',
-    location: 'Ares Crater, Mars System',
-    camera: 'Ares Rover Optical Cam 4K',
+    location: 'Ares Crater, Mars',
+    latitude: 18.45,
+    longitude: -66.10,
+    camera: 'Optical Rover Cam 4K',
     exif: '24mm • f/4.0 • 1/1000s • ISO 100',
     url: 'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?q=80&w=2000&auto=format&fit=crop'
   },
   {
     id: 'demo-2',
     title: 'Nebula Horizon Over City',
+    description: 'Long exposure nocturnal view of city lights glowing beneath passing cloud cover.',
     date: '2026-06-15 22:10',
-    location: 'Citizen Suite Penthouse',
+    location: 'New York, United States',
+    latitude: 40.71,
+    longitude: -74.00,
     camera: 'Sony Alpha A7 IV',
     exif: '35mm • f/1.8 • 1/60s • ISO 800',
     url: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=2000&auto=format&fit=crop'
@@ -24,8 +30,11 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-3',
     title: 'Pressurized Mountain Pass',
+    description: 'Crisp alpine morning view along the high mountain transit ridge.',
     date: '2026-05-04 11:30',
-    location: 'Sector 02 Alpine Loop',
+    location: 'Interlaken, Switzerland',
+    latitude: 46.57,
+    longitude: 7.91,
     camera: 'Fujifilm X-T5',
     exif: '16mm • f/8.0 • 1/250s • ISO 200',
     url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2000&auto=format&fit=crop'
@@ -33,8 +42,11 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-4',
     title: 'Cosmic Reflection Lake',
+    description: 'Serene sunrise framing coastal bio-dome reflection pools at first light.',
     date: '2026-04-12 05:20',
-    location: 'Northern Colony Sanctuary',
+    location: 'Honolulu, Hawaii',
+    latitude: 21.30,
+    longitude: -157.85,
     camera: 'Canon EOS R5',
     exif: '50mm • f/1.4 • 1/4000s • ISO 100',
     url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2000&auto=format&fit=crop'
@@ -42,13 +54,33 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-5',
     title: 'Deep Space Orbital Aurora',
+    description: 'Spectacular aurora borealis ribbons shimmering over polar ice fields.',
     date: '2026-03-29 02:15',
-    location: 'Ares City Orbital Platform',
+    location: 'Reykjavik, Iceland',
+    latitude: 64.14,
+    longitude: -21.94,
     camera: 'Orbital Tele-Array Mark III',
     exif: '85mm • f/1.2 • 1/30s • ISO 1600',
     url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=2000&auto=format&fit=crop'
   }
 ];
+
+function formatHumanDate(rawDate) {
+  if (!rawDate || rawDate === 'Unknown Date') return 'Date Taken Unknown';
+  try {
+    const clean = rawDate.includes('T') ? rawDate : rawDate.replace(' ', 'T');
+    const d = new Date(clean);
+    if (isNaN(d.getTime())) return rawDate;
+
+    const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
+    const monthDay = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    return `${weekday}, ${monthDay} • ${timeStr}`;
+  } catch (e) {
+    return rawDate;
+  }
+}
 
 export default function TvDashboard() {
   const [config, setConfig] = useState({
@@ -60,7 +92,11 @@ export default function TvDashboard() {
     enableKenBurns: false,
     enableScanlines: true,
     enableFallbackDemo: true,
-    imageFitMode: 'contain' // 'contain' for full un-cropped photos, 'cover' for full bleed
+    imageFitMode: 'contain', // 'contain' for full un-cropped photos, 'cover' for full bleed
+    uiScale: '150', // '100', '125', '150', '175' for 4K TV font scaling
+    showDescription: true,
+    showHudCard: true,
+    clockFormat: '12' // '12' or '24'
   });
 
   const [photoList, setPhotoList] = useState(DEMO_PHOTOS);
@@ -71,12 +107,13 @@ export default function TvDashboard() {
   const [isOnline, setIsOnline] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [testResult, setTestResult] = useState('');
+  const [showControls, setShowControls] = useState(true);
 
   // Clock state
   const [clockTime, setClockTime] = useState('00:00:00');
   const [clockAmPm, setClockAmPm] = useState('AM');
   const [clockDate, setClockDate] = useState('MON, JAN 01, 2026');
-  const [aresSol, setAresSol] = useState('ARES SOL: 0.000');
+  const [aresSolarClock, setAresSolarClock] = useState('38 / 605 / 0080');
 
   // Layer transition state
   const [activeLayer, setActiveLayer] = useState(1);
@@ -89,18 +126,51 @@ export default function TvDashboard() {
   const slideTimerRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const startTimeRef = useRef(0);
+  const idleTimerRef = useRef(null);
 
-  // Load config from localStorage
+  // Load config from localStorage & URL scale override
   useEffect(() => {
     try {
       const saved = localStorage.getItem('ares_tv_dashboard_config');
-      if (saved) {
-        setConfig((prev) => ({ ...prev, ...JSON.parse(saved) }));
+      let loaded = saved ? JSON.parse(saved) : {};
+      
+      // Allow URL parameter scale override (e.g. ?scale=150 or ?scale=175)
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlScale = urlParams.get('scale');
+      if (urlScale && ['100', '125', '150', '175'].includes(urlScale)) {
+        loaded.uiScale = urlScale;
       }
+
+      setConfig((prev) => ({ ...prev, ...loaded }));
     } catch (e) {
       // localStorage unavailable
     }
   }, []);
+
+  // Mouse movement & idle detection for TV ambient mode
+  useEffect(() => {
+    const handleMouseMove = () => {
+      setShowControls(true);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => {
+        if (!isModalOpen) setShowControls(false);
+      }, 3500);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchstart', handleMouseMove);
+    
+    // Initial auto-hide timer
+    idleTimerRef.current = setTimeout(() => {
+      setShowControls(false);
+    }, 4000);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchstart', handleMouseMove);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [isModalOpen]);
 
   // Save config helper
   const saveConfig = (newConfig) => {
@@ -110,7 +180,7 @@ export default function TvDashboard() {
     } catch (e) {}
   };
 
-  // Clock interval
+  // Clock interval & Exhibit 04 Solar Clock calculation (38 / 605 / 0080)
   useEffect(() => {
     const updateClock = () => {
       const now = new Date();
@@ -128,9 +198,16 @@ export default function TvDashboard() {
       const options = { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' };
       setClockDate(now.toLocaleDateString('en-US', options).toUpperCase());
 
+      // Exhibit 04 Martian Solar Clock: MY / Sol / Decimal Sol Fraction (4 digits)
+      // Epoch start Nov 12, 2024 = MY 38, MSD 53630.0
       const julianDate = now.getTime() / 86400000 + 2440587.5;
       const msd = (julianDate - 2451549.5) / 1.027491252 + 44796.0;
-      setAresSol(`ARES SOL: ${msd.toFixed(3)}`);
+      const solsInMY38 = msd - 53630.0;
+      const solNum = Math.floor(solsInMY38);
+      const solFracNum = Math.floor((solsInMY38 - solNum) * 10000);
+      const fracStr = String(Math.max(0, solFracNum)).padStart(4, '0');
+
+      setAresSolarClock(`38 / ${solNum} / ${fracStr}`);
     };
 
     updateClock();
@@ -145,17 +222,22 @@ export default function TvDashboard() {
         folder: config.onedriveFolder,
         query: config.albumQuery,
         token: config.onedriveToken,
-        filterScreenshots: config.filterScreenshots ? 'true' : 'false'
+        filterScreenshots: config.filterScreenshots ? 'true' : 'false',
+        _t: Date.now().toString()
       });
 
-      const res = await fetch(`/api/onedrive/photos?${params.toString()}`);
+      const res = await fetch(`/api/onedrive/photos?${params.toString()}`, { cache: 'no-store' });
       const data = await res.json();
 
       if (data.success && data.photos && data.photos.length > 0) {
-        setPhotoList(data.photos);
+        const cleanedPhotos = data.photos.map(p => ({
+          ...p,
+          location: (p.location && p.location.includes('°')) ? 'Personal Collection' : (p.location || 'Personal Collection')
+        }));
+        setPhotoList(cleanedPhotos);
         setIsConnectedToOneDrive(true);
         setIsOnline(true);
-        setSysStatus(`ONLINE (${data.photos.length} PHOTOS)`);
+        setSysStatus(`ONLINE (${cleanedPhotos.length} PHOTOS)`);
       } else if (config.enableFallbackDemo) {
         setPhotoList(DEMO_PHOTOS);
         setIsConnectedToOneDrive(false);
@@ -262,6 +344,10 @@ export default function TvDashboard() {
         case 'S':
           saveConfig({ ...config, enableScanlines: !config.enableScanlines });
           break;
+        case 'd':
+        case 'D':
+          saveConfig({ ...config, showDescription: !config.showDescription });
+          break;
         case 'm':
         case 'M':
         case 'c':
@@ -304,7 +390,7 @@ export default function TvDashboard() {
   };
 
   return (
-    <>
+    <div className={`ares-tv-app ui-scale-${config.uiScale || '150'} ${showControls ? 'user-active' : 'user-idle'}`}>
       {/* Background Slideshow Viewport */}
       <div className="slideshow-viewport">
         <div
@@ -316,11 +402,21 @@ export default function TvDashboard() {
           style={{ backgroundImage: layer2Url ? `url("${layer2Url}")` : 'none' }}
         />
         <div className="photo-overlay-vignette" />
+
+        {/* Translucent Hero "Photo Taken" Date & Time Overlay */}
+        <div className="photo-taken-hero-overlay">
+          <div className="hero-date-badge">
+            <span className="badge-icon">📅</span>
+            <div className="badge-text-group">
+              <span className="badge-sub-label">PHOTO TAKEN</span>
+              <span className="badge-main-date">{formatHumanDate(currentPhoto.date)}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Overlays */}
       <div className="city-matrix-underlay" />
-      <div className={`hud-scanline ${config.enableScanlines ? '' : 'disabled'}`} />
 
       {/* Screen Corner Brackets */}
       <div className="avatar-corner avatar-corner--tl" />
@@ -339,7 +435,7 @@ export default function TvDashboard() {
           </span>
           <div className="hud-title-stack">
             <span className="hud-sys-tag">// ARES CITY OS</span>
-            <span className="hud-sys-name">NEXT.JS TV DASHBOARD</span>
+            <span className="hud-sys-name">ARES CITY TV DASHBOARD</span>
           </div>
           <span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>
             <span className="active-pulse-dot" />
@@ -347,16 +443,17 @@ export default function TvDashboard() {
           </span>
         </div>
 
-        {/* Center Clock */}
+        {/* Center Clock & Solar Clock Sector */}
         <div className="hud-clock-sector">
           <div className="time-main-display">
-            <span>{clockTime}</span>
+            <span className="clock-time-val">{clockTime}</span>
             <span id="clock-ampm">{clockAmPm}</span>
+            <span className="clock-sep">•</span>
+            <span className="clock-date-val">{clockDate}</span>
           </div>
-          <div className="clock-sub-details">
-            <span className="hud-text-highlight">{clockDate}</span>
-            <span className="hud-divider">|</span>
-            <span className="hud-text-dim">{aresSol}</span>
+          <div className="ares-solar-clock-display">
+            <span className="solar-label">ARES SOLAR CLOCK //</span>
+            <span className="solar-digits">{aresSolarClock}</span>
           </div>
         </div>
 
@@ -380,7 +477,7 @@ export default function TvDashboard() {
               {isConnectedToOneDrive ? 'ONEDRIVE' : 'DEMO STREAM'}
             </span>
           </div>
-          <button className="hud-btn" onClick={() => setIsModalOpen(true)} title="Open Settings (M)">
+          <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)} title="Open Settings (M)">
             [ ⚙ CONFIG ]
           </button>
         </div>
@@ -396,8 +493,8 @@ export default function TvDashboard() {
 
           <div className="meta-card-header">
             <div className="meta-title-group">
-              <span className="meta-sector-label">// TELEMETRY // CURRENT ASSET</span>
-              <h2 className="photo-title">{currentPhoto.title}</h2>
+              <span className="meta-sector-label">📍 LOCATION // {currentPhoto.location}</span>
+              <h2 className="photo-title">{currentPhoto.description || currentPhoto.title}</h2>
             </div>
             <div className="meta-controls-quick">
               <button
@@ -431,26 +528,6 @@ export default function TvDashboard() {
               <button className="hud-btn hud-btn-icon" onClick={toggleFullscreen} title="Toggle Fullscreen (F)">
                 ⛶
               </button>
-            </div>
-          </div>
-
-          {/* EXIF Telemetry Row */}
-          <div className="meta-telemetry-grid">
-            <div className="telemetry-item">
-              <span className="t-label">DATE TAKEN</span>
-              <span className="t-value">{currentPhoto.date}</span>
-            </div>
-            <div className="telemetry-item">
-              <span className="t-label">LOCATION</span>
-              <span className="t-value">{currentPhoto.location}</span>
-            </div>
-            <div className="telemetry-item">
-              <span className="t-label">CAMERA</span>
-              <span className="t-value">{currentPhoto.camera}</span>
-            </div>
-            <div className="telemetry-item">
-              <span className="t-label">EXIF</span>
-              <span className="t-value">{currentPhoto.exif}</span>
             </div>
           </div>
 
@@ -559,6 +636,28 @@ export default function TvDashboard() {
               <div className="settings-group">
                 <h4 className="group-title">// SLIDESHOW & DISPLAY</h4>
                 <div className="form-row">
+                  <label>4K TV UI Text Scale:</label>
+                  <select
+                    value={config.uiScale || '150'}
+                    onChange={(e) => setConfig({ ...config, uiScale: e.target.value })}
+                    style={{
+                      background: 'rgba(0, 0, 0, 0.6)',
+                      border: '1px solid var(--color-hud-border-cyan)',
+                      color: 'var(--color-cyan)',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.85rem',
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      outline: 'none'
+                    }}
+                  >
+                    <option value="100">100% Standard (Desktop)</option>
+                    <option value="125">125% Large Display</option>
+                    <option value="150">150% Ultra 4K TV (Recommended)</option>
+                    <option value="175">175% Giant TV Font</option>
+                  </select>
+                </div>
+                <div className="form-row">
                   <label>Photo Sizing / Fit Mode:</label>
                   <select
                     value={config.imageFitMode || 'contain'}
@@ -568,7 +667,7 @@ export default function TvDashboard() {
                       border: '1px solid var(--color-hud-border-cyan)',
                       color: 'var(--color-cyan)',
                       fontFamily: 'var(--font-mono)',
-                      fontSize: '0.8rem',
+                      fontSize: '0.85rem',
                       padding: '8px 12px',
                       borderRadius: 6,
                       outline: 'none'
@@ -587,6 +686,15 @@ export default function TvDashboard() {
                     value={config.slideDuration}
                     onChange={(e) => setConfig({ ...config, slideDuration: parseInt(e.target.value) || 15 })}
                   />
+                </div>
+                <div className="form-row checkbox-row">
+                  <input
+                    type="checkbox"
+                    id="cfg-desc"
+                    checked={config.showDescription}
+                    onChange={(e) => setConfig({ ...config, showDescription: e.target.checked })}
+                  />
+                  <label htmlFor="cfg-desc">Display Photo Description & Caption</label>
                 </div>
                 <div className="form-row checkbox-row">
                   <input
@@ -623,6 +731,7 @@ export default function TvDashboard() {
             <div className="shortcuts-hint">
               <span className="hint-key">◀/▶</span> Skip &nbsp;
               <span className="hint-key">SPACE</span> Pause &nbsp;
+              <span className="hint-key">D</span> Description &nbsp;
               <span className="hint-key">F</span> Fullscreen &nbsp;
               <span className="hint-key">S</span> Scanlines &nbsp;
               <span className="hint-key">M</span> Settings
@@ -640,6 +749,6 @@ export default function TvDashboard() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
