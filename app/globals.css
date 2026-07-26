@@ -35,6 +35,7 @@
   margin: 0;
   padding: 0;
   user-select: none;
+  cursor: none !important;
 }
 
 html, body {
@@ -45,6 +46,7 @@ html, body {
   font-family: var(--font-mono);
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
+  cursor: none !important;
 }
 
 /* ==============================================================================
@@ -114,27 +116,6 @@ html, body {
   pointer-events: none;
   z-index: 1;
   opacity: 0.6;
-}
-
-.hud-scanline {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(255,255,255,0),
-    rgba(255,255,255,0) 50%,
-    rgba(0, 0, 0, 0.3) 50%,
-    rgba(0, 0, 0, 0.3)
-  );
-  background-size: 100% 4px;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0.75;
-  transition: opacity var(--transition-fast);
-}
-
-.hud-scanline.disabled {
-  opacity: 0;
 }
 
 /* Corner Brackets */
@@ -569,3 +550,218 @@ html, body {
 
 .btn-primary { background: var(--color-orange); color: #000; }
 .btn-primary:hover { background: #ff7043; box-shadow: 0 0 20px var(--color-orange-glow); }
+
+/* ==============================================================================
+   4K TV AMBIENT READ-ONLY & ULTRA-SCALE SYSTEM
+   ============================================================================== */
+
+.ares-tv-app {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Dynamic UI Scale Classes */
+.ui-scale-100 { font-size: 14px; }
+.ui-scale-125 { font-size: 17px; }
+.ui-scale-150 { font-size: 21px; } /* Recommended for 4K TV */
+.ui-scale-175 { font-size: 25px; } /* Giant font size */
+
+/* Auto-Hiding Controls for Clean Read-Only Ambient TV Mode */
+.meta-controls-quick,
+.config-hud-btn {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.user-idle .meta-controls-quick,
+.user-idle .config-hud-btn {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+}
+
+.user-active .meta-controls-quick,
+.user-active .config-hud-btn {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* 4K Header & Clock Enhancement */
+.system-hud-bar {
+  height: clamp(68px, 6vw, 110px);
+  padding: 0 32px;
+}
+
+.time-main-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-title);
+  font-size: clamp(1.8rem, 3.2vw, 4.4rem);
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--color-cyan);
+  text-shadow: 0 0 18px var(--color-cyan-glow);
+  line-height: 1;
+}
+
+.clock-date-val {
+  color: var(--color-cyan);
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: 2px;
+}
+
+.clock-sep {
+  color: var(--color-orange);
+  margin: 0 4px;
+}
+
+#clock-ampm {
+  font-size: clamp(0.9rem, 1.4vw, 1.8rem);
+  color: var(--color-orange);
+  margin-left: 4px;
+  text-shadow: 0 0 10px var(--color-orange-glow);
+}
+
+.ares-solar-clock-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(0.75rem, 1.1vw, 1.35rem);
+  letter-spacing: 2px;
+  margin-top: 5px;
+}
+
+.solar-label {
+  color: var(--color-orange);
+  font-weight: 700;
+  font-size: 0.85em;
+}
+
+.solar-digits {
+  color: #ffb300;
+  font-weight: 900;
+  font-family: var(--font-mono);
+  text-shadow: 0 0 12px rgba(255, 179, 0, 0.55);
+}
+
+.hud-sys-tag {
+  font-size: clamp(0.6rem, 0.8vw, 0.95rem);
+}
+
+.hud-sys-name {
+  font-size: clamp(1rem, 1.3vw, 1.6rem);
+}
+
+.status-pill {
+  font-size: clamp(0.7rem, 0.9vw, 1.1rem);
+  padding: 6px 14px;
+}
+
+.stat-label {
+  font-size: clamp(0.6rem, 0.8vw, 0.9rem);
+}
+
+.stat-value {
+  font-size: clamp(0.85rem, 1.1vw, 1.35rem);
+}
+
+/* Photo Description & Bottom HUD Card Revamp */
+.hud-bottom-overlay {
+  bottom: clamp(20px, 3.5vw, 48px);
+  left: clamp(24px, 4vw, 64px);
+  right: clamp(24px, 4vw, 64px);
+}
+
+.photo-meta-card {
+  padding: clamp(18px, 2.2vw, 32px) clamp(22px, 2.8vw, 40px);
+  border-width: 2px;
+}
+
+.meta-sector-label {
+  font-size: clamp(0.65rem, 0.9vw, 1.15rem);
+  color: var(--color-cyan);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.photo-title {
+  font-family: var(--font-sans);
+  font-size: clamp(1.15rem, 1.75vw, 2.35rem);
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  line-height: 1.45;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.progress-bar-container {
+  height: clamp(3.5px, 0.5vw, 7px);
+  margin-top: clamp(12px, 1.5vw, 20px);
+}
+
+/* ==============================================================================
+   TRANSLUCENT HERO "PHOTO TAKEN" DATE & TIME OVERLAY
+   ============================================================================== */
+
+.photo-taken-hero-overlay {
+  position: absolute;
+  top: clamp(82px, 7.5vw, 130px);
+  left: clamp(24px, 4vw, 64px);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.hero-date-badge {
+  background: rgba(4, 6, 12, 0.55);
+  border: 1.5px solid var(--color-hud-border-cyan);
+  border-radius: 12px;
+  padding: clamp(8px, 1.2vw, 16px) clamp(16px, 2vw, 28px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 240, 255, 0.15);
+  animation: heroBadgeFadeIn 0.8s ease-out forwards;
+}
+
+@keyframes heroBadgeFadeIn {
+  0% { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.badge-icon {
+  font-size: clamp(1.2rem, 1.8vw, 2.2rem);
+}
+
+.badge-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.badge-sub-label {
+  font-size: clamp(0.55rem, 0.75vw, 0.9rem);
+  color: var(--color-cyan);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.badge-main-date {
+  font-family: var(--font-sans);
+  font-size: clamp(1rem, 1.45vw, 1.95rem);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+
