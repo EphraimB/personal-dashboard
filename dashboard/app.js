@@ -244,15 +244,18 @@
     return null;
   }
 
-  async function refreshOneDriveAccessToken(refreshToken, clientId) {
+  let activeTenant = 'consumers';
+
+  async function refreshOneDriveAccessToken(refreshToken, clientId, tenant) {
     try {
-      const cId = clientId || '0614e717-b1a7-47b8-9369-34b868615b3c';
+      const cId = clientId || '1950a258-227b-4e31-a9cf-717495945fc2';
+      const t = tenant || activeTenant || 'consumers';
       const params = new URLSearchParams();
       params.append('client_id', cId);
       params.append('grant_type', 'refresh_token');
       params.append('refresh_token', refreshToken);
 
-      const res = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+      const res = await fetch(`https://login.microsoftonline.com/${t}/oauth2/v2.0/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params.toString()
@@ -308,7 +311,8 @@
   async function fetchFromOneDrive() {
     let token = config.onedriveToken.trim();
     let refreshToken = '';
-    let clientId = '0614e717-b1a7-47b8-9369-34b868615b3c';
+    let clientId = '1950a258-227b-4e31-a9cf-717495945fc2';
+    let tenant = 'consumers';
 
     // Check local token file created by ./scripts/onedrive-login.sh over SSH
     const localTokens = await loadTokensFromFile();
@@ -316,7 +320,9 @@
       if (localTokens.access_token) token = localTokens.access_token;
       if (localTokens.refresh_token) refreshToken = localTokens.refresh_token;
       if (localTokens.client_id) clientId = localTokens.client_id;
+      if (localTokens.tenant) tenant = localTokens.tenant;
     }
+    activeTenant = tenant;
 
     if (!token && !refreshToken) {
       return { success: false, reason: 'No OneDrive credentials found. Run ./scripts/onedrive-login.sh over SSH' };

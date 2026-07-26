@@ -8,7 +8,8 @@
 
 set -e
 
-CLIENT_ID="${ONEDRIVE_CLIENT_ID:-0614e717-b1a7-47b8-9369-34b868615b3c}" # Standard Microsoft Public Client ID or custom
+CLIENT_ID="${ONEDRIVE_CLIENT_ID:-1950a258-227b-4e31-a9cf-717495945fc2}" # Microsoft Public App Client ID
+TENANT="${ONEDRIVE_TENANT:-consumers}" # 'consumers' for Personal OneDrive, 'common' or 'organizations' for Work/School
 SCOPE="offline_access Files.Read User.Read"
 TOKEN_FILE="$(dirname "$0")/../dashboard/onedrive_tokens.json"
 
@@ -18,10 +19,9 @@ echo "=================================================================="
 echo ""
 
 # 1. Request Device Code from Microsoft OAuth2 Endpoint
-echo "📡 Requesting Device Code from Microsoft..."
-RESP=$(curl -s -X POST "https://login.microsoftonline.com/common/oauth2/v2.0/devicecode" \
-  -d "client_id=${CLIENT_ID}" \
-  -d "scope=${SCOPE}")
+echo "📡 Requesting Device Code from Microsoft (${TENANT})..."
+RESP=$(curl -s -X POST "https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/devicecode" \
+  -d "client_id=${CLIENT_ID}&scope=offline_access%20Files.Read%20User.Read")
 
 USER_CODE=$(echo "$RESP" | grep -o '"user_code":"[^"]*' | cut -d'"' -f4)
 VERIFICATION_URI=$(echo "$RESP" | grep -o '"verification_uri":"[^"]*' | cut -d'"' -f4)
@@ -59,10 +59,8 @@ while [ $ELAPSED -lt $EXPIRES_IN ]; do
   sleep $INTERVAL
   ELAPSED=$((ELAPSED + INTERVAL))
 
-  POLL_RES=$(curl -s -X POST "https://login.microsoftonline.com/common/oauth2/v2.0/token" \
-    -d "client_id=${CLIENT_ID}" \
-    -d "grant_type=urn:ietf:params:oauth:grant-type:device_code" \
-    -d "device_code=${DEVICE_CODE}")
+  POLL_RES=$(curl -s -X POST "https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/token" \
+    -d "client_id=${CLIENT_ID}&grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code=${DEVICE_CODE}")
 
   ERROR=$(echo "$POLL_RES" | grep -o '"error":"[^"]*' | cut -d'"' -f4 || true)
 
@@ -102,6 +100,7 @@ mkdir -p "$(dirname "$TOKEN_FILE")"
 cat <<EOF > "$TOKEN_FILE"
 {
   "client_id": "$CLIENT_ID",
+  "tenant": "$TENANT",
   "access_token": "$ACCESS_TOKEN",
   "refresh_token": "$REFRESH_TOKEN",
   "updated_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
