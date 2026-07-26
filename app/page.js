@@ -113,7 +113,7 @@ export default function TvDashboard() {
   const [clockTime, setClockTime] = useState('00:00:00');
   const [clockAmPm, setClockAmPm] = useState('AM');
   const [clockDate, setClockDate] = useState('MON, JAN 01, 2026');
-  const [aresSol, setAresSol] = useState('ARES SOL: 0.000');
+  const [aresSolarClock, setAresSolarClock] = useState('38 / 605 / 0080');
 
   // Layer transition state
   const [activeLayer, setActiveLayer] = useState(1);
@@ -180,7 +180,7 @@ export default function TvDashboard() {
     } catch (e) {}
   };
 
-  // Clock interval
+  // Clock interval & Exhibit 04 Solar Clock calculation (38 / 605 / 0080)
   useEffect(() => {
     const updateClock = () => {
       const now = new Date();
@@ -198,9 +198,16 @@ export default function TvDashboard() {
       const options = { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' };
       setClockDate(now.toLocaleDateString('en-US', options).toUpperCase());
 
+      // Exhibit 04 Martian Solar Clock: MY / Sol / Decimal Sol Fraction (4 digits)
+      // Epoch start Nov 12, 2024 = MY 38, MSD 53630.0
       const julianDate = now.getTime() / 86400000 + 2440587.5;
       const msd = (julianDate - 2451549.5) / 1.027491252 + 44796.0;
-      setAresSol(`ARES SOL: ${msd.toFixed(3)}`);
+      const solsInMY38 = msd - 53630.0;
+      const solNum = Math.floor(solsInMY38);
+      const solFracNum = Math.floor((solsInMY38 - solNum) * 10000);
+      const fracStr = String(Math.max(0, solFracNum)).padStart(4, '0');
+
+      setAresSolarClock(`38 / ${solNum} / ${fracStr}`);
     };
 
     updateClock();
@@ -405,7 +412,6 @@ export default function TvDashboard() {
 
       {/* Overlays */}
       <div className="city-matrix-underlay" />
-      <div className={`hud-scanline ${config.enableScanlines ? '' : 'disabled'}`} />
 
       {/* Screen Corner Brackets */}
       <div className="avatar-corner avatar-corner--tl" />
@@ -432,16 +438,17 @@ export default function TvDashboard() {
           </span>
         </div>
 
-        {/* Center Clock */}
+        {/* Center Clock & Solar Clock Sector */}
         <div className="hud-clock-sector">
           <div className="time-main-display">
-            <span>{clockTime}</span>
+            <span className="clock-time-val">{clockTime}</span>
             <span id="clock-ampm">{clockAmPm}</span>
+            <span className="clock-sep">•</span>
+            <span className="clock-date-val">{clockDate}</span>
           </div>
-          <div className="clock-sub-details">
-            <span className="hud-text-highlight">{clockDate}</span>
-            <span className="hud-divider">|</span>
-            <span className="hud-text-dim">{aresSol}</span>
+          <div className="ares-solar-clock-display">
+            <span className="solar-label">ARES SOLAR CLOCK //</span>
+            <span className="solar-digits">{aresSolarClock}</span>
           </div>
         </div>
 
