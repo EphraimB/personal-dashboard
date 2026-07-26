@@ -205,6 +205,40 @@ function isScreenshot(item) {
   return false;
 }
 
+const geocodeCache = new Map();
+
+async function reverseGeocode(lat, lon) {
+  if (!lat || !lon) return null;
+  const key = `${Number(lat).toFixed(3)},${Number(lon).toFixed(3)}`;
+  if (geocodeCache.has(key)) return geocodeCache.get(key);
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`, {
+      headers: { 'User-Agent': 'PersonalDashboardTV/2.0' },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      const addr = data.address || {};
+      const place = addr.city || addr.town || addr.village || addr.municipality || addr.county || addr.state || '';
+      const country = addr.country || '';
+      const formatted = [place, country].filter(Boolean).join(', ');
+      if (formatted) {
+        geocodeCache.set(key, formatted);
+        return formatted;
+      }
+    }
+  } catch (e) {
+    // Ignore rate limit or offline timeout
+  }
+  return null;
+}
+
 function cleanTitle(rawName) {
   if (!rawName) return 'Captured Moment';
   let cleaned = rawName
