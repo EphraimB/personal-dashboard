@@ -1,0 +1,12 @@
+services:
+  tv-dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: tv-dashboard
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+      - ./dashboard/onedrive_tokens.json:/usr/share/nginx/html/onedrive_tokens.json:ro
