@@ -59,7 +59,8 @@ export default function TvDashboard() {
     slideDuration: 15,
     enableKenBurns: true,
     enableScanlines: true,
-    enableFallbackDemo: true
+    enableFallbackDemo: true,
+    imageFitMode: 'contain' // 'contain' for full un-cropped photos, 'cover' for full bleed
   });
 
   const [photoList, setPhotoList] = useState(DEMO_PHOTOS);
@@ -188,15 +189,16 @@ export default function TvDashboard() {
     if (!currentPhoto) return;
 
     const kenburnsClass = currentIndex % 2 === 0 ? 'kenburns-1' : 'kenburns-2';
+    const fitClass = config.imageFitMode === 'contain' ? 'fit-contain' : '';
 
     if (activeLayer === 1) {
       setLayer2Url(currentPhoto.url);
-      setLayer2Class(`photo-layer ${config.enableKenBurns ? kenburnsClass : ''} active`);
+      setLayer2Class(`photo-layer ${fitClass} ${config.enableKenBurns ? kenburnsClass : ''} active`);
       setLayer1Class((prev) => prev.replace(' active', ''));
       setActiveLayer(2);
     } else {
       setLayer1Url(currentPhoto.url);
-      setLayer1Class(`photo-layer ${config.enableKenBurns ? kenburnsClass : ''} active`);
+      setLayer1Class(`photo-layer ${fitClass} ${config.enableKenBurns ? kenburnsClass : ''} active`);
       setLayer2Class((prev) => prev.replace(' active', ''));
       setActiveLayer(1);
     }
@@ -556,6 +558,26 @@ export default function TvDashboard() {
 
               <div className="settings-group">
                 <h4 className="group-title">// SLIDESHOW & DISPLAY</h4>
+                <div className="form-row">
+                  <label>Photo Sizing / Fit Mode:</label>
+                  <select
+                    value={config.imageFitMode || 'contain'}
+                    onChange={(e) => setConfig({ ...config, imageFitMode: e.target.value })}
+                    style={{
+                      background: 'rgba(0, 0, 0, 0.6)',
+                      border: '1px solid var(--color-hud-border-cyan)',
+                      color: 'var(--color-cyan)',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.8rem',
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      outline: 'none'
+                    }}
+                  >
+                    <option value="contain">Fit Entire Photo (No Cropping)</option>
+                    <option value="cover">Fill Screen (Crop Edges)</option>
+                  </select>
+                </div>
                 <div className="form-row">
                   <label>Slide Duration (Seconds):</label>
                   <input

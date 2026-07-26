@@ -69,6 +69,10 @@ html, body {
   will-change: transform, opacity;
 }
 
+.photo-layer.fit-contain {
+  background-size: contain;
+}
+
 .photo-layer.active {
   opacity: 1;
 }
