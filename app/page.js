@@ -8,7 +8,7 @@ const DEMO_PHOTOS = [
     title: 'Ares Habitat Surface Survey',
     description: 'Atmospheric survey over the eastern flank of Ares Crater during late afternoon solar alignment.',
     date: '2026-07-21 18:45',
-    location: 'Ares Crater, Mars System',
+    location: 'Ares Crater, Mars',
     latitude: 18.45,
     longitude: -66.10,
     camera: 'Optical Rover Cam 4K',
@@ -20,7 +20,7 @@ const DEMO_PHOTOS = [
     title: 'Nebula Horizon Over City',
     description: 'Long exposure nocturnal view of city lights glowing beneath passing cloud cover.',
     date: '2026-06-15 22:10',
-    location: 'Citizen Suite Penthouse',
+    location: 'New York, United States',
     latitude: 40.71,
     longitude: -74.00,
     camera: 'Sony Alpha A7 IV',
@@ -32,7 +32,7 @@ const DEMO_PHOTOS = [
     title: 'Pressurized Mountain Pass',
     description: 'Crisp alpine morning view along the high mountain transit ridge.',
     date: '2026-05-04 11:30',
-    location: 'Sector 02 Alpine Loop',
+    location: 'Interlaken, Switzerland',
     latitude: 46.57,
     longitude: 7.91,
     camera: 'Fujifilm X-T5',
@@ -44,7 +44,7 @@ const DEMO_PHOTOS = [
     title: 'Cosmic Reflection Lake',
     description: 'Serene sunrise framing coastal bio-dome reflection pools at first light.',
     date: '2026-04-12 05:20',
-    location: 'Northern Colony Sanctuary',
+    location: 'Honolulu, Hawaii',
     latitude: 21.30,
     longitude: -157.85,
     camera: 'Canon EOS R5',
@@ -56,7 +56,7 @@ const DEMO_PHOTOS = [
     title: 'Deep Space Orbital Aurora',
     description: 'Spectacular aurora borealis ribbons shimmering over polar ice fields.',
     date: '2026-03-29 02:15',
-    location: 'Ares City Orbital Platform',
+    location: 'Reykjavik, Iceland',
     latitude: 64.14,
     longitude: -21.94,
     camera: 'Orbital Tele-Array Mark III',
@@ -229,10 +229,14 @@ export default function TvDashboard() {
       const data = await res.json();
 
       if (data.success && data.photos && data.photos.length > 0) {
-        setPhotoList(data.photos);
+        const cleanedPhotos = data.photos.map(p => ({
+          ...p,
+          location: (p.location && p.location.includes('°')) ? 'Personal Collection' : (p.location || 'Personal Collection')
+        }));
+        setPhotoList(cleanedPhotos);
         setIsConnectedToOneDrive(true);
         setIsOnline(true);
-        setSysStatus(`ONLINE (${data.photos.length} PHOTOS)`);
+        setSysStatus(`ONLINE (${cleanedPhotos.length} PHOTOS)`);
       } else if (config.enableFallbackDemo) {
         setPhotoList(DEMO_PHOTOS);
         setIsConnectedToOneDrive(false);

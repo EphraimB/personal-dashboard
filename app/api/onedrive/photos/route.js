@@ -189,7 +189,7 @@ async function fetchGraphPhotos(token, folder, query, filterScreenshots) {
       return { success: false, reason: 'No photo assets found in OneDrive folder' };
     }
 
-    const transformed = itemsToUse.map(item => transformOneDriveItem(item));
+    const transformed = await Promise.all(itemsToUse.map(item => transformOneDriveItem(item)));
     return { success: true, photos: transformed };
   } catch (e) {
     return { success: false, reason: `Network error connecting to Microsoft Graph API: ${e.message}` };
@@ -218,7 +218,7 @@ function cleanTitle(rawName) {
   return cleaned || 'Captured Moment';
 }
 
-function transformOneDriveItem(item) {
+async function transformOneDriveItem(item) {
   const name = (item.name || '').toLowerCase();
   const mime = (item.file && item.file.mimeType ? item.file.mimeType : '').toLowerCase();
   const isHeic = name.endsWith('.heic') || name.endsWith('.heif') || mime.includes('heic') || mime.includes('heif');
@@ -258,12 +258,14 @@ function transformOneDriveItem(item) {
   const cameraStr = [photoMeta.cameraMake, photoMeta.cameraModel].filter(Boolean).join(' ') || 'Digital Camera';
 
   const loc = item.location || {};
-  let locStr = 'Personal Collection';
   let lat = loc.latitude || null;
   let lon = loc.longitude || null;
 
-  if (lat && lon) {
-    locStr = `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+  // Use Microsoft Graph API location displayName if present, otherwise fallback to clean place name
+  let locStr = loc.displayName || loc.name || 'Personal Collection';
+  if ((!loc.displayName && !loc.name) && lat && lon) {
+    const geo = await reverseGeocode(lat, lon);
+    if (geo) locStr = geo;
   }
 
   const desc = item.description || 
