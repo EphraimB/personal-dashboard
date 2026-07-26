@@ -82,6 +82,161 @@ function formatHumanDate(rawDate) {
   }
 }
 
+function getWeatherDescription(code) {
+  if (code === 0) return 'CLEAR SKY';
+  if (code === 1) return 'MAINLY CLEAR';
+  if (code === 2) return 'PARTLY CLOUDY';
+  if (code === 3) return 'OVERCAST';
+  if (code === 45 || code === 48) return 'FOG / HAZE';
+  if (code >= 51 && code <= 55) return 'LIGHT DRIZZLE';
+  if (code >= 61 && code <= 65) return 'RAINY';
+  if (code === 66 || code === 67) return 'FREEZING RAIN';
+  if (code >= 71 && code <= 77) return 'SNOWING';
+  if (code >= 80 && code <= 82) return 'RAIN SHOWERS';
+  if (code === 85 || code === 86) return 'SNOW SHOWERS';
+  if (code >= 95) return 'THUNDERSTORM';
+  return 'FAIR WEATHER';
+}
+
+function getDayAbbrev(dateStr, isToday = false) {
+  if (isToday) return 'TODAY';
+  if (!dateStr || typeof dateStr !== 'string') return '---';
+  const parts = dateStr.split('-');
+  if (parts.length < 3) return dateStr;
+  const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+  const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  return days[d.getDay()] || '---';
+}
+
+function WeatherSvg({ code = 0, className = 'wx-svg-container' }) {
+  if (code === 0) {
+    return (
+      <svg className={className} viewBox="0 0 64 64" fill="none">
+        <g className="wx-anim-sun">
+          <circle cx="32" cy="32" r="14" fill="url(#sunGrad)" />
+          <g className="wx-anim-sun-rays" stroke="#00f0ff" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="32" y1="6" x2="32" y2="12" />
+            <line x1="32" y1="52" x2="32" y2="58" />
+            <line x1="6" y1="32" x2="12" y2="32" />
+            <line x1="52" y1="32" x2="58" y2="32" />
+            <line x1="13.6" y1="13.6" x2="17.8" y2="17.8" />
+            <line x1="46.2" y1="46.2" x2="50.4" y2="50.4" />
+            <line x1="13.6" y1="50.4" x2="17.8" y2="46.2" />
+            <line x1="46.2" y1="17.8" x2="50.4" y2="13.6" />
+          </g>
+        </g>
+        <defs>
+          <radialGradient id="sunGrad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(32 32) scale(14)">
+            <stop stopColor="#ffea00" />
+            <stop offset="1" stopColor="#ff9100" />
+          </radialGradient>
+        </defs>
+      </svg>
+    );
+  }
+
+  if (code >= 95) {
+    return (
+      <svg className={className} viewBox="0 0 64 64" fill="none">
+        <g className="wx-anim-cloud">
+          <path d="M46 38C49.3 38 52 35.3 52 32C52 28.7 49.3 26 46 26C45.7 26 45.4 26 45.1 26.1C43.8 20.3 38.6 16 32.5 16C25.6 16 20 21.6 20 28.5C20 28.7 20 29 20 29.2C17.7 29.8 16 31.9 16 34.5C16 37.5 18.5 40 21.5 40L46 38Z" fill="url(#cloudGradDark)" />
+        </g>
+        <path className="wx-anim-lightning" d="M30 36L22 48H30L28 58L40 44H32L34 36Z" fill="#ffea00" />
+        <g stroke="#00f0ff" strokeWidth="2" strokeLinecap="round">
+          <line className="wx-anim-rain-1" x1="22" y1="44" x2="20" y2="50" />
+          <line className="wx-anim-rain-2" x1="42" y1="44" x2="40" y2="50" />
+        </g>
+        <defs>
+          <linearGradient id="cloudGradDark" x1="16" y1="16" x2="52" y2="40" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#4a6572" />
+            <stop offset="1" stopColor="#1e272c" />
+          </linearGradient>
+        </defs>
+      </svg>
+    );
+  }
+
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+    return (
+      <svg className={className} viewBox="0 0 64 64" fill="none">
+        <g className="wx-anim-cloud">
+          <path d="M44 34C46.8 34 49 31.8 49 29C49 26.2 46.8 24 44 24C43.7 24 43.5 24 43.2 24.1C42.1 19.1 37.7 15.5 32.5 15.5C26.7 15.5 22 20.2 22 26C22 26.2 22 26.4 22 26.6C20.1 27.1 18.7 28.9 18.7 31C18.7 33.5 20.7 35.5 23.2 35.5L44 34Z" fill="url(#cloudGradRain)" />
+        </g>
+        <g stroke="#00f0ff" strokeWidth="2.5" strokeLinecap="round">
+          <line className="wx-anim-rain-1" x1="24" y1="38" x2="21" y2="48" />
+          <line className="wx-anim-rain-2" x1="33" y1="38" x2="30" y2="48" />
+          <line className="wx-anim-rain-3" x1="42" y1="38" x2="39" y2="48" />
+        </g>
+        <defs>
+          <linearGradient id="cloudGradRain" x1="18.7" y1="15.5" x2="49" y2="35.5" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#80d8ff" />
+            <stop offset="1" stopColor="#37474f" />
+          </linearGradient>
+        </defs>
+      </svg>
+    );
+  }
+
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) {
+    return (
+      <svg className={className} viewBox="0 0 64 64" fill="none">
+        <g className="wx-anim-cloud">
+          <path d="M44 32C46.8 32 49 29.8 49 27C49 24.2 46.8 22 44 22C43.7 22 43.5 22 43.2 22.1C42.1 17.1 37.7 13.5 32.5 13.5C26.7 13.5 22 18.2 22 24C22 24.2 22 24.4 22 24.6C20.1 25.1 18.7 26.9 18.7 29C18.7 31.5 20.7 33.5 23.2 33.5L44 32Z" fill="url(#cloudGradSnow)" />
+        </g>
+        <g fill="#ffffff">
+          <circle className="wx-anim-snow-1" cx="24" cy="42" r="2.5" />
+          <circle className="wx-anim-snow-2" cx="33" cy="44" r="2.5" />
+          <circle className="wx-anim-snow-3" cx="42" cy="41" r="2.5" />
+        </g>
+        <defs>
+          <linearGradient id="cloudGradSnow" x1="18.7" y1="13.5" x2="49" y2="33.5" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#e0f7fa" />
+            <stop offset="1" stopColor="#546e7a" />
+          </linearGradient>
+        </defs>
+      </svg>
+    );
+  }
+
+  if (code === 45 || code === 48) {
+    return (
+      <svg className={className} viewBox="0 0 64 64" fill="none">
+        <g className="wx-anim-cloud">
+          <path d="M44 28C46.8 28 49 25.8 49 23C49 20.2 46.8 18 44 18C43.7 18 43.5 18 43.2 18.1C42.1 13.1 37.7 9.5 32.5 9.5C26.7 9.5 22 14.2 22 20C22 20.2 22 20.4 22 20.6C20.1 21.1 18.7 22.9 18.7 25C18.7 27.5 20.7 29.5 23.2 29.5L44 28Z" fill="url(#cloudGradFog)" />
+        </g>
+        <g stroke="rgba(0, 240, 255, 0.7)" strokeWidth="2.5" strokeLinecap="round">
+          <line x1="16" y1="36" x2="48" y2="36" />
+          <line x1="20" y1="42" x2="44" y2="42" />
+          <line x1="14" y1="48" x2="50" y2="48" />
+        </g>
+        <defs>
+          <linearGradient id="cloudGradFog" x1="18.7" y1="9.5" x2="49" y2="29.5" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#b0bec5" />
+            <stop offset="1" stopColor="#37474f" />
+          </linearGradient>
+        </defs>
+      </svg>
+    );
+  }
+
+  return (
+    <svg className={className} viewBox="0 0 64 64" fill="none">
+      <g className="wx-anim-sun" transform="translate(-6, -6)">
+        <circle cx="32" cy="32" r="11" fill="#ffea00" />
+      </g>
+      <g className="wx-anim-cloud">
+        <path d="M46 36C48.8 36 51 33.8 51 31C51 28.2 48.8 26 46 26C45.7 26 45.5 26 45.2 26.1C44.1 21.1 39.7 17.5 34.5 17.5C28.7 17.5 24 22.2 24 28C24 28.2 24 28.4 24 28.6C22.1 29.1 20.7 30.9 20.7 33C20.7 35.5 22.7 37.5 25.2 37.5L46 36Z" fill="url(#cloudGradDefault)" />
+      </g>
+      <defs>
+        <linearGradient id="cloudGradDefault" x1="20.7" y1="17.5" x2="51" y2="37.5" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#e0f7fa" />
+          <stop offset="1" stopColor="#455a64" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
 export default function TvDashboard() {
   const [config, setConfig] = useState({
     onedriveToken: '',
@@ -96,8 +251,12 @@ export default function TvDashboard() {
     uiScale: '150', // '100', '125', '150', '175' for 4K TV font scaling
     showDescription: true,
     showHudCard: true,
-    clockFormat: '12' // '12' or '24'
+    clockFormat: '12', // '12' or '24'
+    showWeatherSidebars: true,
+    tempUnit: 'F'
   });
+
+  const [weatherData, setWeatherData] = useState(null);
 
   const [photoList, setPhotoList] = useState(DEMO_PHOTOS);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -146,6 +305,28 @@ export default function TvDashboard() {
       // localStorage unavailable
     }
   }, []);
+
+  // Fetch Cedarhurst, NY live weather & 5-day forecast from Open-Meteo API
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        const unitParam = config.tempUnit === 'C' ? 'celsius' : 'fahrenheit';
+        const windParam = config.tempUnit === 'C' ? 'kmh' : 'mph';
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=40.6237&longitude=-73.7257&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=${unitParam}&wind_speed_unit=${windParam}&precipitation_unit=inch&timezone=America%2FNew_York`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          setWeatherData(data);
+        }
+      } catch (err) {
+        console.error('Weather fetch error:', err);
+      }
+    };
+
+    fetchWeather();
+    const interval = setInterval(fetchWeather, 15 * 60 * 1000); // 15 mins auto-refresh
+    return () => clearInterval(interval);
+  }, [config.tempUnit]);
 
   // Mouse movement & idle detection for TV ambient mode
   useEffect(() => {
@@ -483,6 +664,94 @@ export default function TvDashboard() {
         </div>
       </header>
 
+      {/* Left Glassmorphic Weather Sidebar - Cedarhurst, NY Live Telemetry */}
+      {config.showWeatherSidebars !== false && (
+        <aside className="weather-sidebar-left">
+          <div className="wx-sidebar-header">
+            <div className="wx-title-stack">
+              <span className="wx-sys-tag">// CEDARHURST, NY</span>
+              <span className="wx-location-name">LOCAL ATMOSPHERE</span>
+            </div>
+            <span className="wx-gps-tag">40.62° N / 73.73° W</span>
+          </div>
+
+          <div className="wx-hero-card">
+            <WeatherSvg code={weatherData?.current?.weather_code ?? 0} />
+            <div className="wx-temp-group">
+              <div className="wx-main-temp">
+                {weatherData?.current?.temperature_2m !== undefined
+                  ? Math.round(weatherData.current.temperature_2m)
+                  : '--'}
+                °{config.tempUnit || 'F'}
+              </div>
+              <div className="wx-hi-lo-badge">
+                <span className="wx-hi-val">▲ {weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '--'}°</span>
+                <span className="wx-lo-val">▼ {weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '--'}°</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="wx-condition-desc">
+            {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
+          </div>
+
+          <div className="wx-telemetry-grid">
+            <div className="wx-telemetry-item">
+              <span className="wx-tel-label">HUMIDITY</span>
+              <span className="wx-tel-value">{weatherData?.current?.relative_humidity_2m ?? '--'}%</span>
+            </div>
+            <div className="wx-telemetry-item">
+              <span className="wx-tel-label">WIND</span>
+              <span className="wx-tel-value">
+                {weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '--'}{' '}
+                <span style={{ fontSize: '0.6rem' }}>{config.tempUnit === 'C' ? 'KM/H' : 'MPH'}</span>
+              </span>
+            </div>
+            <div className="wx-telemetry-item">
+              <span className="wx-tel-label">RAIN %</span>
+              <span className="wx-tel-value">{weatherData?.daily?.precipitation_probability_max?.[0] ?? 0}%</span>
+            </div>
+          </div>
+        </aside>
+      )}
+
+      {/* Right Glassmorphic Weather Sidebar - Cedarhurst, NY 5-Day Forecast */}
+      {config.showWeatherSidebars !== false && (
+        <aside className="weather-sidebar-right">
+          <div className="wx-sidebar-header">
+            <div className="wx-title-stack">
+              <span className="wx-sys-tag">// CEDARHURST, NY</span>
+              <span className="wx-location-name">5-DAY FORECAST</span>
+            </div>
+            <span className="wx-gps-tag">OUTLOOK</span>
+          </div>
+
+          <div className="wx-forecast-list">
+            {(weatherData?.daily?.time || ['', '', '', '', '']).slice(0, 5).map((dateStr, idx) => {
+              const code = weatherData?.daily?.weather_code?.[idx] ?? 0;
+              const maxTemp = weatherData?.daily?.temperature_2m_max?.[idx];
+              const minTemp = weatherData?.daily?.temperature_2m_min?.[idx];
+              const pop = weatherData?.daily?.precipitation_probability_max?.[idx] ?? 0;
+              const dayLabel = getDayAbbrev(dateStr, idx === 0);
+
+              return (
+                <div key={idx} className="wx-forecast-row">
+                  <span className="wx-fc-day">{dayLabel}</span>
+                  <div className="wx-fc-icon">
+                    <WeatherSvg code={code} className="wx-fc-icon" />
+                  </div>
+                  <div className="wx-fc-temps">
+                    <span className="wx-hi-val">{maxTemp !== undefined ? Math.round(maxTemp) : '--'}°</span>
+                    <span className="wx-lo-val">{minTemp !== undefined ? Math.round(minTemp) : '--'}°</span>
+                  </div>
+                  <span className="wx-fc-pop">{pop}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+      )}
+
       {/* Bottom Metadata HUD Card */}
       <main className="hud-bottom-overlay">
         <div className="photo-meta-card">
@@ -722,6 +991,41 @@ export default function TvDashboard() {
                     onChange={(e) => setConfig({ ...config, enableFallbackDemo: e.target.checked })}
                   />
                   <label htmlFor="cfg-fallback">Enable Demo Photos if disconnected</label>
+                </div>
+              </div>
+
+              <div className="settings-group">
+                <h4 className="group-title">// CEDARHURST, NY WEATHER SIDEBARS</h4>
+                <div className="form-row checkbox-row">
+                  <input
+                    type="checkbox"
+                    id="cfg-weather"
+                    checked={config.showWeatherSidebars !== false}
+                    onChange={(e) => setConfig({ ...config, showWeatherSidebars: e.target.checked })}
+                  />
+                  <label htmlFor="cfg-weather">
+                    Display Cedarhurst Weather Sidebars (Left Telemetry & Right 5-Day Forecast)
+                  </label>
+                </div>
+                <div className="form-row">
+                  <label>Temperature Units:</label>
+                  <select
+                    value={config.tempUnit || 'F'}
+                    onChange={(e) => setConfig({ ...config, tempUnit: e.target.value })}
+                    style={{
+                      background: 'rgba(0, 0, 0, 0.6)',
+                      border: '1px solid var(--color-hud-border-cyan)',
+                      color: 'var(--color-cyan)',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.85rem',
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      outline: 'none'
+                    }}
+                  >
+                    <option value="F">Fahrenheit (°F)</option>
+                    <option value="C">Celsius (°C)</option>
+                  </select>
                 </div>
               </div>
             </form>
