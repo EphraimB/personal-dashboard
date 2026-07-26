@@ -6,6 +6,7 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-1',
     title: 'Ares Habitat Surface Survey',
+    description: 'High-resolution atmospheric survey captured by Rover Optical Unit 4 over the eastern flank of Ares Crater. Atmospheric dust density remains within expected operational parameters for habitat maintenance.',
     date: '2026-07-21 18:45',
     location: 'Ares Crater, Mars System',
     camera: 'Ares Rover Optical Cam 4K',
@@ -15,6 +16,7 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-2',
     title: 'Nebula Horizon Over City',
+    description: 'Long exposure nocturnal panoramic of the metropolis baseline. Glowing cybernetic grids reflect off low-altitude cloud cover during peak solar flare activity.',
     date: '2026-06-15 22:10',
     location: 'Citizen Suite Penthouse',
     camera: 'Sony Alpha A7 IV',
@@ -24,6 +26,7 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-3',
     title: 'Pressurized Mountain Pass',
+    description: 'Crisp alpine morning vista captured along the Sector 02 high-altitude transit corridor. Glacial runoff feeds into pressurized reservoir facilities downstream.',
     date: '2026-05-04 11:30',
     location: 'Sector 02 Alpine Loop',
     camera: 'Fujifilm X-T5',
@@ -33,6 +36,7 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-4',
     title: 'Cosmic Reflection Lake',
+    description: 'Serene sunrise framing the bio-dome reflection pools in the Northern Colony Sanctuary. Early morning mist dissipates as thermal array cycles begin.',
     date: '2026-04-12 05:20',
     location: 'Northern Colony Sanctuary',
     camera: 'Canon EOS R5',
@@ -42,6 +46,7 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-5',
     title: 'Deep Space Orbital Aurora',
+    description: 'Orbital spectrograph tracking magnetic field oscillations and ion density glows in upper thermosphere. Telemetry streamed live to primary TV HUD arrays.',
     date: '2026-03-29 02:15',
     location: 'Ares City Orbital Platform',
     camera: 'Orbital Tele-Array Mark III',
@@ -245,9 +250,14 @@ function transformOneDriveItem(item) {
     locStr = `${loc.latitude.toFixed(2)}°, ${loc.longitude.toFixed(2)}°`;
   }
 
+  const desc = item.description || 
+             (item.photo && item.photo.caption) || 
+             `Captured on ${dateStr} at ${locStr}. Telemetry logged via ${cameraStr}.`;
+
   return {
     id: item.id,
     title: item.name || 'OneDrive Photo',
+    description: desc,
     date: dateStr,
     location: locStr,
     camera: cameraStr,

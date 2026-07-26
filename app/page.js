@@ -6,6 +6,7 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-1',
     title: 'Ares Habitat Surface Survey',
+    description: 'High-resolution atmospheric survey captured by Rover Optical Unit 4 over the eastern flank of Ares Crater. Atmospheric dust density remains within expected operational parameters for habitat maintenance.',
     date: '2026-07-21 18:45',
     location: 'Ares Crater, Mars System',
     camera: 'Ares Rover Optical Cam 4K',
@@ -15,6 +16,7 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-2',
     title: 'Nebula Horizon Over City',
+    description: 'Long exposure nocturnal panoramic of the metropolis baseline. Glowing cybernetic grids reflect off low-altitude cloud cover during peak solar flare activity.',
     date: '2026-06-15 22:10',
     location: 'Citizen Suite Penthouse',
     camera: 'Sony Alpha A7 IV',
@@ -24,6 +26,7 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-3',
     title: 'Pressurized Mountain Pass',
+    description: 'Crisp alpine morning vista captured along the Sector 02 high-altitude transit corridor. Glacial runoff feeds into pressurized reservoir facilities downstream.',
     date: '2026-05-04 11:30',
     location: 'Sector 02 Alpine Loop',
     camera: 'Fujifilm X-T5',
@@ -33,6 +36,7 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-4',
     title: 'Cosmic Reflection Lake',
+    description: 'Serene sunrise framing the bio-dome reflection pools in the Northern Colony Sanctuary. Early morning mist dissipates as thermal array cycles begin.',
     date: '2026-04-12 05:20',
     location: 'Northern Colony Sanctuary',
     camera: 'Canon EOS R5',
@@ -42,6 +46,7 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-5',
     title: 'Deep Space Orbital Aurora',
+    description: 'Orbital spectrograph tracking magnetic field oscillations and ion density glows in upper thermosphere. Telemetry streamed live to primary TV HUD arrays.',
     date: '2026-03-29 02:15',
     location: 'Ares City Orbital Platform',
     camera: 'Orbital Tele-Array Mark III',
@@ -60,7 +65,11 @@ export default function TvDashboard() {
     enableKenBurns: false,
     enableScanlines: true,
     enableFallbackDemo: true,
-    imageFitMode: 'contain' // 'contain' for full un-cropped photos, 'cover' for full bleed
+    imageFitMode: 'contain', // 'contain' for full un-cropped photos, 'cover' for full bleed
+    uiScale: '150', // '100', '125', '150', '175' for 4K TV font scaling
+    showDescription: true,
+    showHudCard: true,
+    clockFormat: '12' // '12' or '24'
   });
 
   const [photoList, setPhotoList] = useState(DEMO_PHOTOS);
@@ -71,6 +80,7 @@ export default function TvDashboard() {
   const [isOnline, setIsOnline] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [testResult, setTestResult] = useState('');
+  const [showControls, setShowControls] = useState(true);
 
   // Clock state
   const [clockTime, setClockTime] = useState('00:00:00');
@@ -89,18 +99,51 @@ export default function TvDashboard() {
   const slideTimerRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const startTimeRef = useRef(0);
+  const idleTimerRef = useRef(null);
 
-  // Load config from localStorage
+  // Load config from localStorage & URL scale override
   useEffect(() => {
     try {
       const saved = localStorage.getItem('ares_tv_dashboard_config');
-      if (saved) {
-        setConfig((prev) => ({ ...prev, ...JSON.parse(saved) }));
+      let loaded = saved ? JSON.parse(saved) : {};
+      
+      // Allow URL parameter scale override (e.g. ?scale=150 or ?scale=175)
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlScale = urlParams.get('scale');
+      if (urlScale && ['100', '125', '150', '175'].includes(urlScale)) {
+        loaded.uiScale = urlScale;
       }
+
+      setConfig((prev) => ({ ...prev, ...loaded }));
     } catch (e) {
       // localStorage unavailable
     }
   }, []);
+
+  // Mouse movement & idle detection for TV ambient mode
+  useEffect(() => {
+    const handleMouseMove = () => {
+      setShowControls(true);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => {
+        if (!isModalOpen) setShowControls(false);
+      }, 3500);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchstart', handleMouseMove);
+    
+    // Initial auto-hide timer
+    idleTimerRef.current = setTimeout(() => {
+      setShowControls(false);
+    }, 4000);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchstart', handleMouseMove);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [isModalOpen]);
 
   // Save config helper
   const saveConfig = (newConfig) => {
@@ -262,6 +305,10 @@ export default function TvDashboard() {
         case 'S':
           saveConfig({ ...config, enableScanlines: !config.enableScanlines });
           break;
+        case 'd':
+        case 'D':
+          saveConfig({ ...config, showDescription: !config.showDescription });
+          break;
         case 'm':
         case 'M':
         case 'c':
@@ -304,7 +351,7 @@ export default function TvDashboard() {
   };
 
   return (
-    <>
+    <div className={`ares-tv-app ui-scale-${config.uiScale || '150'} ${showControls ? 'user-active' : 'user-idle'}`}>
       {/* Background Slideshow Viewport */}
       <div className="slideshow-viewport">
         <div
@@ -380,7 +427,7 @@ export default function TvDashboard() {
               {isConnectedToOneDrive ? 'ONEDRIVE' : 'DEMO STREAM'}
             </span>
           </div>
-          <button className="hud-btn" onClick={() => setIsModalOpen(true)} title="Open Settings (M)">
+          <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)} title="Open Settings (M)">
             [ ⚙ CONFIG ]
           </button>
         </div>
@@ -423,6 +470,13 @@ export default function TvDashboard() {
               </button>
               <button
                 className="hud-btn hud-btn-icon"
+                onClick={() => saveConfig({ ...config, showDescription: !config.showDescription })}
+                title="Toggle Photo Description (D)"
+              >
+                💬
+              </button>
+              <button
+                className="hud-btn hud-btn-icon"
                 onClick={() => saveConfig({ ...config, enableScanlines: !config.enableScanlines })}
                 title="Toggle Scanlines (S)"
               >
@@ -433,6 +487,15 @@ export default function TvDashboard() {
               </button>
             </div>
           </div>
+
+          {/* Photo Description Section */}
+          {config.showDescription && (
+            <div className="photo-description-box">
+              <p className="description-text">
+                {currentPhoto.description || `Captured on ${currentPhoto.date} at ${currentPhoto.location}.`}
+              </p>
+            </div>
+          )}
 
           {/* EXIF Telemetry Row */}
           <div className="meta-telemetry-grid">
@@ -559,6 +622,28 @@ export default function TvDashboard() {
               <div className="settings-group">
                 <h4 className="group-title">// SLIDESHOW & DISPLAY</h4>
                 <div className="form-row">
+                  <label>4K TV UI Text Scale:</label>
+                  <select
+                    value={config.uiScale || '150'}
+                    onChange={(e) => setConfig({ ...config, uiScale: e.target.value })}
+                    style={{
+                      background: 'rgba(0, 0, 0, 0.6)',
+                      border: '1px solid var(--color-hud-border-cyan)',
+                      color: 'var(--color-cyan)',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.85rem',
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      outline: 'none'
+                    }}
+                  >
+                    <option value="100">100% Standard (Desktop)</option>
+                    <option value="125">125% Large Display</option>
+                    <option value="150">150% Ultra 4K TV (Recommended)</option>
+                    <option value="175">175% Giant TV Font</option>
+                  </select>
+                </div>
+                <div className="form-row">
                   <label>Photo Sizing / Fit Mode:</label>
                   <select
                     value={config.imageFitMode || 'contain'}
@@ -568,7 +653,7 @@ export default function TvDashboard() {
                       border: '1px solid var(--color-hud-border-cyan)',
                       color: 'var(--color-cyan)',
                       fontFamily: 'var(--font-mono)',
-                      fontSize: '0.8rem',
+                      fontSize: '0.85rem',
                       padding: '8px 12px',
                       borderRadius: 6,
                       outline: 'none'
@@ -587,6 +672,15 @@ export default function TvDashboard() {
                     value={config.slideDuration}
                     onChange={(e) => setConfig({ ...config, slideDuration: parseInt(e.target.value) || 15 })}
                   />
+                </div>
+                <div className="form-row checkbox-row">
+                  <input
+                    type="checkbox"
+                    id="cfg-desc"
+                    checked={config.showDescription}
+                    onChange={(e) => setConfig({ ...config, showDescription: e.target.checked })}
+                  />
+                  <label htmlFor="cfg-desc">Display Photo Description & Caption</label>
                 </div>
                 <div className="form-row checkbox-row">
                   <input
@@ -623,6 +717,7 @@ export default function TvDashboard() {
             <div className="shortcuts-hint">
               <span className="hint-key">◀/▶</span> Skip &nbsp;
               <span className="hint-key">SPACE</span> Pause &nbsp;
+              <span className="hint-key">D</span> Description &nbsp;
               <span className="hint-key">F</span> Fullscreen &nbsp;
               <span className="hint-key">S</span> Scanlines &nbsp;
               <span className="hint-key">M</span> Settings
@@ -640,6 +735,6 @@ export default function TvDashboard() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
