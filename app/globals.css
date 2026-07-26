@@ -673,54 +673,29 @@ html, body {
 }
 
 .meta-sector-label {
-  font-size: clamp(0.6rem, 0.8vw, 0.95rem);
+  font-size: clamp(0.65rem, 0.9vw, 1.15rem);
+  color: var(--color-cyan);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
 }
 
 .photo-title {
-  font-size: clamp(1.4rem, 2.4vw, 3.2rem);
-  font-weight: 800;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
-  line-height: 1.25;
-}
-
-.photo-description-box {
-  margin-top: clamp(10px, 1.2vw, 18px);
-  margin-bottom: clamp(12px, 1.4vw, 20px);
-  padding: clamp(10px, 1.2vw, 18px) clamp(14px, 1.6vw, 24px);
-  background: rgba(0, 240, 255, 0.06);
-  border-left: 4px solid var(--color-cyan);
-  border-radius: 6px;
-  backdrop-filter: blur(10px);
-  box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.05);
-}
-
-.description-text {
   font-family: var(--font-sans);
-  font-size: clamp(0.95rem, 1.35vw, 1.65rem);
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.95);
-  font-weight: 400;
-  letter-spacing: 0.2px;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
-}
-
-.meta-telemetry-grid {
-  gap: clamp(12px, 2vw, 32px);
-  padding-top: clamp(10px, 1.2vw, 18px);
-}
-
-.t-label {
-  font-size: clamp(0.6rem, 0.85vw, 1.05rem);
-  letter-spacing: 1.2px;
-}
-
-.t-value {
-  font-size: clamp(0.85rem, 1.2vw, 1.55rem);
+  font-size: clamp(1.15rem, 1.75vw, 2.35rem);
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  line-height: 1.45;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
 }
 
 .progress-bar-container {
-  height: clamp(3px, 0.5vw, 6px);
-  margin-top: clamp(12px, 1.5vw, 22px);
+  height: clamp(3.5px, 0.5vw, 7px);
+  margin-top: clamp(12px, 1.5vw, 20px);
 }
 
 /* ==============================================================================

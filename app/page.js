@@ -423,8 +423,8 @@ export default function TvDashboard() {
             </svg>
           </span>
           <div className="hud-title-stack">
-            <span className="hud-sys-tag">// PERSONAL TV DASHBOARD</span>
-            <span className="hud-sys-name">EPHRAIM BECKER'S DASHBOARD</span>
+            <span className="hud-sys-tag">// ARES CITY OS</span>
+            <span className="hud-sys-name">ARES CITY TV DASHBOARD</span>
           </div>
           <span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>
             <span className="active-pulse-dot" />
@@ -481,7 +481,7 @@ export default function TvDashboard() {
 
           <div className="meta-card-header">
             <div className="meta-title-group">
-              <span className="meta-sector-label">📍 LOCATION: {currentPhoto.location}</span>
+              <span className="meta-sector-label">📍 LOCATION // {currentPhoto.location}</span>
               <h2 className="photo-title">{currentPhoto.description || currentPhoto.title}</h2>
             </div>
             <div className="meta-controls-quick">
@@ -508,13 +508,6 @@ export default function TvDashboard() {
               </button>
               <button
                 className="hud-btn hud-btn-icon"
-                onClick={() => saveConfig({ ...config, showDescription: !config.showDescription })}
-                title="Toggle Photo Description (D)"
-              >
-                💬
-              </button>
-              <button
-                className="hud-btn hud-btn-icon"
                 onClick={() => saveConfig({ ...config, enableScanlines: !config.enableScanlines })}
                 title="Toggle Scanlines (S)"
               >
@@ -523,35 +516,6 @@ export default function TvDashboard() {
               <button className="hud-btn hud-btn-icon" onClick={toggleFullscreen} title="Toggle Fullscreen (F)">
                 ⛶
               </button>
-            </div>
-          </div>
-
-          {/* Photo Description Section */}
-          {config.showDescription && (
-            <div className="photo-description-box">
-              <p className="description-text">
-                {currentPhoto.description || `Captured on ${currentPhoto.date} at ${currentPhoto.location}.`}
-              </p>
-            </div>
-          )}
-
-          {/* EXIF Telemetry Row */}
-          <div className="meta-telemetry-grid">
-            <div className="telemetry-item">
-              <span className="t-label">DATE TAKEN</span>
-              <span className="t-value">{currentPhoto.date}</span>
-            </div>
-            <div className="telemetry-item">
-              <span className="t-label">LOCATION</span>
-              <span className="t-value">{currentPhoto.location}</span>
-            </div>
-            <div className="telemetry-item">
-              <span className="t-label">CAMERA</span>
-              <span className="t-value">{currentPhoto.camera}</span>
-            </div>
-            <div className="telemetry-item">
-              <span className="t-label">EXIF</span>
-              <span className="t-value">{currentPhoto.exif}</span>
             </div>
           </div>
 
