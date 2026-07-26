@@ -1,164 +1,25 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Plug & Play External SSD Auto-Detector & Photo Prism Auto-Indexer
-# ==============================================================================
-# Detects connected external USB SSD drives, auto-mounts them, syncs/symlinks
-# photo collections to PhotoPrism's originals folder, and triggers API re-indexing.
+# Automatic SSD Mount & Auto-Detection Daemon Script
 # ==============================================================================
 
-MOUNT_BASE="${MOUNT_BASE:-/media/external_ssd}"
-PHOTOPRISM_URL="${PHOTOPRISM_URL:-http://localhost:2342}"
-ORIGINALS_PATH="${PHOTOPRISM_ORIGINALS_PATH:-/photoprism/originals}"
-STATUS_FILE="${STATUS_FILE:-/tmp/ssd_status.json}"
+ACTION="$1"
+DEVICE="$2"
+MOUNT_BASE="/media/external_ssd"
 
-# Ensure status directory exists
-mkdir -p "$(dirname "$STATUS_FILE")"
 mkdir -p "$MOUNT_BASE"
 
-update_status() {
-  local state="$1"
-  local dev="$2"
-  local photos="$3"
-  local msg="$4"
-  cat <<EOF > "$STATUS_FILE"
-{
-  "status": "$state",
-  "device": "$dev",
-  "photosFound": $photos,
-  "message": "$msg",
-  "lastUpdated": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-}
-EOF
-}
-
-trigger_photoprism_index() {
-  if command -v docker >/dev/null 2>&1; then
-    if docker exec photoprism pgrep -f "photoprism index" >/dev/null 2>&1; then
-      echo "[SSD Detector] Indexing is already running. Skipping duplicate trigger."
-      return 0
-    fi
-    echo "[SSD Detector] Triggering PhotoPrism Auto-Index via CLI..."
-    docker exec photoprism photoprism index >/dev/null 2>&1 &
-  fi
-}
-
-scan_and_index_drive() {
-  local mount_dir="$1"
-  local dev_name="$2"
-
-  echo "[SSD Detector] Scanning mounted storage at $mount_dir for photo media..."
-  update_status "SCANNING" "$dev_name" 0 "Scanning drive for photos..."
-
-  # Find photo media extensions
-  IMAGE_COUNT=$(find "$mount_dir" -maxdepth 5 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.heic" -o -iname "*.webp" -o -iname "*.cr2" -o -iname "*.nef" -o -iname "*.arw" -o -iname "*.dng" \) 2>/dev/null | wc -l)
-
-  echo "[SSD Detector] Discovered $IMAGE_COUNT photo files on external storage."
-
-  if [ "$IMAGE_COUNT" -gt 0 ]; then
-    # If mount_dir is different from ORIGINALS_PATH, link it
-    if [ "$mount_dir" != "$ORIGINALS_PATH" ] && [[ "$ORIGINALS_PATH" != "$mount_dir"* ]]; then
-      mkdir -p "$ORIGINALS_PATH" 2>/dev/null || true
-      TARGET_LINK="$ORIGINALS_PATH/External_SSD"
-      echo "[SSD Detector] Symlinking $mount_dir to $TARGET_LINK..."
-      ln -sfn "$mount_dir" "$TARGET_LINK" 2>/dev/null || true
-    fi
-
-    update_status "CONNECTED" "$dev_name" "$IMAGE_COUNT" "Plug & Play SSD active with $IMAGE_COUNT photos."
-    trigger_photoprism_index
-  else
-    update_status "CONNECTED_EMPTY" "$dev_name" 0 "SSD mounted but no image files found."
-  fi
-}
-
-mount_device() {
-  local dev="$1"
-  if [ -z "$dev" ]; then return 1; fi
-
-  echo "[SSD Detector] Processing plug event for device $dev..."
-  
-  # Determine target mount point
-  MNT_POINT="$MOUNT_BASE/$(basename "$dev")"
-  mkdir -p "$MNT_POINT"
-
-  # Check if already mounted
-  if mountpoint -q "$MNT_POINT" || grep -q "$dev" /proc/mounts; then
-    MNT_POINT=$(grep "$dev" /proc/mounts | awk '{print $2}' | head -n 1)
-    echo "[SSD Detector] Device $dev is already mounted at $MNT_POINT"
-  else
-    echo "[SSD Detector] Mounting $dev to $MNT_POINT..."
-    mount -o defaults,noatime,uid=1000,gid=1000 "$dev" "$MNT_POINT" 2>/dev/null || \
-    udisksctl mount -b "$dev" --no-user-interaction 2>/dev/null || \
-    mount "$dev" "$MNT_POINT" 2>/dev/null || true
-  fi
-
-  if mountpoint -q "$MNT_POINT" || grep -q "$dev" /proc/mounts; then
-    scan_and_index_drive "$MNT_POINT" "$dev"
-  else
-    update_status "ERROR" "$dev" 0 "Failed to mount device $dev"
-  fi
-}
-
-unmount_device() {
-  local dev="$1"
-  echo "[SSD Detector] Processing unplug event for device $dev..."
-  MNT_POINT="$MOUNT_BASE/$(basename "$dev")"
-
-  if [ -d "$ORIGINALS_PATH/External_SSD" ]; then
-    rm -f "$ORIGINALS_PATH/External_SSD" 2>/dev/null || true
-  fi
-
-  umount "$dev" 2>/dev/null || umount -l "$MNT_POINT" 2>/dev/null || true
-  update_status "DISCONNECTED" "NONE" 0 "External SSD unplugged."
-  echo "[SSD Detector] SSD unplugged cleanly."
-}
-
-daemon_loop() {
-  echo "[SSD Detector] Running continuous Plug & Play USB monitoring loop..."
-  update_status "DISCONNECTED" "NONE" 0 "Waiting for external SSD connection..."
-
-  LAST_DEV=""
-  while true; do
-    # Scan for external USB block storage devices
-    CURRENT_DEV=$(lsblk -d -n -o NAME,TRAN,TYPE | grep "usb" | grep "disk" | awk '{print "/dev/"$1}' | head -n 1)
-    
-    # Also check partition if disk found
-    if [ -n "$CURRENT_DEV" ]; then
-      PARTITION=$(lsblk -n -o NAME,TYPE "$CURRENT_DEV" | grep "part" | awk '{print "/dev/"$1}' | head -n 1)
-      if [ -n "$PARTITION" ]; then
-        CURRENT_DEV="$PARTITION"
-      fi
-    fi
-
-    if [ -n "$CURRENT_DEV" ] && [ "$CURRENT_DEV" != "$LAST_DEV" ]; then
-      echo "[SSD Detector] New external SSD detected: $CURRENT_DEV"
-      mount_device "$CURRENT_DEV"
-      LAST_DEV="$CURRENT_DEV"
-    elif [ -z "$CURRENT_DEV" ] && [ -n "$LAST_DEV" ]; then
-      echo "[SSD Detector] External SSD disconnected."
-      unmount_device "$LAST_DEV"
-      LAST_DEV=""
-    fi
-
-    sleep 5
-  done
-}
-
-# Entrypoint routing based on action
-CMD="${1:-daemon}"
-DEV_PATH="$2"
-
-case "$CMD" in
-  mount)
-    mount_device "$DEV_PATH"
-    ;;
-  unmount)
-    unmount_device "$DEV_PATH"
-    ;;
-  daemon)
-    daemon_loop
-    ;;
-  *)
-    echo "Usage: $0 {mount <dev>|unmount <dev>|daemon}"
-    exit 1
-    ;;
-esac
+if [ "$ACTION" = "mount" ] && [ -n "$DEVICE" ]; then
+  DEV_NAME=$(basename "$DEVICE")
+  TARGET="$MOUNT_BASE/$DEV_NAME"
+  mkdir -p "$TARGET"
+  mount "$DEVICE" "$TARGET" 2>/dev/null || mount -t exfat "$DEVICE" "$TARGET" 2>/dev/null || true
+  chmod -R 777 "$TARGET" 2>/dev/null || true
+  echo "[SSD Auto-Detector] Mounted $DEVICE at $TARGET"
+elif [ "$ACTION" = "unmount" ] && [ -n "$DEVICE" ]; then
+  DEV_NAME=$(basename "$DEVICE")
+  TARGET="$MOUNT_BASE/$DEV_NAME"
+  umount -l "$TARGET" 2>/dev/null || true
+  rmdir "$TARGET" 2>/dev/null || true
+  echo "[SSD Auto-Detector] Unmounted $DEVICE"
+fi

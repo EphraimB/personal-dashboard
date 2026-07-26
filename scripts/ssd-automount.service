@@ -1,15 +1,12 @@
 [Unit]
-Description=Plug & Play External SSD Auto-Detector Daemon for PhotoPrism
-After=network.target docker.service
-Wants=docker.service
+Description=External SSD Auto-Detector and Automount Service
+After=network.target
 
 [Service]
 Type=simple
 ExecStart=/usr/local/bin/ssd-auto-detector.sh daemon
 Restart=always
-RestartSec=5
-Environment=MOUNT_BASE=/media/external_ssd
-Environment=PHOTOPRISM_URL=http://localhost:2342
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
