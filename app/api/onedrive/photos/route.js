@@ -57,8 +57,8 @@ const DEMO_PHOTOS = [
 
 function getStoredTokens() {
   const possiblePaths = [
-    path.join(process.cwd(), 'dashboard', 'onedrive_tokens.json'),
-    path.join(process.cwd(), 'onedrive_tokens.json')
+    path.join(/*turbopackIgnore: true*/ process.cwd(), 'dashboard', 'onedrive_tokens.json'),
+    path.join(/*turbopackIgnore: true*/ process.cwd(), 'onedrive_tokens.json')
   ];
 
   for (const tokenPath of possiblePaths) {
