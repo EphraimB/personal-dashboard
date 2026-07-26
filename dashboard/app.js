@@ -1,5 +1,5 @@
 /* ==============================================================================
-   ARES CITY OS — TV DASHBOARD & PHOTO STREAM ENGINE
+   ARES CITY OS — TV DASHBOARD & ONEDRIVE PHOTO STREAM ENGINE
    ============================================================================== */
 
 (function () {
@@ -8,15 +8,9 @@
   // --- Configuration Management ---
   const STORAGE_KEY = 'ares_tv_dashboard_config';
 
-  function getDynamicDefaultUrl() {
-    const host = (window.location && window.location.hostname) ? window.location.hostname : 'localhost';
-    const protocol = (window.location && window.location.protocol) ? window.location.protocol : 'http:';
-    return `${protocol}//${host}:2342`;
-  }
-
   const DEFAULT_CONFIG = {
-    photoprismUrl: getDynamicDefaultUrl(),
-    password: '',
+    onedriveToken: '',
+    onedriveFolder: '',
     filterScreenshots: true,
     albumQuery: '',
     slideDuration: 15, // seconds
@@ -26,7 +20,6 @@
   };
 
   let config = loadConfig();
-  let sessionToken = '';
 
   // --- High-Resolution Fallback Demo Photos ---
   const DEMO_PHOTOS = [
@@ -85,7 +78,7 @@
   let progressInterval = null;
   let slideStartTime = 0;
   let activeLayer = 1;
-  let isConnectedToPhotoPrism = false;
+  let isConnectedToOneDrive = false;
 
   // --- DOM Elements ---
   const elViewport = document.getElementById('slideshow-viewport');
@@ -126,8 +119,8 @@
   const btnTestConnection = document.getElementById('btn-test-connection');
   const elTestResult = document.getElementById('connection-test-result');
 
-  const inputUrl = document.getElementById('cfg-photoprism-url');
-  const inputPassword = document.getElementById('cfg-admin-password');
+  const inputToken = document.getElementById('cfg-onedrive-token');
+  const inputFolder = document.getElementById('cfg-onedrive-folder');
   const chkFilterScreenshots = document.getElementById('cfg-filter-screenshots');
   const inputAlbumQuery = document.getElementById('cfg-album-query');
   const inputSlideDuration = document.getElementById('cfg-slide-duration');
@@ -143,55 +136,43 @@
 
     setupEventListeners();
     fetchPhotosAndStart();
-    startSsdAndPhotoPolling();
+    startOneDrivePolling();
   }
 
-  function startSsdAndPhotoPolling() {
-    // Poll every 10 seconds for newly connected SSDs / newly indexed photos / auto-reconnect
+  function startOneDrivePolling() {
+    // Poll every 30 seconds for new OneDrive photo uploads / sync
     setInterval(async () => {
-      const result = await fetchFromPhotoPrismWithFallback();
+      const result = await fetchFromOneDrive();
       if (result.success && result.photos && result.photos.length > 0) {
-        if (!isConnectedToPhotoPrism || photoList === DEMO_PHOTOS) {
+        if (!isConnectedToOneDrive || photoList === DEMO_PHOTOS) {
           photoList = result.photos;
-          isConnectedToPhotoPrism = true;
-          elSourceBadge.textContent = 'PHOTOPRISM';
+          isConnectedToOneDrive = true;
+          elSourceBadge.textContent = 'ONEDRIVE';
           elSourceBadge.className = 'stat-value source-connected';
           setSystemStatus(`ONLINE (${photoList.length} PHOTOS)`, true);
           if (elSsdBadge) {
-            elSsdBadge.textContent = 'CONNECTED';
+            elSsdBadge.textContent = 'PAIRED';
             elSsdBadge.className = 'stat-value ssd-connected';
           }
           currentIndex = 0;
           showPhoto(0);
         } else if (result.photos.length !== photoList.length) {
-          console.log(`[SSD Sync] Library updated! Old count: ${photoList.length}, New count: ${result.photos.length}`);
+          console.log(`[OneDrive Sync] Library updated! New count: ${result.photos.length}`);
           photoList = result.photos;
           setSystemStatus(`ONLINE (${photoList.length} PHOTOS)`, true);
-          if (elSsdBadge) {
-            elSsdBadge.textContent = `SSD (${photoList.length})`;
-            elSsdBadge.className = 'stat-value ssd-connected';
-          }
-        } else if (elSsdBadge) {
-          elSsdBadge.textContent = 'PLUG & PLAY';
-          elSsdBadge.className = 'stat-value ssd-connected';
         }
-      } else if (!isConnectedToPhotoPrism && elSsdBadge) {
-        elSsdBadge.textContent = 'AUTO DETECT';
+      } else if (!isConnectedToOneDrive && elSsdBadge) {
+        elSsdBadge.textContent = 'SSH AUTH';
         elSsdBadge.className = 'stat-value ssd-idle';
       }
-    }, 10000);
+    }, 30000);
   }
 
   function loadConfig() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        // Migration: If photoprismUrl was saved as 'http://localhost:2342' but we are accessing via IP, update default
-        if (parsed.photoprismUrl === 'http://localhost:2342' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-          parsed.photoprismUrl = getDynamicDefaultUrl();
-        }
-        return { ...DEFAULT_CONFIG, ...parsed };
+        return { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
       }
       return { ...DEFAULT_CONFIG };
     } catch (e) {
@@ -208,8 +189,8 @@
   }
 
   function applyConfigUI() {
-    inputUrl.value = config.photoprismUrl;
-    inputPassword.value = config.password;
+    inputToken.value = config.onedriveToken;
+    inputFolder.value = config.onedriveFolder;
     chkFilterScreenshots.checked = config.filterScreenshots;
     inputAlbumQuery.value = config.albumQuery;
     inputSlideDuration.value = config.slideDuration;
@@ -247,43 +228,72 @@
     elAresSol.textContent = `ARES SOL: ${msd.toFixed(3)}`;
   }
 
-  // --- PhotoPrism Auth & API Client ---
-  async function authenticateSession(baseUrl) {
-    if (!config.password) return '';
+  // --- Microsoft Graph API & Token Handler ---
+  async function loadTokensFromFile() {
     try {
-      const res = await fetch(`${baseUrl}/api/v1/session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'admin', password: config.password })
-      });
+      const res = await fetch('onedrive_tokens.json');
       if (res.ok) {
         const data = await res.json();
-        return data.id || data.token || '';
+        if (data.access_token) {
+          return data;
+        }
       }
     } catch (e) {
-      console.warn('Session auth failed:', e);
+      // File not present or running standalone
+    }
+    return null;
+  }
+
+  async function refreshOneDriveAccessToken(refreshToken, clientId) {
+    try {
+      const cId = clientId || '0614e717-b1a7-47b8-9369-34b868615b3c';
+      const params = new URLSearchParams();
+      params.append('client_id', cId);
+      params.append('grant_type', 'refresh_token');
+      params.append('refresh_token', refreshToken);
+
+      const res = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        return data.access_token || '';
+      }
+    } catch (e) {
+      console.warn('[OneDrive] Refresh token failed:', e);
     }
     return '';
   }
 
   async function fetchPhotosAndStart() {
-    setSystemStatus('CONNECTING...', false);
+    setSystemStatus('CONNECTING TO ONEDRIVE...', false);
     photoList = [];
 
-    const result = await fetchFromPhotoPrismWithFallback();
+    const result = await fetchFromOneDrive();
 
     if (result.success && result.photos && result.photos.length > 0) {
       photoList = result.photos;
-      isConnectedToPhotoPrism = true;
-      elSourceBadge.textContent = 'PHOTOPRISM';
+      isConnectedToOneDrive = true;
+      elSourceBadge.textContent = 'ONEDRIVE';
       elSourceBadge.className = 'stat-value source-connected';
       setSystemStatus(`ONLINE (${photoList.length} PHOTOS)`, true);
+      if (elSsdBadge) {
+        elSsdBadge.textContent = 'PAIRED';
+        elSsdBadge.className = 'stat-value ssd-connected';
+      }
     } else if (config.enableFallbackDemo) {
       photoList = DEMO_PHOTOS;
-      isConnectedToPhotoPrism = false;
+      isConnectedToOneDrive = false;
       elSourceBadge.textContent = 'DEMO STREAM';
       elSourceBadge.className = 'stat-value';
       setSystemStatus(`DEMO MODE (${result.reason || 'NOT CONNECTED'})`, false);
+      if (elSsdBadge) {
+        elSsdBadge.textContent = 'SSH AUTH';
+        elSsdBadge.className = 'stat-value ssd-idle';
+      }
     } else {
       setSystemStatus(`ERROR: ${result.reason || 'NO PHOTOS'}`, false);
       elPhotoTitle.textContent = result.reason || 'No photos available';
@@ -295,140 +305,132 @@
     startSlideshowTimer();
   }
 
-  async function fetchFromPhotoPrismWithFallback() {
-    const configuredUrl = config.photoprismUrl.replace(/\/$/, '');
-    const dynamicUrl = getDynamicDefaultUrl();
-    const proxyUrl = `${window.location.protocol}//${window.location.host}/photoprism-api`;
-    const localhostUrl = 'http://localhost:2342';
+  async function fetchFromOneDrive() {
+    let token = config.onedriveToken.trim();
+    let refreshToken = '';
+    let clientId = '0614e717-b1a7-47b8-9369-34b868615b3c';
 
-    // Deduplicate candidate endpoints
-    const urlsToTry = Array.from(new Set([configuredUrl, dynamicUrl, proxyUrl, localhostUrl])).filter(Boolean);
+    // Check local token file created by ./scripts/onedrive-login.sh over SSH
+    const localTokens = await loadTokensFromFile();
+    if (localTokens) {
+      if (localTokens.access_token) token = localTokens.access_token;
+      if (localTokens.refresh_token) refreshToken = localTokens.refresh_token;
+      if (localTokens.client_id) clientId = localTokens.client_id;
+    }
 
-    let lastReason = 'Unreachable server or CORS issue';
+    if (!token && !refreshToken) {
+      return { success: false, reason: 'No OneDrive credentials found. Run ./scripts/onedrive-login.sh over SSH' };
+    }
 
-    for (const baseUrl of urlsToTry) {
-      const res = await tryFetchFromUrl(baseUrl);
-      if (res.success) return res;
-      if (res.reason && !res.reason.includes('Unreachable') && !res.reason.includes('Network error')) {
-        lastReason = res.reason;
+    let res = await tryFetchGraphPhotos(token);
+    if (!res.success && refreshToken) {
+      console.log('[OneDrive] Attempting refresh token...');
+      const newToken = await refreshOneDriveAccessToken(refreshToken, clientId);
+      if (newToken) {
+        token = newToken;
+        res = await tryFetchGraphPhotos(newToken);
       }
     }
 
-    return { success: false, reason: lastReason };
+    return res;
   }
 
-  async function tryFetchFromUrl(baseUrl) {
+  async function tryFetchGraphPhotos(accessToken) {
     try {
-      sessionToken = await authenticateSession(baseUrl);
+      let endpoint = 'https://graph.microsoft.com/v1.0/me/drive/special/photos/children?$expand=thumbnails&$top=500';
 
-      let endpoint = `${baseUrl}/api/v1/photos?count=1000&order=newest`;
-      if (config.albumQuery.trim()) {
-        endpoint += `&q=${encodeURIComponent(config.albumQuery.trim())}`;
+      const targetFolder = config.onedriveFolder.trim();
+      if (targetFolder) {
+        const cleanPath = targetFolder.replace(/^\/+|\/+$/g, '');
+        endpoint = `https://graph.microsoft.com/v1.0/me/drive/root:/${encodeURIComponent(cleanPath)}:/children?$expand=thumbnails&$top=500`;
+      } else if (config.albumQuery.trim()) {
+        endpoint = `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(config.albumQuery.trim())}')?$expand=thumbnails&$top=500`;
       }
 
-      const headers = {};
-      const token = sessionToken || config.password;
-      if (token) {
-        headers['X-Session-Id'] = token;
-        headers['X-Auth-Token'] = token;
-      }
+      const response = await fetch(endpoint, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
 
-      let response = await fetch(endpoint, { headers });
       if (response.status === 401 || response.status === 403) {
-        return { success: false, reason: 'Authentication required (Check password or enable PHOTOPRISM_PUBLIC)' };
+        return { success: false, reason: 'OneDrive Access Token Expired. Run ./scripts/onedrive-login.sh' };
       }
 
       if (!response.ok) {
-        return { success: false, reason: `HTTP Error ${response.status}` };
+        return { success: false, reason: `Microsoft Graph API Error HTTP ${response.status}` };
       }
 
-      let data = await response.json();
-      if (!Array.isArray(data)) {
-        return { success: false, reason: 'Invalid API response format' };
+      const data = await response.json();
+      const items = data.value || [];
+
+      if (items.length === 0) {
+        return { success: false, reason: '0 Photos found in specified OneDrive location' };
       }
 
-      // If main query returned 0, try fallback search queries (quality:0, s:all, merged:true)
-      if (data.length === 0 && !config.albumQuery.trim()) {
-        const candidateQueries = [
-          `${baseUrl}/api/v1/photos?count=1000&q=quality:0`,
-          `${baseUrl}/api/v1/photos?count=1000&q=s:all`,
-          `${baseUrl}/api/v1/photos?count=1000&q=merged:true`
-        ];
-        for (const fallbackUrl of candidateQueries) {
-          const fallbackRes = await fetch(fallbackUrl, { headers });
-          if (fallbackRes.ok) {
-            const fallbackData = await fallbackRes.json();
-            if (Array.isArray(fallbackData) && fallbackData.length > 0) {
-              data = fallbackData;
-              break;
-            }
-          }
-        }
-      }
-
-      if (data.length === 0) {
-        return { success: false, reason: '0 Photos in PhotoPrism library' };
-      }
-
-      // Filter photos (safely without dropping real photos)
-      let filtered = data.filter(item => {
-        if (!config.filterScreenshots) return true;
-        return isRealCameraPhoto(item);
+      // Filter images
+      const imageItems = items.filter(item => {
+        if (!item.file) return false;
+        const mime = item.file.mimeType || '';
+        if (!mime.startsWith('image/')) return false;
+        if (config.filterScreenshots && !isRealCameraPhoto(item)) return false;
+        return true;
       });
 
-      // Safety fallback: if filter drops everything, use all photos
-      if (filtered.length === 0) {
-        filtered = data;
+      const itemsToUse = imageItems.length > 0 ? imageItems : items.filter(i => i.file && (i.file.mimeType || '').startsWith('image/'));
+
+      if (itemsToUse.length === 0) {
+        return { success: false, reason: 'No photo files matching criteria' };
       }
 
-      const transformed = filtered.map(item => transformPhotoItem(item, baseUrl));
+      const transformed = itemsToUse.map(item => transformOneDriveItem(item));
       return { success: true, photos: transformed };
     } catch (e) {
-      console.warn(`Fetch error for ${baseUrl}:`, e);
-      return { success: false, reason: `Network error connecting to ${baseUrl}` };
+      console.warn('[OneDrive] Graph API fetch error:', e);
+      return { success: false, reason: `Network error connecting to Microsoft Graph API` };
     }
   }
 
   function isRealCameraPhoto(item) {
-    if (item.Type && item.Type !== 'image') return false;
-
-    const titleAndName = [item.Title, item.Name, item.FileName].filter(Boolean).join(' ').toLowerCase();
-
-    const explicitScreenshotTerms = [
-      'screenshot', 'screen_shot', 'screen shot', 'captura de pantalla'
-    ];
-
-    for (const term of explicitScreenshotTerms) {
-      if (titleAndName.includes(term)) return false;
+    const name = (item.name || '').toLowerCase();
+    const explicitTerms = ['screenshot', 'screen_shot', 'captura', 'document', 'receipt', 'scan'];
+    for (const term of explicitTerms) {
+      if (name.includes(term)) return false;
     }
-
     return true;
   }
 
-  function transformPhotoItem(item, baseUrl) {
-    const token = sessionToken || config.password || 'public';
-    const uid = item.UID || item.ID || item.Hash;
-    const hash = item.Hash || item.FileHash || uid;
-    
-    // Use PhotoPrism /api/v1/t/:hash/:token/fit_2048 image stream endpoint.
-    // Avoid /api/v1/photos/:uid/dl which sets Content-Disposition: attachment
-    const photoUrl = hash 
-      ? `${baseUrl}/api/v1/t/${hash}/${token}/fit_2048`
-      : `${baseUrl}/api/v1/photos/${uid}/view`;
-    
+  function transformOneDriveItem(item) {
+    const photoUrl = item['@microsoft.graph.downloadUrl'] || 
+                     (item.thumbnails && item.thumbnails[0] && item.thumbnails[0].large ? item.thumbnails[0].large.url : '');
+
+    const photoMeta = item.photo || {};
     const exifParts = [];
-    if (item.FocalLength) exifParts.push(`${item.FocalLength}mm`);
-    if (item.FNumber) exifParts.push(`f/${item.FNumber}`);
-    if (item.Exposure) exifParts.push(`${item.Exposure}s`);
-    if (item.Iso) exifParts.push(`ISO ${item.Iso}`);
+    if (photoMeta.focalLength) exifParts.push(`${photoMeta.focalLength}mm`);
+    if (photoMeta.fNumber) exifParts.push(`f/${photoMeta.fNumber}`);
+    if (photoMeta.exposureDenominator) exifParts.push(`1/${photoMeta.exposureDenominator}s`);
+    if (photoMeta.iso) exifParts.push(`ISO ${photoMeta.iso}`);
+
+    let dateStr = 'Unknown Date';
+    if (photoMeta.takenDateTime) {
+      dateStr = photoMeta.takenDateTime.replace('T', ' ').substring(0, 16);
+    } else if (item.createdDateTime) {
+      dateStr = item.createdDateTime.replace('T', ' ').substring(0, 16);
+    }
+
+    const cameraStr = [photoMeta.cameraMake, photoMeta.cameraModel].filter(Boolean).join(' ') || 'OneDrive Camera Asset';
+
+    const loc = item.location;
+    let locStr = 'OneDrive Cloud Storage';
+    if (loc && loc.latitude && loc.longitude) {
+      locStr = `${loc.latitude.toFixed(2)}°, ${loc.longitude.toFixed(2)}°`;
+    }
 
     return {
-      id: uid,
-      title: item.Title || item.Name || 'SSD Photo Asset',
-      date: item.TakenAt ? item.TakenAt.replace('T', ' ').substring(0, 16) : 'Unknown Date',
-      location: [item.City, item.Country].filter(Boolean).join(', ') || 'Earth',
-      camera: item.CameraModel || item.CameraMake || 'Digital Camera',
-      exif: exifParts.length > 0 ? exifParts.join(' • ') : 'Camera Capture',
+      id: item.id,
+      title: item.name || 'OneDrive Photo',
+      date: dateStr,
+      location: locStr,
+      camera: cameraStr,
+      exif: exifParts.length > 0 ? exifParts.join(' • ') : 'Digital Capture',
       url: photoUrl
     };
   }
@@ -544,8 +546,8 @@
 
     btnSaveSettings.addEventListener('click', (e) => {
       e.preventDefault();
-      config.photoprismUrl = inputUrl.value.trim() || DEFAULT_CONFIG.photoprismUrl;
-      config.password = inputPassword.value.trim();
+      config.onedriveToken = inputToken.value.trim();
+      config.onedriveFolder = inputFolder.value.trim();
       config.filterScreenshots = chkFilterScreenshots.checked;
       config.albumQuery = inputAlbumQuery.value.trim();
       config.slideDuration = Math.max(3, parseInt(inputSlideDuration.value, 10) || 15);
@@ -598,40 +600,39 @@
   }
 
   async function testConnection() {
-    elTestResult.textContent = 'Testing connection...';
+    elTestResult.textContent = 'Testing OneDrive connection...';
     elTestResult.className = 'test-result-msg';
 
-    const testUrl = inputUrl.value.trim().replace(/\/$/, '');
-    const headers = {};
-    const token = await authenticateSession(testUrl) || inputPassword.value.trim();
-    if (token) {
-      headers['X-Session-Id'] = token;
-      headers['X-Auth-Token'] = token;
+    let token = inputToken.value.trim();
+    if (!token) {
+      const local = await loadTokensFromFile();
+      if (local && local.access_token) token = local.access_token;
+    }
+
+    if (!token) {
+      elTestResult.textContent = '❌ No Token found. Run ./scripts/onedrive-login.sh over SSH first.';
+      elTestResult.className = 'test-result-msg error';
+      return;
     }
 
     try {
-      const res = await fetch(`${testUrl}/api/v1/ping`, { headers });
+      const res = await fetch('https://graph.microsoft.com/v1.0/me/drive/root', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
       if (res.ok) {
-        const countRes = await fetch(`${testUrl}/api/v1/photos?count=1`, { headers });
-        if (countRes.ok) {
-          const photos = await countRes.json();
-          if (Array.isArray(photos) && photos.length > 0) {
-            elTestResult.textContent = '✓ Connected! Photos found on server.';
-            elTestResult.className = 'test-result-msg success';
-          } else {
-            elTestResult.textContent = '⚠ Connected to PhotoPrism, but 0 photos indexed yet. Run indexing command!';
-            elTestResult.className = 'test-result-msg error';
-          }
-        } else {
-          elTestResult.textContent = `✓ Ping OK, but photo list returned HTTP ${countRes.status}`;
-          elTestResult.className = 'test-result-msg error';
-        }
+        const data = await res.json();
+        elTestResult.textContent = `✓ Connected to OneDrive! Account: ${data.owner?.user?.displayName || 'User'}`;
+        elTestResult.className = 'test-result-msg success';
+      } else if (res.status === 401) {
+        elTestResult.textContent = '✗ Token Expired or Invalid. Re-run ./scripts/onedrive-login.sh over SSH.';
+        elTestResult.className = 'test-result-msg error';
       } else {
         elTestResult.textContent = `✗ HTTP Error ${res.status}`;
         elTestResult.className = 'test-result-msg error';
       }
     } catch (e) {
-      elTestResult.textContent = '✗ Unreachable server or CORS issue';
+      elTestResult.textContent = '✗ Network error connecting to Microsoft Graph API';
       elTestResult.className = 'test-result-msg error';
     }
   }

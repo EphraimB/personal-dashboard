@@ -64,8 +64,8 @@
     <!-- Right System Controls & Indicators -->
     <div class="hud-right-sector">
       <div class="hud-stat-box">
-        <span class="stat-label">EXTERNAL SSD</span>
-        <span id="ssd-status-badge" class="stat-value ssd-idle">AUTO DETECT</span>
+        <span class="stat-label">CLOUD SYNC</span>
+        <span id="ssd-status-badge" class="stat-value ssd-idle">HEADLESS AUTH</span>
       </div>
       <div class="hud-stat-box">
         <span class="stat-label">PHOTOS</span>
@@ -73,7 +73,7 @@
       </div>
       <div class="hud-stat-box">
         <span class="stat-label">SOURCE</span>
-        <span id="source-badge" class="stat-value source-connected">PHOTOPRISM</span>
+        <span id="source-badge" class="stat-value source-connected">ONEDRIVE</span>
       </div>
       <button id="btn-open-settings" class="hud-btn" title="Open Settings (Shortcut: M)">
         [ ⚙ CONFIG ]
@@ -150,17 +150,21 @@
         <form id="settings-form">
           <!-- Connection Settings -->
           <div class="settings-group">
-            <h4 class="group-title">// PHOTOPRISM CONNECTION</h4>
-            <div class="form-row">
-              <label for="cfg-photoprism-url">PhotoPrism URL:</label>
-              <input type="text" id="cfg-photoprism-url" placeholder="http://localhost:2342" value="http://localhost:2342" />
+            <h4 class="group-title">// MICROSOFT ONEDRIVE CONNECTION</h4>
+            <div class="ssh-hint-box" style="margin-bottom: 12px; padding: 10px; background: rgba(0, 240, 255, 0.08); border: 1px dashed rgba(0, 240, 255, 0.3); border-radius: 4px; font-size: 0.85rem;">
+              <strong>💻 SSH / Headless Authentication Command:</strong><br/>
+              Run <code style="color: #00f0ff;">./scripts/onedrive-login.sh</code> in your SSH terminal to pair OneDrive from your phone or laptop in 30 seconds!
             </div>
             <div class="form-row">
-              <label for="cfg-admin-password">Admin Password / Auth Token:</label>
-              <input type="password" id="cfg-admin-password" placeholder="Leave empty if public/no auth" />
+              <label for="cfg-onedrive-token">OneDrive Access Token / Refresh Token:</label>
+              <input type="password" id="cfg-onedrive-token" placeholder="Automatically set by ./scripts/onedrive-login.sh or paste token" />
             </div>
             <div class="form-row">
-              <button type="button" id="btn-test-connection" class="hud-btn">TEST CONNECTION</button>
+              <label for="cfg-onedrive-folder">Target Folder / Path:</label>
+              <input type="text" id="cfg-onedrive-folder" placeholder="e.g. Pictures or Pictures/Camera Roll (Leave blank for default Photos)" />
+            </div>
+            <div class="form-row">
+              <button type="button" id="btn-test-connection" class="hud-btn">TEST ONEDRIVE CONNECTION</button>
               <span id="connection-test-result" class="test-result-msg"></span>
             </div>
           </div>
@@ -171,13 +175,13 @@
             <div class="form-row checkbox-row">
               <input type="checkbox" id="cfg-filter-screenshots" checked />
               <label for="cfg-filter-screenshots">
-                <strong>Smart Screenshot & AI Filter:</strong> Exclude screenshots, documents, AI art, drawings, and non-photos automatically
+                <strong>Smart Screenshot & AI Filter:</strong> Exclude screenshots, documents, AI art, and non-photos automatically
               </label>
             </div>
             <div class="form-row">
-              <label for="cfg-album-query">Target Album / Search Query:</label>
-              <input type="text" id="cfg-album-query" placeholder="e.g. album:vacation or camera:&quot;Sony&quot;" />
-              <span class="input-hint">Leave blank to load all camera photos in library</span>
+              <label for="cfg-album-query">Search Query Filter:</label>
+              <input type="text" id="cfg-album-query" placeholder="e.g. .jpg or .png or specific search term" />
+              <span class="input-hint">Leave blank to stream all camera photos in library</span>
             </div>
           </div>
 
@@ -198,7 +202,7 @@
             </div>
             <div class="form-row checkbox-row">
               <input type="checkbox" id="cfg-fallback-demo" checked />
-              <label for="cfg-fallback-demo">Enable High-Res Demo Photos if PhotoPrism is offline</label>
+              <label for="cfg-fallback-demo">Enable High-Res Demo Photos if OneDrive is disconnected</label>
             </div>
           </div>
         </form>
