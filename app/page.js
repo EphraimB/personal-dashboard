@@ -57,7 +57,7 @@ export default function TvDashboard() {
     filterScreenshots: true,
     albumQuery: '',
     slideDuration: 15,
-    enableKenBurns: true,
+    enableKenBurns: false,
     enableScanlines: true,
     enableFallbackDemo: true,
     imageFitMode: 'contain' // 'contain' for full un-cropped photos, 'cover' for full bleed

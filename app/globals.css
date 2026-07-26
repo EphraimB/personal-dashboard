@@ -71,6 +71,8 @@ html, body {
 
 .photo-layer.fit-contain {
   background-size: contain;
+  transform: none !important;
+  animation: none !important;
 }
 
 .photo-layer.active {
