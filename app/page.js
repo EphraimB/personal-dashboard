@@ -6,19 +6,23 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-1',
     title: 'Ares Habitat Surface Survey',
-    description: 'High-resolution atmospheric survey captured by Rover Optical Unit 4 over the eastern flank of Ares Crater. Atmospheric dust density remains within expected operational parameters for habitat maintenance.',
+    description: 'Atmospheric survey over the eastern flank of Ares Crater during late afternoon solar alignment.',
     date: '2026-07-21 18:45',
     location: 'Ares Crater, Mars System',
-    camera: 'Ares Rover Optical Cam 4K',
+    latitude: 18.45,
+    longitude: -66.10,
+    camera: 'Optical Rover Cam 4K',
     exif: '24mm • f/4.0 • 1/1000s • ISO 100',
     url: 'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?q=80&w=2000&auto=format&fit=crop'
   },
   {
     id: 'demo-2',
     title: 'Nebula Horizon Over City',
-    description: 'Long exposure nocturnal panoramic of the metropolis baseline. Glowing cybernetic grids reflect off low-altitude cloud cover during peak solar flare activity.',
+    description: 'Long exposure nocturnal view of city lights glowing beneath passing cloud cover.',
     date: '2026-06-15 22:10',
     location: 'Citizen Suite Penthouse',
+    latitude: 40.71,
+    longitude: -74.00,
     camera: 'Sony Alpha A7 IV',
     exif: '35mm • f/1.8 • 1/60s • ISO 800',
     url: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=2000&auto=format&fit=crop'
@@ -26,9 +30,11 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-3',
     title: 'Pressurized Mountain Pass',
-    description: 'Crisp alpine morning vista captured along the Sector 02 high-altitude transit corridor. Glacial runoff feeds into pressurized reservoir facilities downstream.',
+    description: 'Crisp alpine morning view along the high mountain transit ridge.',
     date: '2026-05-04 11:30',
     location: 'Sector 02 Alpine Loop',
+    latitude: 46.57,
+    longitude: 7.91,
     camera: 'Fujifilm X-T5',
     exif: '16mm • f/8.0 • 1/250s • ISO 200',
     url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2000&auto=format&fit=crop'
@@ -36,9 +42,11 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-4',
     title: 'Cosmic Reflection Lake',
-    description: 'Serene sunrise framing the bio-dome reflection pools in the Northern Colony Sanctuary. Early morning mist dissipates as thermal array cycles begin.',
+    description: 'Serene sunrise framing coastal bio-dome reflection pools at first light.',
     date: '2026-04-12 05:20',
     location: 'Northern Colony Sanctuary',
+    latitude: 21.30,
+    longitude: -157.85,
     camera: 'Canon EOS R5',
     exif: '50mm • f/1.4 • 1/4000s • ISO 100',
     url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2000&auto=format&fit=crop'
@@ -46,14 +54,33 @@ const DEMO_PHOTOS = [
   {
     id: 'demo-5',
     title: 'Deep Space Orbital Aurora',
-    description: 'Orbital spectrograph tracking magnetic field oscillations and ion density glows in upper thermosphere. Telemetry streamed live to primary TV HUD arrays.',
+    description: 'Spectacular aurora borealis ribbons shimmering over polar ice fields.',
     date: '2026-03-29 02:15',
     location: 'Ares City Orbital Platform',
+    latitude: 64.14,
+    longitude: -21.94,
     camera: 'Orbital Tele-Array Mark III',
     exif: '85mm • f/1.2 • 1/30s • ISO 1600',
     url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=2000&auto=format&fit=crop'
   }
 ];
+
+function formatHumanDate(rawDate) {
+  if (!rawDate || rawDate === 'Unknown Date') return 'Date Taken Unknown';
+  try {
+    const clean = rawDate.includes('T') ? rawDate : rawDate.replace(' ', 'T');
+    const d = new Date(clean);
+    if (isNaN(d.getTime())) return rawDate;
+
+    const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
+    const monthDay = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    return `${weekday}, ${monthDay} • ${timeStr}`;
+  } catch (e) {
+    return rawDate;
+  }
+}
 
 export default function TvDashboard() {
   const [config, setConfig] = useState({
@@ -363,6 +390,17 @@ export default function TvDashboard() {
           style={{ backgroundImage: layer2Url ? `url("${layer2Url}")` : 'none' }}
         />
         <div className="photo-overlay-vignette" />
+
+        {/* Translucent Hero "Photo Taken" Date & Time Overlay */}
+        <div className="photo-taken-hero-overlay">
+          <div className="hero-date-badge">
+            <span className="badge-icon">📅</span>
+            <div className="badge-text-group">
+              <span className="badge-sub-label">PHOTO TAKEN</span>
+              <span className="badge-main-date">{formatHumanDate(currentPhoto.date)}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Overlays */}
@@ -385,8 +423,8 @@ export default function TvDashboard() {
             </svg>
           </span>
           <div className="hud-title-stack">
-            <span className="hud-sys-tag">// ARES CITY OS</span>
-            <span className="hud-sys-name">NEXT.JS TV DASHBOARD</span>
+            <span className="hud-sys-tag">// PERSONAL TV DASHBOARD</span>
+            <span className="hud-sys-name">EPHRAIM BECKER'S DASHBOARD</span>
           </div>
           <span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>
             <span className="active-pulse-dot" />
@@ -443,8 +481,8 @@ export default function TvDashboard() {
 
           <div className="meta-card-header">
             <div className="meta-title-group">
-              <span className="meta-sector-label">// TELEMETRY // CURRENT ASSET</span>
-              <h2 className="photo-title">{currentPhoto.title}</h2>
+              <span className="meta-sector-label">📍 LOCATION: {currentPhoto.location}</span>
+              <h2 className="photo-title">{currentPhoto.description || currentPhoto.title}</h2>
             </div>
             <div className="meta-controls-quick">
               <button

@@ -723,3 +723,60 @@ html, body {
   margin-top: clamp(12px, 1.5vw, 22px);
 }
 
+/* ==============================================================================
+   TRANSLUCENT HERO "PHOTO TAKEN" DATE & TIME OVERLAY
+   ============================================================================== */
+
+.photo-taken-hero-overlay {
+  position: absolute;
+  top: clamp(82px, 7.5vw, 130px);
+  left: clamp(24px, 4vw, 64px);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.hero-date-badge {
+  background: rgba(4, 6, 12, 0.55);
+  border: 1.5px solid var(--color-hud-border-cyan);
+  border-radius: 12px;
+  padding: clamp(8px, 1.2vw, 16px) clamp(16px, 2vw, 28px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 240, 255, 0.15);
+  animation: heroBadgeFadeIn 0.8s ease-out forwards;
+}
+
+@keyframes heroBadgeFadeIn {
+  0% { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.badge-icon {
+  font-size: clamp(1.2rem, 1.8vw, 2.2rem);
+}
+
+.badge-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.badge-sub-label {
+  font-size: clamp(0.55rem, 0.75vw, 0.9rem);
+  color: var(--color-cyan);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.badge-main-date {
+  font-family: var(--font-sans);
+  font-size: clamp(1rem, 1.45vw, 1.95rem);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+

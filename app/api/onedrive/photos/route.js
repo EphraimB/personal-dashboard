@@ -205,6 +205,19 @@ function isScreenshot(item) {
   return false;
 }
 
+function cleanTitle(rawName) {
+  if (!rawName) return 'Captured Moment';
+  let cleaned = rawName
+    .replace(/\.(jpg|jpeg|png|heic|heif|webp|gif)$/i, '')
+    .replace(/^(IMG_|DSC_|PXL_|PHOTO_|Screenshot_)/i, '')
+    .replace(/[-_]/g, ' ')
+    .trim();
+
+  // Capitalize words cleanly if it was a filename
+  cleaned = cleaned.replace(/\b\w/g, (c) => c.toUpperCase());
+  return cleaned || 'Captured Moment';
+}
+
 function transformOneDriveItem(item) {
   const name = (item.name || '').toLowerCase();
   const mime = (item.file && item.file.mimeType ? item.file.mimeType : '').toLowerCase();
@@ -242,24 +255,29 @@ function transformOneDriveItem(item) {
     dateStr = item.createdDateTime.replace('T', ' ').substring(0, 16);
   }
 
-  const cameraStr = [photoMeta.cameraMake, photoMeta.cameraModel].filter(Boolean).join(' ') || 'OneDrive Camera Asset';
+  const cameraStr = [photoMeta.cameraMake, photoMeta.cameraModel].filter(Boolean).join(' ') || 'Digital Camera';
 
-  const loc = item.location;
-  let locStr = 'OneDrive Cloud Storage';
-  if (loc && loc.latitude && loc.longitude) {
-    locStr = `${loc.latitude.toFixed(2)}°, ${loc.longitude.toFixed(2)}°`;
+  const loc = item.location || {};
+  let locStr = 'Personal Collection';
+  let lat = loc.latitude || null;
+  let lon = loc.longitude || null;
+
+  if (lat && lon) {
+    locStr = `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
   }
 
   const desc = item.description || 
              (item.photo && item.photo.caption) || 
-             `Captured on ${dateStr} at ${locStr}. Telemetry logged via ${cameraStr}.`;
+             `Captured on ${dateStr}. Camera: ${cameraStr}.`;
 
   return {
     id: item.id,
-    title: item.name || 'OneDrive Photo',
+    title: cleanTitle(item.name),
     description: desc,
     date: dateStr,
     location: locStr,
+    latitude: lat,
+    longitude: lon,
     camera: cameraStr,
     exif: exifParts.length > 0 ? exifParts.join(' • ') : 'Digital Capture',
     url: photoUrl
