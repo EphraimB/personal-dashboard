@@ -148,84 +148,79 @@ export async function GET(request) {
 
 async function fetchGraphPhotos(token, folder, query, filterScreenshots) {
   try {
-    let initialEndpoint = 'https://graph.microsoft.com/v1.0/me/drive/special/photos/children?$expand=thumbnails&$top=500';
+    let queue = [];
 
     if (folder.trim()) {
       const cleanPath = folder.trim().replace(/^\/+|\/+$/g, '');
-      initialEndpoint = `https://graph.microsoft.com/v1.0/me/drive/root:/${encodeURIComponent(cleanPath)}:/children?$expand=thumbnails&$top=500`;
+      queue.push(`https://graph.microsoft.com/v1.0/me/drive/root:/${encodeURIComponent(cleanPath)}:/children?$expand=thumbnails&$top=500`);
     } else if (query.trim()) {
-      initialEndpoint = `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(query.trim())}')?$expand=thumbnails&$top=500`;
+      queue.push(`https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(query.trim())}')?$expand=thumbnails&$top=500`);
+    } else {
+      // https://onedrive.live.com/photos target: Fetch Camera Roll, Pictures, and Photos special folders
+      queue.push('https://graph.microsoft.com/v1.0/me/drive/special/cameraroll/children?$expand=thumbnails&$top=500');
+      queue.push('https://graph.microsoft.com/v1.0/me/drive/special/photos/children?$expand=thumbnails&$top=500');
+      queue.push('https://graph.microsoft.com/v1.0/me/drive/root:/Pictures/Camera Roll:/children?$expand=thumbnails&$top=500');
+      queue.push('https://graph.microsoft.com/v1.0/me/drive/root:/Pictures:/children?$expand=thumbnails&$top=500');
     }
 
-    let allItems = [];
-    let queue = [initialEndpoint];
+    let rawItems = [];
     let visitedEndpoints = new Set();
     let pageCount = 0;
 
-    // Fetch items with recursive subfolder traversal (up to 15 API requests max)
-    while (queue.length > 0 && pageCount < 15) {
+    // Fetch items with recursive subfolder traversal (up to 20 API requests max)
+    while (queue.length > 0 && pageCount < 20) {
       const currentEndpoint = queue.shift();
       if (!currentEndpoint || visitedEndpoints.has(currentEndpoint)) continue;
       visitedEndpoints.add(currentEndpoint);
       pageCount++;
 
-      const response = await fetch(currentEndpoint, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Cache-Control': 'no-cache'
-        },
-        cache: 'no-store'
-      });
+      try {
+        const response = await fetch(currentEndpoint, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache'
+          },
+          cache: 'no-store'
+        });
 
-      if (response.status === 401 || response.status === 403) {
-        return { success: false, reason: 'OneDrive Token Expired / Access Denied. Re-run ./scripts/onedrive-login.sh' };
-      }
-
-      if (!response.ok) {
-        // If special/photos is empty, fallback to root search
-        if (pageCount === 1 && !folder.trim() && !query.trim()) {
-          queue.push("https://graph.microsoft.com/v1.0/me/drive/root/search(q='.jpg')?$expand=thumbnails&$top=500");
-          continue;
+        if (response.status === 401 || response.status === 403) {
+          return { success: false, reason: 'OneDrive Token Expired / Access Denied. Re-run ./scripts/onedrive-login.sh' };
         }
-        return { success: false, reason: `Microsoft Graph API Error HTTP ${response.status}` };
-      }
 
-      const data = await response.json();
-      const pageItems = data.value || [];
-      allItems = allItems.concat(pageItems);
-
-      // Follow nextLink for pagination
-      if (data['@odata.nextLink']) {
-        queue.push(data['@odata.nextLink']);
-      }
-
-      // Discover subfolders and add their children to queue (if searching inside a folder)
-      for (const item of pageItems) {
-        if (item.folder && item.folder.childCount > 0 && item.id) {
-          const subfolderEndpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${item.id}/children?$expand=thumbnails&$top=500`;
-          if (!visitedEndpoints.has(subfolderEndpoint) && queue.length < 10) {
-            queue.push(subfolderEndpoint);
-          }
+        if (!response.ok) {
+          continue; // Skip invalid or non-existent subfolder endpoints
         }
-      }
-    }
 
-    // Also fallback to broad image search if special/photos yielded few items and no folder was explicitly set
-    if (allItems.length < 90 && !folder.trim() && !query.trim() && !visitedEndpoints.has("https://graph.microsoft.com/v1.0/me/drive/root/search(q='.jpg')?$expand=thumbnails&$top=500")) {
-      const searchRes = await fetch("https://graph.microsoft.com/v1.0/me/drive/root/search(q='.jpg')?$expand=thumbnails&$top=500", {
-        headers: { 'Authorization': `Bearer ${token}` },
-        cache: 'no-store'
-      });
-      if (searchRes.ok) {
-        const searchData = await searchRes.json();
-        if (searchData.value && searchData.value.length > 0) {
-          const existingIds = new Set(allItems.map(i => i.id));
-          for (const sItem of searchData.value) {
-            if (!existingIds.has(sItem.id)) {
-              allItems.push(sItem);
+        const data = await response.json();
+        const pageItems = data.value || [];
+        rawItems = rawItems.concat(pageItems);
+
+        // Follow nextLink for pagination
+        if (data['@odata.nextLink']) {
+          queue.push(data['@odata.nextLink']);
+        }
+
+        // Discover subfolders and add their children to queue
+        for (const item of pageItems) {
+          if (item.folder && item.folder.childCount > 0 && item.id) {
+            const subfolderEndpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${item.id}/children?$expand=thumbnails&$top=500`;
+            if (!visitedEndpoints.has(subfolderEndpoint) && queue.length < 15) {
+              queue.push(subfolderEndpoint);
             }
           }
         }
+      } catch (err) {
+        // Continue queue on transient fetch error
+      }
+    }
+
+    // Deduplicate items by unique item ID
+    const seenIds = new Set();
+    const allItems = [];
+    for (const item of rawItems) {
+      if (item && item.id && !seenIds.has(item.id)) {
+        seenIds.add(item.id);
+        allItems.push(item);
       }
     }
 
