@@ -170,8 +170,10 @@ async function fetchGraphPhotos(token, folder, query, filterScreenshots) {
 
     const imageItems = items.filter(item => {
       if (!item.file) return false;
-      const mime = item.file.mimeType || '';
-      if (!mime.startsWith('image/')) return false;
+      const mime = (item.file.mimeType || '').toLowerCase();
+      const name = (item.name || '').toLowerCase();
+      const isImage = mime.startsWith('image/') || name.endsWith('.heic') || name.endsWith('.heif');
+      if (!isImage) return false;
       if (filterScreenshots && isScreenshot(item)) return false;
       return true;
     });
@@ -199,8 +201,27 @@ function isScreenshot(item) {
 }
 
 function transformOneDriveItem(item) {
-  const photoUrl = item['@microsoft.graph.downloadUrl'] || 
-                   (item.thumbnails && item.thumbnails[0] && item.thumbnails[0].large ? item.thumbnails[0].large.url : '');
+  const name = (item.name || '').toLowerCase();
+  const mime = (item.file && item.file.mimeType ? item.file.mimeType : '').toLowerCase();
+  const isHeic = name.endsWith('.heic') || name.endsWith('.heif') || mime.includes('heic') || mime.includes('heif');
+
+  let photoUrl = '';
+
+  // Extract Microsoft Graph API converted JPEG thumbnail for HEIC/HEIF browser rendering
+  if (item.thumbnails && item.thumbnails.length > 0) {
+    const thumb = item.thumbnails[0];
+    photoUrl = (thumb.c2048x2048 && thumb.c2048x2048.url) || 
+               (thumb.large && thumb.large.url) || 
+               (thumb.medium && thumb.medium.url) || 
+               (thumb.source && thumb.source.url) || '';
+  }
+
+  // Use direct download URL for standard JPEGs, or fallback to converted thumbnail for HEIC
+  if (!isHeic && item['@microsoft.graph.downloadUrl']) {
+    photoUrl = item['@microsoft.graph.downloadUrl'];
+  } else if (!photoUrl) {
+    photoUrl = item['@microsoft.graph.downloadUrl'] || '';
+  }
 
   const photoMeta = item.photo || {};
   const exifParts = [];
