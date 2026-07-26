@@ -148,22 +148,27 @@ export async function GET(request) {
 
 async function fetchGraphPhotos(token, folder, query, filterScreenshots) {
   try {
-    let endpoint = 'https://graph.microsoft.com/v1.0/me/drive/special/photos/children?$expand=thumbnails&$top=500';
+    let initialEndpoint = 'https://graph.microsoft.com/v1.0/me/drive/special/photos/children?$expand=thumbnails&$top=500';
 
     if (folder.trim()) {
       const cleanPath = folder.trim().replace(/^\/+|\/+$/g, '');
-      endpoint = `https://graph.microsoft.com/v1.0/me/drive/root:/${encodeURIComponent(cleanPath)}:/children?$expand=thumbnails&$top=500`;
+      initialEndpoint = `https://graph.microsoft.com/v1.0/me/drive/root:/${encodeURIComponent(cleanPath)}:/children?$expand=thumbnails&$top=500`;
     } else if (query.trim()) {
-      endpoint = `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(query.trim())}')?$expand=thumbnails&$top=500`;
+      initialEndpoint = `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(query.trim())}')?$expand=thumbnails&$top=500`;
     }
 
-    let items = [];
-    let currentEndpoint = endpoint;
+    let allItems = [];
+    let queue = [initialEndpoint];
+    let visitedEndpoints = new Set();
     let pageCount = 0;
 
-    // Follow @odata.nextLink pagination loop to fetch all photo pages
-    while (currentEndpoint && pageCount < 10) {
+    // Fetch items with recursive subfolder traversal (up to 15 API requests max)
+    while (queue.length > 0 && pageCount < 15) {
+      const currentEndpoint = queue.shift();
+      if (!currentEndpoint || visitedEndpoints.has(currentEndpoint)) continue;
+      visitedEndpoints.add(currentEndpoint);
       pageCount++;
+
       const response = await fetch(currentEndpoint, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -177,32 +182,68 @@ async function fetchGraphPhotos(token, folder, query, filterScreenshots) {
       }
 
       if (!response.ok) {
+        // If special/photos is empty, fallback to root search
+        if (pageCount === 1 && !folder.trim() && !query.trim()) {
+          queue.push("https://graph.microsoft.com/v1.0/me/drive/root/search(q='.jpg')?$expand=thumbnails&$top=500");
+          continue;
+        }
         return { success: false, reason: `Microsoft Graph API Error HTTP ${response.status}` };
       }
 
       const data = await response.json();
-      if (data.value && data.value.length > 0) {
-        items = items.concat(data.value);
+      const pageItems = data.value || [];
+      allItems = allItems.concat(pageItems);
+
+      // Follow nextLink for pagination
+      if (data['@odata.nextLink']) {
+        queue.push(data['@odata.nextLink']);
       }
 
-      currentEndpoint = data['@odata.nextLink'] || null;
+      // Discover subfolders and add their children to queue (if searching inside a folder)
+      for (const item of pageItems) {
+        if (item.folder && item.folder.childCount > 0 && item.id) {
+          const subfolderEndpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${item.id}/children?$expand=thumbnails&$top=500`;
+          if (!visitedEndpoints.has(subfolderEndpoint) && queue.length < 10) {
+            queue.push(subfolderEndpoint);
+          }
+        }
+      }
     }
 
-    if (items.length === 0) {
+    // Also fallback to broad image search if special/photos yielded few items and no folder was explicitly set
+    if (allItems.length < 90 && !folder.trim() && !query.trim() && !visitedEndpoints.has("https://graph.microsoft.com/v1.0/me/drive/root/search(q='.jpg')?$expand=thumbnails&$top=500")) {
+      const searchRes = await fetch("https://graph.microsoft.com/v1.0/me/drive/root/search(q='.jpg')?$expand=thumbnails&$top=500", {
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store'
+      });
+      if (searchRes.ok) {
+        const searchData = await searchRes.json();
+        if (searchData.value && searchData.value.length > 0) {
+          const existingIds = new Set(allItems.map(i => i.id));
+          for (const sItem of searchData.value) {
+            if (!existingIds.has(sItem.id)) {
+              allItems.push(sItem);
+            }
+          }
+        }
+      }
+    }
+
+    if (allItems.length === 0) {
       return { success: false, reason: '0 Photos found in specified OneDrive location' };
     }
 
-    const imageItems = items.filter(item => {
+    const imageItems = allItems.filter(item => {
       if (!item.file) return false;
       const mime = (item.file.mimeType || '').toLowerCase();
       const name = (item.name || '').toLowerCase();
-      const isImage = mime.startsWith('image/') || name.endsWith('.heic') || name.endsWith('.heif');
+      const isImage = mime.startsWith('image/') || name.endsWith('.heic') || name.endsWith('.heif') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png');
       if (!isImage) return false;
       if (filterScreenshots && isScreenshot(item)) return false;
       return true;
     });
 
-    const itemsToUse = imageItems.length > 0 ? imageItems : items.filter(i => i.file && (i.file.mimeType || '').startsWith('image/'));
+    const itemsToUse = imageItems.length > 0 ? imageItems : allItems.filter(i => i.file && (i.file.mimeType || '').startsWith('image/'));
 
     if (itemsToUse.length === 0) {
       return { success: false, reason: 'No photo assets found in OneDrive folder' };
