@@ -190,14 +190,14 @@ html, body {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: auto;
-  min-height: 125px;
-  padding: 16px 36px;
+  min-height: max-content;
+  padding: 16px 36px 20px 36px;
   z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   background: var(--color-hud-bg);
   border-bottom: 1.5px solid var(--color-hud-border);
   backdrop-filter: blur(16px);
@@ -655,11 +655,15 @@ html, body {
    ============================================================================== */
 
 .ares-tv-app {
-  position: absolute;
-  inset: 0;
+  position: relative;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  background-image: url('/location-background.jpeg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* Dynamic UI Scale Classes */
@@ -689,17 +693,12 @@ html, body {
 }
 
 /* 4K Header & Clock Enhancement */
-.system-hud-bar {
-  height: clamp(68px, 6vw, 110px);
-  padding: 0 32px;
-}
-
 .time-main-display {
   display: flex;
   align-items: center;
   gap: 12px;
   font-family: var(--font-title);
-  font-size: clamp(1.8rem, 3.2vw, 4.4rem);
+  font-size: clamp(1.4rem, 2.2vw, 2.6rem);
   font-weight: 900;
   letter-spacing: 2px;
   color: var(--color-cyan);
