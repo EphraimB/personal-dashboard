@@ -350,25 +350,92 @@ html, body {
   padding-left: 12px;
 }
 
-/* 6-Hour Hourly Weather Forecast Strip (Full-Height Header Integration) */
-.hud-hourly-forecast-strip {
+/* Unified Current Weather & 6-Hour Forecast Capsule */
+.hud-unified-weather-strip {
   display: flex;
   align-items: stretch;
   align-self: stretch;
   gap: 12px;
   background: rgba(0, 240, 255, 0.05);
-  border: 1px dashed rgba(0, 240, 255, 0.35);
-  border-radius: 14px;
-  padding: 8px 16px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.12);
+  border: 1.5px solid var(--color-hud-border-cyan);
+  border-radius: 16px;
+  padding: 8px 18px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
   animation: hourlyFadeIn 0.6s ease-out forwards;
 }
 
 @keyframes hourlyFadeIn {
   from { opacity: 0; transform: translateX(10px); }
   to { opacity: 1; transform: translateX(0); }
+}
+
+.wx-current-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-width: 145px;
+}
+
+.wx-curr-label {
+  font-size: clamp(0.55rem, 0.65vw, 0.72rem);
+  font-family: var(--font-title);
+  font-weight: 800;
+  color: var(--color-orange);
+  letter-spacing: 1px;
+}
+
+.wx-curr-main-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wx-curr-icon {
+  width: clamp(26px, 2.4vw, 36px);
+  height: clamp(26px, 2.4vw, 36px);
+  flex-shrink: 0;
+}
+
+.wx-curr-temp {
+  font-family: var(--font-title);
+  font-size: clamp(1.2rem, 1.6vw, 1.85rem);
+  font-weight: 900;
+  color: var(--color-cyan);
+  text-shadow: 0 0 10px var(--color-cyan-glow);
+  line-height: 1;
+}
+
+.wx-curr-cond {
+  font-size: clamp(0.62rem, 0.72vw, 0.82rem);
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.wx-curr-hilo {
+  display: flex;
+  gap: 6px;
+  font-size: clamp(0.6rem, 0.7vw, 0.8rem);
+  font-weight: 700;
+}
+
+.wx-curr-meta {
+  font-size: clamp(0.52rem, 0.6vw, 0.68rem);
+  color: var(--color-text-dim);
+}
+
+.wx-unified-divider {
+  width: 1.5px;
+  background: linear-gradient(180deg, transparent, var(--color-cyan), transparent);
+  margin: 0 4px;
+}
+
+.wx-hourly-sequence {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
 }
 
 .wx-hourly-item {

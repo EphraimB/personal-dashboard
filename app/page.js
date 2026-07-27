@@ -914,27 +914,57 @@ function formatHourLabel(timeStr, index) {
             </div>
           </div>
 
-          {/* 6-Hour Hourly Weather Forecast Strip to the Right of Clocks */}
+          {/* Unified Current Weather & 6-Hour Forecast Capsule */}
           {config.showWeatherSidebars !== false && (
-            <div className="hud-hourly-forecast-strip">
-              {hourlyTimes.map((timeStr, idx) => {
-                const globalIdx = hourlyStartIdx + idx;
-                const code = weatherData?.hourly?.weather_code?.[globalIdx] ?? 0;
-                const temp = weatherData?.hourly?.temperature_2m?.[globalIdx];
-                const pop = weatherData?.hourly?.precipitation_probability?.[globalIdx] ?? 0;
-                const label = formatHourLabel(timeStr, idx);
+            <div className="hud-unified-weather-strip">
+              {/* Featured Left Column: Current Live Weather */}
+              <div className="wx-current-column">
+                <span className="wx-curr-label">CURRENT</span>
+                <div className="wx-curr-main-row">
+                  <WeatherSvg code={weatherData?.current?.weather_code ?? 0} className="wx-curr-icon" />
+                  <span className="wx-curr-temp">
+                    {weatherData?.current?.temperature_2m !== undefined
+                      ? Math.round(weatherData.current.temperature_2m)
+                      : '--'}
+                    °{config.tempUnit || 'F'}
+                  </span>
+                </div>
+                <span className="wx-curr-cond">
+                  {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
+                </span>
+                <div className="wx-curr-hilo">
+                  <span className="wx-hi-val">▲{weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '--'}°</span>
+                  <span className="wx-lo-val">▼{weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '--'}°</span>
+                </div>
+                <span className="wx-curr-meta">
+                  HUM {weatherData?.current?.relative_humidity_2m ?? '--'}% • WIND {weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '--'} {config.tempUnit === 'C' ? 'KMH' : 'MPH'}
+                </span>
+              </div>
 
-                return (
-                  <div key={idx} className="wx-hourly-item">
-                    <span className="wx-hr-time">{label}</span>
-                    <WeatherSvg code={code} className="wx-hr-icon" />
-                    <span className="wx-hr-temp">
-                      {temp !== undefined ? Math.round(temp) : '--'}°
-                    </span>
-                    <span className="wx-hr-pop">{pop}%</span>
-                  </div>
-                );
-              })}
+              {/* Vertical Neon Divider */}
+              <div className="wx-unified-divider" />
+
+              {/* Right Columns: 6-Hour Hourly Forecast Sequence */}
+              <div className="wx-hourly-sequence">
+                {hourlyTimes.map((timeStr, idx) => {
+                  const globalIdx = hourlyStartIdx + idx;
+                  const code = weatherData?.hourly?.weather_code?.[globalIdx] ?? 0;
+                  const temp = weatherData?.hourly?.temperature_2m?.[globalIdx];
+                  const pop = weatherData?.hourly?.precipitation_probability?.[globalIdx] ?? 0;
+                  const label = formatHourLabel(timeStr, idx);
+
+                  return (
+                    <div key={idx} className="wx-hourly-item">
+                      <span className="wx-hr-time">{label}</span>
+                      <WeatherSvg code={code} className="wx-hr-icon" />
+                      <span className="wx-hr-temp">
+                        {temp !== undefined ? Math.round(temp) : '--'}°
+                      </span>
+                      <span className="wx-hr-pop">{pop}%</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -945,31 +975,6 @@ function formatHourLabel(timeStr, index) {
             </button>
           </div>
         </div>
-
-        {/* Row 2: Centered Weather Telemetry Pill */}
-        {config.showWeatherSidebars !== false && (
-          <div className="hud-weather-center-pill">
-            <WeatherSvg code={weatherData?.current?.weather_code ?? 0} className="wx-pill-icon" />
-            <span className="wx-pill-temp">
-              {weatherData?.current?.temperature_2m !== undefined
-                ? Math.round(weatherData.current.temperature_2m)
-                : '--'}
-              °{config.tempUnit || 'F'}
-            </span>
-            <span className="wx-pill-cond">
-              {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
-            </span>
-            <div className="wx-pill-hilo">
-              <span className="wx-hi-val">▲ {weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '--'}°</span>
-              <span className="wx-lo-val">▼ {weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '--'}°</span>
-            </div>
-            <span className="wx-pill-stat">HUM {weatherData?.current?.relative_humidity_2m ?? '--'}%</span>
-            <span className="wx-pill-stat">
-              WIND {weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '--'}{' '}
-              {config.tempUnit === 'C' ? 'KM/H' : 'MPH'}
-            </span>
-          </div>
-        )}
       </header>
 
       {/* Settings Modal */}
