@@ -864,22 +864,17 @@ function formatHourLabel(timeStr, index) {
             </div>
           </div>
 
-          {/* Top-Center Photo Frame Telemetry Badge (Cloud Sync, Source, Photo Counter) */}
+          {/* Top-Center Photo Frame Slide Counter Hero Badge */}
           <div className="photo-frame-top-center-badge">
-            <span className={`sync-dot ${isConnectedToOneDrive ? 'connected' : 'idle'}`} />
-            <span className="badge-tag">CLOUD SYNC:</span>
-            <span className={`badge-val ${isConnectedToOneDrive ? 'ssd-connected' : 'ssd-idle'}`}>
-              {isConnectedToOneDrive ? 'PAIRED' : 'SSH AUTH'}
-            </span>
-            <span className="badge-sep">•</span>
-            <span className="badge-tag">SOURCE:</span>
-            <span className={`badge-val ${isConnectedToOneDrive ? 'source-connected' : ''}`}>
-              {isConnectedToOneDrive ? 'ONEDRIVE' : 'DEMO STREAM'}
-            </span>
-            <span className="badge-sep">•</span>
-            <span className="badge-count">
-              {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length).padStart(2, '0')}
-            </span>
+            <div className="hero-date-badge">
+              <span className="badge-icon">🖼️</span>
+              <div className="badge-text-group">
+                <span className="badge-sub-label">SLIDE / PHOTO</span>
+                <span className="badge-main-date">
+                  {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length).padStart(2, '0')}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Integrated Glass Caption Footer inside Photo Frame */}
