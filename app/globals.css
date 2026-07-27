@@ -35,7 +35,6 @@
   margin: 0;
   padding: 0;
   user-select: none;
-  cursor: none !important;
 }
 
 html, body {
@@ -46,7 +45,6 @@ html, body {
   font-family: var(--font-mono);
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
-  cursor: none !important;
 }
 
 /* ==============================================================================
