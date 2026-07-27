@@ -350,6 +350,62 @@ html, body {
   padding-left: 12px;
 }
 
+/* 6-Hour Hourly Weather Forecast Strip (Top Header Right of Clocks) */
+.hud-hourly-forecast-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 240, 255, 0.06);
+  border: 1px dashed rgba(0, 240, 255, 0.35);
+  border-radius: 20px;
+  padding: 6px 16px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.12);
+  animation: hourlyFadeIn 0.6s ease-out forwards;
+}
+
+@keyframes hourlyFadeIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.wx-hourly-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 44px;
+}
+
+.wx-hr-time {
+  font-size: clamp(0.55rem, 0.65vw, 0.72rem);
+  font-family: var(--font-title);
+  font-weight: 700;
+  color: var(--color-cyan);
+  margin-bottom: 2px;
+}
+
+.wx-hr-icon {
+  width: clamp(22px, 1.8vw, 28px);
+  height: clamp(22px, 1.8vw, 28px);
+  flex-shrink: 0;
+}
+
+.wx-hr-temp {
+  font-family: var(--font-title);
+  font-size: clamp(0.75rem, 0.88vw, 0.98rem);
+  font-weight: 800;
+  color: #ffffff;
+  margin-top: 2px;
+}
+
+.wx-hr-pop {
+  font-size: clamp(0.5rem, 0.6vw, 0.68rem);
+  color: #4dadff;
+  font-weight: 600;
+}
+
 .time-main-display {
   font-family: var(--font-title);
   font-size: 2.1rem;

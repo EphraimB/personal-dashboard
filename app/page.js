@@ -468,6 +468,21 @@ export default function TvDashboard() {
   const startTimeRef = useRef(0);
   const idleTimerRef = useRef(null);
 
+function formatHourLabel(timeStr, index) {
+  if (index === 0) return 'NOW';
+  if (!timeStr || typeof timeStr !== 'string') return '--';
+  try {
+    const parts = timeStr.split('T');
+    if (parts.length < 2) return timeStr;
+    const hourNum = parseInt(parts[1].split(':')[0], 10);
+    const ampm = hourNum >= 12 ? 'PM' : 'AM';
+    const h12 = hourNum % 12 || 12;
+    return `${h12} ${ampm}`;
+  } catch (e) {
+    return timeStr;
+  }
+}
+
   // Load config from localStorage & URL scale override
   useEffect(() => {
     try {
@@ -487,13 +502,13 @@ export default function TvDashboard() {
     }
   }, []);
 
-  // Fetch Cedarhurst, NY live weather & 5-day forecast from Open-Meteo API
+  // Fetch Cedarhurst, NY live weather & hourly/5-day forecast from Open-Meteo API
   useEffect(() => {
     const fetchWeather = async () => {
       try {
         const unitParam = config.tempUnit === 'C' ? 'celsius' : 'fahrenheit';
         const windParam = config.tempUnit === 'C' ? 'kmh' : 'mph';
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=40.6237&longitude=-73.7257&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=${unitParam}&wind_speed_unit=${windParam}&precipitation_unit=inch&timezone=America%2FNew_York`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=40.6237&longitude=-73.7257&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=temperature_2m,weather_code,precipitation_probability&forecast_hours=12&temperature_unit=${unitParam}&wind_speed_unit=${windParam}&precipitation_unit=inch&timezone=America%2FNew_York`;
         const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
@@ -751,6 +766,15 @@ export default function TvDashboard() {
     }
   };
 
+  // Calculate 6 upcoming hours starting from current time
+  const currentHourISO = new Date().toISOString().substring(0, 13);
+  let hourlyStartIdx = 0;
+  if (weatherData?.hourly?.time) {
+    const foundIdx = weatherData.hourly.time.findIndex((t) => typeof t === 'string' && t.startsWith(currentHourISO));
+    if (foundIdx !== -1) hourlyStartIdx = foundIdx;
+  }
+  const hourlyTimes = (weatherData?.hourly?.time || ['', '', '', '', '', '']).slice(hourlyStartIdx, hourlyStartIdx + 6);
+
   return (
     <div className={`ares-tv-app ui-scale-${config.uiScale || '150'} ${showControls ? 'user-active' : 'user-idle'}`}>
       {/* Full-Screen Dynamic Weather Atmospheric Effects Engine (Rain, Snow, Lightning, Sun Flare, Fog) */}
@@ -889,6 +913,30 @@ export default function TvDashboard() {
               <span className="solar-digits">{aresSolarClock}</span>
             </div>
           </div>
+
+          {/* 6-Hour Hourly Weather Forecast Strip to the Right of Clocks */}
+          {config.showWeatherSidebars !== false && (
+            <div className="hud-hourly-forecast-strip">
+              {hourlyTimes.map((timeStr, idx) => {
+                const globalIdx = hourlyStartIdx + idx;
+                const code = weatherData?.hourly?.weather_code?.[globalIdx] ?? 0;
+                const temp = weatherData?.hourly?.temperature_2m?.[globalIdx];
+                const pop = weatherData?.hourly?.precipitation_probability?.[globalIdx] ?? 0;
+                const label = formatHourLabel(timeStr, idx);
+
+                return (
+                  <div key={idx} className="wx-hourly-item">
+                    <span className="wx-hr-time">{label}</span>
+                    <WeatherSvg code={code} className="wx-hr-icon" />
+                    <span className="wx-hr-temp">
+                      {temp !== undefined ? Math.round(temp) : '--'}°
+                    </span>
+                    <span className="wx-hr-pop">{pop}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Right Controls */}
           <div className="hud-right-sector">
