@@ -1157,6 +1157,67 @@ html, body {
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 240, 255, 0.4);
 }
 
+/* Top-Center Photo Frame Telemetry Capsule */
+.photo-frame-top-center-badge {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(4, 6, 12, 0.88);
+  border: 1.5px solid var(--color-hud-border-cyan);
+  border-radius: 20px;
+  padding: 6px 18px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.85), 0 0 15px rgba(0, 240, 255, 0.2);
+  font-size: clamp(0.65rem, 0.75vw, 0.85rem);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-orange);
+  box-shadow: 0 0 8px var(--color-orange);
+}
+
+.sync-dot.connected {
+  background: var(--color-green);
+  box-shadow: 0 0 8px var(--color-green);
+}
+
+.badge-tag {
+  color: var(--color-text-dim);
+  letter-spacing: 0.5px;
+}
+
+.badge-val {
+  color: var(--color-cyan);
+  font-family: var(--font-title);
+  font-weight: 800;
+}
+
+.badge-val.source-connected, .badge-val.ssd-connected {
+  color: var(--color-green);
+}
+
+.badge-sep {
+  color: rgba(255, 255, 255, 0.25);
+  margin: 0 2px;
+}
+
+.badge-count {
+  color: var(--color-text-main);
+  font-family: var(--font-title);
+  font-weight: 800;
+}
+
 
 
 

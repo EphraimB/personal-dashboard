@@ -784,6 +784,24 @@ export default function TvDashboard() {
           </div>
         </div>
 
+        {/* Top-Center Photo Frame Telemetry Badge (Cloud Sync, Source, Photo Counter) */}
+        <div className="photo-frame-top-center-badge">
+          <span className={`sync-dot ${isConnectedToOneDrive ? 'connected' : 'idle'}`} />
+          <span className="badge-tag">CLOUD SYNC:</span>
+          <span className={`badge-val ${isConnectedToOneDrive ? 'ssd-connected' : 'ssd-idle'}`}>
+            {isConnectedToOneDrive ? 'PAIRED' : 'SSH AUTH'}
+          </span>
+          <span className="badge-sep">•</span>
+          <span className="badge-tag">SOURCE:</span>
+          <span className={`badge-val ${isConnectedToOneDrive ? 'source-connected' : ''}`}>
+            {isConnectedToOneDrive ? 'ONEDRIVE' : 'DEMO STREAM'}
+          </span>
+          <span className="badge-sep">•</span>
+          <span className="badge-count">
+            {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length).padStart(2, '0')}
+          </span>
+        </div>
+
         {/* Integrated Glass Caption Footer inside Photo Frame */}
         <div className="photo-meta-card-integrated">
           <div className="meta-card-header">
@@ -856,10 +874,6 @@ export default function TvDashboard() {
               <span className="hud-sys-tag">// ARES CITY OS</span>
               <span className="hud-sys-name">ARES CITY TV DASHBOARD</span>
             </div>
-            <span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>
-              <span className="active-pulse-dot" />
-              <span>{sysStatus}</span>
-            </span>
           </div>
 
           {/* Center Clock & Solar Clock Sector */}
@@ -876,26 +890,8 @@ export default function TvDashboard() {
             </div>
           </div>
 
-          {/* Right Status */}
+          {/* Right Controls */}
           <div className="hud-right-sector">
-            <div className="hud-stat-box">
-              <span className="stat-label">CLOUD SYNC</span>
-              <span className={`stat-value ${isConnectedToOneDrive ? 'ssd-connected' : 'ssd-idle'}`}>
-                {isConnectedToOneDrive ? 'PAIRED' : 'SSH AUTH'}
-              </span>
-            </div>
-            <div className="hud-stat-box">
-              <span className="stat-label">PHOTOS</span>
-              <span className="stat-value">
-                {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length).padStart(2, '0')}
-              </span>
-            </div>
-            <div className="hud-stat-box">
-              <span className="stat-label">SOURCE</span>
-              <span className={`stat-value ${isConnectedToOneDrive ? 'source-connected' : ''}`}>
-                {isConnectedToOneDrive ? 'ONEDRIVE' : 'DEMO STREAM'}
-              </span>
-            </div>
             <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)} title="Open Settings (M)">
               [ ⚙ CONFIG ]
             </button>
