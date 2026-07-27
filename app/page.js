@@ -780,97 +780,154 @@ function formatHourLabel(timeStr, index) {
       {/* Full-Screen Dynamic Weather Atmospheric Effects Engine (Rain, Snow, Lightning, Sun Flare, Fog) */}
       <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
 
-      {/* Centered 16:9 Glassmorphic Photo Slideshow Viewport */}
-      <div className="slideshow-viewport-centered">
-        <div className="card-corner card-corner--tl" />
-        <div className="card-corner card-corner--tr" />
-        <div className="card-corner card-corner--bl" />
-        <div className="card-corner card-corner--br" />
+      {/* Centered Photo Frame & Weather Command Banner Wrapper */}
+      <div className="slideshow-wrapper-centered">
+        {/* Full-Width Dedicated Weather Command Banner */}
+        {config.showWeatherSidebars !== false && (
+          <div className="hud-standalone-weather-banner">
+            {/* Featured Left Column: Current Live Weather */}
+            <div className="wx-current-column">
+              <span className="wx-curr-label">CURRENT</span>
+              <div className="wx-curr-main-row">
+                <WeatherSvg code={weatherData?.current?.weather_code ?? 0} className="wx-curr-icon" />
+                <span className="wx-curr-temp">
+                  {weatherData?.current?.temperature_2m !== undefined
+                    ? Math.round(weatherData.current.temperature_2m)
+                    : '--'}
+                  °{config.tempUnit || 'F'}
+                </span>
+              </div>
+              <span className="wx-curr-cond">
+                {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
+              </span>
+              <div className="wx-curr-hilo">
+                <span className="wx-hi-val">▲{weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '--'}°</span>
+                <span className="wx-lo-val">▼{weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '--'}°</span>
+              </div>
+              <span className="wx-curr-meta">
+                HUM {weatherData?.current?.relative_humidity_2m ?? '--'}% • WIND {weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '--'} {config.tempUnit === 'C' ? 'KMH' : 'MPH'}
+              </span>
+            </div>
 
-        <div
-          className={layer1Class}
-          style={{ backgroundImage: layer1Url ? `url("${layer1Url}")` : 'none' }}
-        />
-        <div
-          className={layer2Class}
-          style={{ backgroundImage: layer2Url ? `url("${layer2Url}")` : 'none' }}
-        />
-        <div className="photo-overlay-vignette" />
+            {/* Vertical Neon Divider */}
+            <div className="wx-unified-divider" />
 
-        {/* Translucent Hero "Photo Taken" Date & Time Overlay */}
-        <div className="photo-taken-hero-overlay">
-          <div className="hero-date-badge">
-            <span className="badge-icon">📅</span>
-            <div className="badge-text-group">
-              <span className="badge-sub-label">PHOTO TAKEN</span>
-              <span className="badge-main-date">{formatHumanDate(currentPhoto.date)}</span>
+            {/* Right Columns: 6-Hour Hourly Forecast Sequence */}
+            <div className="wx-hourly-sequence">
+              {hourlyTimes.map((timeStr, idx) => {
+                const globalIdx = hourlyStartIdx + idx;
+                const code = weatherData?.hourly?.weather_code?.[globalIdx] ?? 0;
+                const temp = weatherData?.hourly?.temperature_2m?.[globalIdx];
+                const pop = weatherData?.hourly?.precipitation_probability?.[globalIdx] ?? 0;
+                const label = formatHourLabel(timeStr, idx);
+
+                return (
+                  <div key={idx} className="wx-hourly-item">
+                    <span className="wx-hr-time">{label}</span>
+                    <WeatherSvg code={code} className="wx-hr-icon" />
+                    <span className="wx-hr-temp">
+                      {temp !== undefined ? Math.round(temp) : '--'}°
+                    </span>
+                    <span className="wx-hr-pop">{pop}%</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Top-Center Photo Frame Telemetry Badge (Cloud Sync, Source, Photo Counter) */}
-        <div className="photo-frame-top-center-badge">
-          <span className={`sync-dot ${isConnectedToOneDrive ? 'connected' : 'idle'}`} />
-          <span className="badge-tag">CLOUD SYNC:</span>
-          <span className={`badge-val ${isConnectedToOneDrive ? 'ssd-connected' : 'ssd-idle'}`}>
-            {isConnectedToOneDrive ? 'PAIRED' : 'SSH AUTH'}
-          </span>
-          <span className="badge-sep">•</span>
-          <span className="badge-tag">SOURCE:</span>
-          <span className={`badge-val ${isConnectedToOneDrive ? 'source-connected' : ''}`}>
-            {isConnectedToOneDrive ? 'ONEDRIVE' : 'DEMO STREAM'}
-          </span>
-          <span className="badge-sep">•</span>
-          <span className="badge-count">
-            {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length).padStart(2, '0')}
-          </span>
-        </div>
+        {/* Centered 16:9 Glassmorphic Photo Slideshow Viewport */}
+        <div className="slideshow-viewport-centered">
+          <div className="card-corner card-corner--tl" />
+          <div className="card-corner card-corner--tr" />
+          <div className="card-corner card-corner--bl" />
+          <div className="card-corner card-corner--br" />
 
-        {/* Integrated Glass Caption Footer inside Photo Frame */}
-        <div className="photo-meta-card-integrated">
-          <div className="meta-card-header">
-            <div className="meta-title-group">
-              <span className="meta-sector-label">📍 LOCATION // {currentPhoto.location}</span>
-              <h2 className="photo-title">{currentPhoto.description || currentPhoto.title}</h2>
-            </div>
-            <div className="meta-controls-quick">
-              <button
-                className="hud-btn hud-btn-icon"
-                onClick={() => setCurrentIndex((prev) => (prev - 1 + photoList.length) % photoList.length)}
-                title="Previous Photo (Left Arrow)"
-              >
-                ◀
-              </button>
-              <button
-                className="hud-btn hud-btn-icon"
-                onClick={() => setIsPaused((prev) => !prev)}
-                title="Pause / Play (Spacebar)"
-              >
-                {isPaused ? '▶' : '⏸'}
-              </button>
-              <button
-                className="hud-btn hud-btn-icon"
-                onClick={() => setCurrentIndex((prev) => (prev + 1) % photoList.length)}
-                title="Next Photo (Right Arrow)"
-              >
-                ▶
-              </button>
-              <button
-                className="hud-btn hud-btn-icon"
-                onClick={() => saveConfig({ ...config, enableScanlines: !config.enableScanlines })}
-                title="Toggle Scanlines (S)"
-              >
-                ⚡
-              </button>
-              <button className="hud-btn hud-btn-icon" onClick={toggleFullscreen} title="Toggle Fullscreen (F)">
-                ⛶
-              </button>
+          <div
+            className={layer1Class}
+            style={{ backgroundImage: layer1Url ? `url("${layer1Url}")` : 'none' }}
+          />
+          <div
+            className={layer2Class}
+            style={{ backgroundImage: layer2Url ? `url("${layer2Url}")` : 'none' }}
+          />
+          <div className="photo-overlay-vignette" />
+
+          {/* Translucent Hero "Photo Taken" Date & Time Overlay */}
+          <div className="photo-taken-hero-overlay">
+            <div className="hero-date-badge">
+              <span className="badge-icon">📅</span>
+              <div className="badge-text-group">
+                <span className="badge-sub-label">PHOTO TAKEN</span>
+                <span className="badge-main-date">{formatHumanDate(currentPhoto.date)}</span>
+              </div>
             </div>
           </div>
 
-          {/* Slide Progress Bar */}
-          <div className="progress-bar-container">
-            <div className="progress-bar-fill" style={{ width: `${progressWidth}%` }} />
+          {/* Top-Center Photo Frame Telemetry Badge (Cloud Sync, Source, Photo Counter) */}
+          <div className="photo-frame-top-center-badge">
+            <span className={`sync-dot ${isConnectedToOneDrive ? 'connected' : 'idle'}`} />
+            <span className="badge-tag">CLOUD SYNC:</span>
+            <span className={`badge-val ${isConnectedToOneDrive ? 'ssd-connected' : 'ssd-idle'}`}>
+              {isConnectedToOneDrive ? 'PAIRED' : 'SSH AUTH'}
+            </span>
+            <span className="badge-sep">•</span>
+            <span className="badge-tag">SOURCE:</span>
+            <span className={`badge-val ${isConnectedToOneDrive ? 'source-connected' : ''}`}>
+              {isConnectedToOneDrive ? 'ONEDRIVE' : 'DEMO STREAM'}
+            </span>
+            <span className="badge-sep">•</span>
+            <span className="badge-count">
+              {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length).padStart(2, '0')}
+            </span>
+          </div>
+
+          {/* Integrated Glass Caption Footer inside Photo Frame */}
+          <div className="photo-meta-card-integrated">
+            <div className="meta-card-header">
+              <div className="meta-title-group">
+                <span className="meta-sector-label">📍 LOCATION // {currentPhoto.location}</span>
+                <h2 className="photo-title">{currentPhoto.description || currentPhoto.title}</h2>
+              </div>
+              <div className="meta-controls-quick">
+                <button
+                  className="hud-btn hud-btn-icon"
+                  onClick={() => setCurrentIndex((prev) => (prev - 1 + photoList.length) % photoList.length)}
+                  title="Previous Photo (Left Arrow)"
+                >
+                  ◀
+                </button>
+                <button
+                  className="hud-btn hud-btn-icon"
+                  onClick={() => setIsPaused((prev) => !prev)}
+                  title="Pause / Play (Spacebar)"
+                >
+                  {isPaused ? '▶' : '⏸'}
+                </button>
+                <button
+                  className="hud-btn hud-btn-icon"
+                  onClick={() => setCurrentIndex((prev) => (prev + 1) % photoList.length)}
+                  title="Next Photo (Right Arrow)"
+                >
+                  ▶
+                </button>
+                <button
+                  className="hud-btn hud-btn-icon"
+                  onClick={() => saveConfig({ ...config, enableScanlines: !config.enableScanlines })}
+                  title="Toggle Scanlines (S)"
+                >
+                  ⚡
+                </button>
+                <button className="hud-btn hud-btn-icon" onClick={toggleFullscreen} title="Toggle Fullscreen (F)">
+                  ⛶
+                </button>
+              </div>
+            </div>
+
+            {/* Slide Progress Bar */}
+            <div className="progress-bar-container">
+              <div className="progress-bar-fill" style={{ width: `${progressWidth}%` }} />
+            </div>
           </div>
         </div>
       </div>
@@ -884,7 +941,7 @@ function formatHourLabel(timeStr, index) {
       <div className="avatar-corner avatar-corner--bl" />
       <div className="avatar-corner avatar-corner--br" />
 
-      {/* Top HUD Header Bar (2-Row Auto-Expanding Layout) */}
+      {/* Top HUD Header Bar */}
       <header className="system-hud-bar">
         <div className="system-hud-row-top">
           <div className="hud-left-sector">
@@ -913,60 +970,6 @@ function formatHourLabel(timeStr, index) {
               <span className="solar-digits">{aresSolarClock}</span>
             </div>
           </div>
-
-          {/* Unified Current Weather & 6-Hour Forecast Capsule */}
-          {config.showWeatherSidebars !== false && (
-            <div className="hud-unified-weather-strip">
-              {/* Featured Left Column: Current Live Weather */}
-              <div className="wx-current-column">
-                <span className="wx-curr-label">CURRENT</span>
-                <div className="wx-curr-main-row">
-                  <WeatherSvg code={weatherData?.current?.weather_code ?? 0} className="wx-curr-icon" />
-                  <span className="wx-curr-temp">
-                    {weatherData?.current?.temperature_2m !== undefined
-                      ? Math.round(weatherData.current.temperature_2m)
-                      : '--'}
-                    °{config.tempUnit || 'F'}
-                  </span>
-                </div>
-                <span className="wx-curr-cond">
-                  {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
-                </span>
-                <div className="wx-curr-hilo">
-                  <span className="wx-hi-val">▲{weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '--'}°</span>
-                  <span className="wx-lo-val">▼{weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '--'}°</span>
-                </div>
-                <span className="wx-curr-meta">
-                  HUM {weatherData?.current?.relative_humidity_2m ?? '--'}% • WIND {weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '--'} {config.tempUnit === 'C' ? 'KMH' : 'MPH'}
-                </span>
-              </div>
-
-              {/* Vertical Neon Divider */}
-              <div className="wx-unified-divider" />
-
-              {/* Right Columns: 6-Hour Hourly Forecast Sequence */}
-              <div className="wx-hourly-sequence">
-                {hourlyTimes.map((timeStr, idx) => {
-                  const globalIdx = hourlyStartIdx + idx;
-                  const code = weatherData?.hourly?.weather_code?.[globalIdx] ?? 0;
-                  const temp = weatherData?.hourly?.temperature_2m?.[globalIdx];
-                  const pop = weatherData?.hourly?.precipitation_probability?.[globalIdx] ?? 0;
-                  const label = formatHourLabel(timeStr, idx);
-
-                  return (
-                    <div key={idx} className="wx-hourly-item">
-                      <span className="wx-hr-time">{label}</span>
-                      <WeatherSvg code={code} className="wx-hr-icon" />
-                      <span className="wx-hr-temp">
-                        {temp !== undefined ? Math.round(temp) : '--'}°
-                      </span>
-                      <span className="wx-hr-pop">{pop}%</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           {/* Right Controls */}
           <div className="hud-right-sector">

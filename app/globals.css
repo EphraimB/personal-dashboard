@@ -138,13 +138,23 @@ html, body {
   z-index: 1;
 }
 
-/* Centered 16:9 Glassmorphic Slideshow Container (Doubled Size) */
-.slideshow-viewport-centered {
+/* Centered Slideshow & Weather Banner Wrapper */
+.slideshow-wrapper-centered {
   position: absolute;
-  top: 52%;
+  top: 54%;
   left: 50%;
   transform: translate(-50%, -46%);
   width: min(88vw, 1720px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Centered 16:9 Glassmorphic Slideshow Container (Doubled Size) */
+.slideshow-viewport-centered {
+  position: relative;
+  width: 100%;
   aspect-ratio: 16 / 9;
   z-index: 2;
   border-radius: 24px;
@@ -350,25 +360,27 @@ html, body {
   padding-left: 12px;
 }
 
-/* Unified Current Weather & 6-Hour Forecast Capsule (Ultra-Large 4K TV Distance Scaled) */
-.hud-unified-weather-strip {
+/* Full-Width Dedicated Weather Command Banner Above Photo Frame */
+.hud-standalone-weather-banner {
+  width: 100%;
   display: flex;
   align-items: stretch;
-  align-self: stretch;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 24px;
   background: rgba(4, 6, 12, 0.88);
   border: 2px solid var(--color-hud-border-cyan);
-  border-radius: 18px;
-  padding: 10px 22px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.85), 0 0 25px rgba(0, 240, 255, 0.25);
-  animation: hourlyFadeIn 0.6s ease-out forwards;
+  border-radius: 20px;
+  padding: 16px 32px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.9), 0 0 35px rgba(0, 240, 255, 0.25);
+  margin-bottom: 16px;
+  animation: weatherBannerSlideDown 0.7s ease-out forwards;
 }
 
-@keyframes hourlyFadeIn {
-  from { opacity: 0; transform: translateX(10px); }
-  to { opacity: 1; transform: translateX(0); }
+@keyframes weatherBannerSlideDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .wx-current-column {
@@ -376,41 +388,41 @@ html, body {
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
-  min-width: 175px;
+  min-width: 240px;
 }
 
 .wx-curr-label {
-  font-size: clamp(0.7rem, 0.85vw, 1.05rem);
+  font-size: clamp(0.8rem, 1vw, 1.2rem);
   font-family: var(--font-title);
-  font-weight: 800;
+  font-weight: 900;
   color: var(--color-orange);
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
 }
 
 .wx-curr-main-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
 }
 
 .wx-curr-icon {
-  width: clamp(38px, 3.5vw, 54px);
-  height: clamp(38px, 3.5vw, 54px);
+  width: clamp(52px, 5vw, 76px);
+  height: clamp(52px, 5vw, 76px);
   flex-shrink: 0;
-  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.5));
+  filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.6));
 }
 
 .wx-curr-temp {
   font-family: var(--font-title);
-  font-size: clamp(1.8rem, 2.6vw, 3.2rem);
+  font-size: clamp(2.5rem, 3.8vw, 4.8rem);
   font-weight: 900;
   color: var(--color-cyan);
-  text-shadow: 0 0 16px var(--color-cyan-glow);
+  text-shadow: 0 0 20px var(--color-cyan-glow);
   line-height: 1;
 }
 
 .wx-curr-cond {
-  font-size: clamp(0.82rem, 1vw, 1.25rem);
+  font-size: clamp(1rem, 1.35vw, 1.6rem);
   font-weight: 800;
   color: #ffffff;
   letter-spacing: 0.5px;
@@ -418,27 +430,30 @@ html, body {
 
 .wx-curr-hilo {
   display: flex;
-  gap: 8px;
-  font-size: clamp(0.78rem, 0.92vw, 1.15rem);
+  gap: 12px;
+  font-size: clamp(0.95rem, 1.2vw, 1.45rem);
   font-weight: 800;
 }
 
 .wx-curr-meta {
-  font-size: clamp(0.68rem, 0.78vw, 0.95rem);
+  font-size: clamp(0.78rem, 0.95vw, 1.15rem);
   color: var(--color-cyan);
   font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .wx-unified-divider {
   width: 2px;
   background: linear-gradient(180deg, transparent, var(--color-cyan), transparent);
-  margin: 0 6px;
+  margin: 0 10px;
 }
 
 .wx-hourly-sequence {
   display: flex;
   align-items: stretch;
-  gap: 14px;
+  gap: 20px;
+  flex-grow: 1;
+  justify-content: space-around;
 }
 
 .wx-hourly-item {
@@ -447,8 +462,8 @@ html, body {
   justify-content: space-between;
   align-items: center;
   text-align: center;
-  min-width: 60px;
-  padding-right: 14px;
+  min-width: 80px;
+  padding-right: 20px;
   border-right: 1.5px dashed rgba(0, 240, 255, 0.25);
 }
 
@@ -458,30 +473,30 @@ html, body {
 }
 
 .wx-hr-time {
-  font-size: clamp(0.78rem, 0.92vw, 1.12rem);
+  font-size: clamp(0.9rem, 1.15vw, 1.4rem);
   font-family: var(--font-title);
   font-weight: 800;
   color: var(--color-cyan);
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .wx-hr-icon {
-  width: clamp(30px, 2.7vw, 42px);
-  height: clamp(30px, 2.7vw, 42px);
+  width: clamp(38px, 3.6vw, 54px);
+  height: clamp(38px, 3.6vw, 54px);
   flex-shrink: 0;
-  margin: 2px 0;
-  filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.4));
+  margin: 4px 0;
+  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.5));
 }
 
 .wx-hr-temp {
   font-family: var(--font-title);
-  font-size: clamp(1.1rem, 1.35vw, 1.7rem);
+  font-size: clamp(1.4rem, 1.85vw, 2.3rem);
   font-weight: 900;
   color: #ffffff;
 }
 
 .wx-hr-pop {
-  font-size: clamp(0.7rem, 0.8vw, 0.95rem);
+  font-size: clamp(0.8rem, 0.95vw, 1.15rem);
   color: #4dadff;
   font-weight: 800;
 }
