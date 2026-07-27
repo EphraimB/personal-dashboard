@@ -138,21 +138,21 @@ html, body {
   z-index: 1;
 }
 
-/* Centered 16:9 Glassmorphic Slideshow Container */
+/* Centered 16:9 Glassmorphic Slideshow Container (Doubled Size) */
 .slideshow-viewport-centered {
   position: absolute;
-  top: 50%;
+  top: 52%;
   left: 50%;
   transform: translate(-50%, -46%);
-  width: min(74vw, 1150px);
+  width: min(88vw, 1720px);
   aspect-ratio: 16 / 9;
   z-index: 2;
-  border-radius: 20px;
-  border: 1.5px solid var(--color-hud-border-cyan);
+  border-radius: 24px;
+  border: 2px solid var(--color-hud-border-cyan);
   background: rgba(4, 6, 12, 0.45);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(0, 240, 255, 0.2);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 25px 85px rgba(0, 0, 0, 0.9), 0 0 45px rgba(0, 240, 255, 0.25);
   overflow: hidden;
 }
 
@@ -185,22 +185,22 @@ html, body {
   border-right: 2.5px solid var(--color-orange);
 }
 
-/* Top Tactical System HUD Bar */
+/* Top Tactical System HUD Bar (Expanded Height) */
 .system-hud-bar {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: auto;
-  min-height: 82px;
-  padding: 10px 24px;
+  min-height: 115px;
+  padding: 14px 32px;
   z-index: 5;
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: var(--color-hud-bg);
   border-bottom: 1.5px solid var(--color-hud-border);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
 }
 
 .hud-left-sector {
@@ -285,17 +285,17 @@ html, body {
 }
 
 .hud-weather-center-pill {
-  margin-top: 6px;
+  margin-top: 8px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   background: rgba(0, 240, 255, 0.08);
-  border: 1px dashed rgba(0, 240, 255, 0.35);
-  border-radius: 24px;
-  padding: 4px 16px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+  border: 1px dashed rgba(0, 240, 255, 0.4);
+  border-radius: 30px;
+  padding: 6px 22px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
   animation: weatherPillFade 0.6s ease-out forwards;
 }
 
@@ -305,48 +305,48 @@ html, body {
 }
 
 .wx-pill-icon {
-  width: clamp(24px, 2vw, 30px);
-  height: clamp(24px, 2vw, 30px);
+  width: clamp(28px, 2.5vw, 36px);
+  height: clamp(28px, 2.5vw, 36px);
   flex-shrink: 0;
-  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.4));
+  filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
 }
 
 .wx-pill-temp {
   font-family: var(--font-title);
-  font-size: clamp(1rem, 1.3vw, 1.4rem);
+  font-size: clamp(1.2rem, 1.5vw, 1.7rem);
   font-weight: 800;
   color: #ffffff;
   line-height: 1;
 }
 
 .wx-pill-cond {
-  font-size: clamp(0.65rem, 0.75vw, 0.85rem);
+  font-size: clamp(0.75rem, 0.9vw, 1rem);
   font-weight: 700;
   color: var(--color-cyan);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 
 .wx-pill-hilo {
   display: flex;
-  gap: 6px;
-  font-size: clamp(0.65rem, 0.75vw, 0.85rem);
+  gap: 8px;
+  font-size: clamp(0.75rem, 0.9vw, 1rem);
   font-weight: 700;
 }
 
 .wx-pill-stat {
-  font-size: clamp(0.6rem, 0.7vw, 0.78rem);
+  font-size: clamp(0.7rem, 0.8vw, 0.88rem);
   color: var(--color-text-sub);
-  border-left: 1px dashed rgba(255, 255, 255, 0.25);
-  padding-left: 10px;
+  border-left: 1px dashed rgba(255, 255, 255, 0.3);
+  padding-left: 12px;
 }
 
 .time-main-display {
   font-family: var(--font-title);
-  font-size: 1.6rem;
+  font-size: 2.1rem;
   font-weight: 900;
-  letter-spacing: 2px;
+  letter-spacing: 2.5px;
   color: var(--color-cyan);
-  text-shadow: 0 0 12px var(--color-cyan-glow);
+  text-shadow: 0 0 16px var(--color-cyan-glow);
   line-height: 1;
 }
 
