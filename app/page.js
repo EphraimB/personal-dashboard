@@ -766,11 +766,17 @@ function formatHourLabel(timeStr, index) {
     }
   };
 
-  // Calculate 6 upcoming hours starting from current time
-  const currentHourISO = new Date().toISOString().substring(0, 13);
+  // Calculate 6 upcoming hours starting from current local device time (America/New_York)
+  const now = new Date();
+  const localYear = now.getFullYear();
+  const localMonth = String(now.getMonth() + 1).padStart(2, '0');
+  const localDay = String(now.getDate()).padStart(2, '0');
+  const localHour = String(now.getHours()).padStart(2, '0');
+  const currentLocalHourISO = `${localYear}-${localMonth}-${localDay}T${localHour}`;
+
   let hourlyStartIdx = 0;
   if (weatherData?.hourly?.time) {
-    const foundIdx = weatherData.hourly.time.findIndex((t) => typeof t === 'string' && t.startsWith(currentHourISO));
+    const foundIdx = weatherData.hourly.time.findIndex((t) => typeof t === 'string' && t.startsWith(currentLocalHourISO));
     if (foundIdx !== -1) hourlyStartIdx = foundIdx;
   }
   const hourlyTimes = (weatherData?.hourly?.time || ['', '', '', '', '', '']).slice(hourlyStartIdx, hourlyStartIdx + 6);
