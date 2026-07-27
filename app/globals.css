@@ -1100,6 +1100,63 @@ html, body {
   50% { opacity: 1; transform: translateY(4px) translateX(3px); }
   100% { transform: translateY(10px) translateX(-2px); opacity: 0; }
 }
+/* ==============================================================================
+   HIGH-CONTRAST "PHOTO TAKEN" DATE BADGE (TOP-RIGHT FRAME ANCHOR)
+   ============================================================================== */
+
+.photo-taken-hero-overlay {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.hero-date-badge {
+  background: rgba(4, 6, 12, 0.88);
+  border: 1.5px solid var(--color-hud-border-cyan);
+  border-radius: 12px;
+  padding: 10px 18px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.85), 0 0 15px rgba(0, 240, 255, 0.2);
+  animation: heroBadgeFadeIn 0.8s ease-out forwards;
+}
+
+@keyframes heroBadgeFadeIn {
+  0% { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.badge-icon {
+  font-size: clamp(1.2rem, 1.6vw, 2rem);
+  filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.5));
+}
+
+.badge-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.badge-sub-label {
+  font-size: clamp(0.6rem, 0.75vw, 0.85rem);
+  color: var(--color-cyan);
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.badge-main-date {
+  font-family: var(--font-title);
+  font-size: clamp(0.95rem, 1.25vw, 1.45rem);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 240, 255, 0.4);
+}
+
 
 
 
