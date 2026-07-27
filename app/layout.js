@@ -16,7 +16,7 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body class="ares-theme">
+      <body className="ares-theme">
         {children}
       </body>
     </html>
