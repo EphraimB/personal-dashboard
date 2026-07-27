@@ -783,109 +783,9 @@ export default function TvDashboard() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Overlays */}
-      <div className="city-matrix-underlay" />
-
-      {/* Screen Corner Brackets */}
-      <div className="avatar-corner avatar-corner--tl" />
-      <div className="avatar-corner avatar-corner--tr" />
-      <div className="avatar-corner avatar-corner--bl" />
-      <div className="avatar-corner avatar-corner--br" />
-
-      {/* Top HUD Header Bar */}
-      <header className="system-hud-bar">
-        <div className="hud-left-sector">
-          <span className="hud-badge-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 3v18M3 12h18" />
-            </svg>
-          </span>
-          <div className="hud-title-stack">
-            <span className="hud-sys-tag">// ARES CITY OS</span>
-            <span className="hud-sys-name">ARES CITY TV DASHBOARD</span>
-          </div>
-          <span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>
-            <span className="active-pulse-dot" />
-            <span>{sysStatus}</span>
-          </span>
-        </div>
-
-        {/* Center Clock & Solar Clock & Live Weather Sector */}
-        <div className="hud-clock-sector">
-          <div className="time-main-display">
-            <span className="clock-time-val">{clockTime}</span>
-            <span id="clock-ampm">{clockAmPm}</span>
-            <span className="clock-sep">•</span>
-            <span className="clock-date-val">{clockDate}</span>
-          </div>
-          <div className="ares-solar-clock-display">
-            <span className="solar-label">ARES SOLAR CLOCK //</span>
-            <span className="solar-digits">{aresSolarClock}</span>
-          </div>
-
-          {/* Centered Weather Pill below clocks */}
-          {config.showWeatherSidebars !== false && (
-            <div className="hud-weather-center-pill">
-              <WeatherSvg code={weatherData?.current?.weather_code ?? 0} className="wx-pill-icon" />
-              <span className="wx-pill-temp">
-                {weatherData?.current?.temperature_2m !== undefined
-                  ? Math.round(weatherData.current.temperature_2m)
-                  : '--'}
-                °{config.tempUnit || 'F'}
-              </span>
-              <span className="wx-pill-cond">
-                {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
-              </span>
-              <div className="wx-pill-hilo">
-                <span className="wx-hi-val">▲ {weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '--'}°</span>
-                <span className="wx-lo-val">▼ {weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '--'}°</span>
-              </div>
-              <span className="wx-pill-stat">HUM {weatherData?.current?.relative_humidity_2m ?? '--'}%</span>
-              <span className="wx-pill-stat">
-                WIND {weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '--'}{' '}
-                {config.tempUnit === 'C' ? 'KM/H' : 'MPH'}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Right Status */}
-        <div className="hud-right-sector">
-          <div className="hud-stat-box">
-            <span className="stat-label">CLOUD SYNC</span>
-            <span className={`stat-value ${isConnectedToOneDrive ? 'ssd-connected' : 'ssd-idle'}`}>
-              {isConnectedToOneDrive ? 'PAIRED' : 'SSH AUTH'}
-            </span>
-          </div>
-          <div className="hud-stat-box">
-            <span className="stat-label">PHOTOS</span>
-            <span className="stat-value">
-              {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length).padStart(2, '0')}
-            </span>
-          </div>
-          <div className="hud-stat-box">
-            <span className="stat-label">SOURCE</span>
-            <span className={`stat-value ${isConnectedToOneDrive ? 'source-connected' : ''}`}>
-              {isConnectedToOneDrive ? 'ONEDRIVE' : 'DEMO STREAM'}
-            </span>
-          </div>
-          <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)} title="Open Settings (M)">
-            [ ⚙ CONFIG ]
-          </button>
-        </div>
-      </header>
-
-      {/* Bottom Metadata HUD Card */}
-      <main className="hud-bottom-overlay">
-        <div className="photo-meta-card">
-          <div className="card-corner card-corner--tl" />
-          <div className="card-corner card-corner--tr" />
-          <div className="card-corner card-corner--bl" />
-          <div className="card-corner card-corner--br" />
-
+        {/* Integrated Glass Caption Footer inside Photo Frame */}
+        <div className="photo-meta-card-integrated">
           <div className="meta-card-header">
             <div className="meta-title-group">
               <span className="meta-sector-label">📍 LOCATION // {currentPhoto.location}</span>
@@ -931,7 +831,102 @@ export default function TvDashboard() {
             <div className="progress-bar-fill" style={{ width: `${progressWidth}%` }} />
           </div>
         </div>
-      </main>
+      </div>
+
+      {/* Overlays */}
+      <div className="city-matrix-underlay" />
+
+      {/* Screen Corner Brackets */}
+      <div className="avatar-corner avatar-corner--tl" />
+      <div className="avatar-corner avatar-corner--tr" />
+      <div className="avatar-corner avatar-corner--bl" />
+      <div className="avatar-corner avatar-corner--br" />
+
+      {/* Top HUD Header Bar (2-Row Auto-Expanding Layout) */}
+      <header className="system-hud-bar">
+        <div className="system-hud-row-top">
+          <div className="hud-left-sector">
+            <span className="hud-badge-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 3v18M3 12h18" />
+              </svg>
+            </span>
+            <div className="hud-title-stack">
+              <span className="hud-sys-tag">// ARES CITY OS</span>
+              <span className="hud-sys-name">ARES CITY TV DASHBOARD</span>
+            </div>
+            <span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>
+              <span className="active-pulse-dot" />
+              <span>{sysStatus}</span>
+            </span>
+          </div>
+
+          {/* Center Clock & Solar Clock Sector */}
+          <div className="hud-clock-sector">
+            <div className="time-main-display">
+              <span className="clock-time-val">{clockTime}</span>
+              <span id="clock-ampm">{clockAmPm}</span>
+              <span className="clock-sep">•</span>
+              <span className="clock-date-val">{clockDate}</span>
+            </div>
+            <div className="ares-solar-clock-display">
+              <span className="solar-label">ARES SOLAR CLOCK //</span>
+              <span className="solar-digits">{aresSolarClock}</span>
+            </div>
+          </div>
+
+          {/* Right Status */}
+          <div className="hud-right-sector">
+            <div className="hud-stat-box">
+              <span className="stat-label">CLOUD SYNC</span>
+              <span className={`stat-value ${isConnectedToOneDrive ? 'ssd-connected' : 'ssd-idle'}`}>
+                {isConnectedToOneDrive ? 'PAIRED' : 'SSH AUTH'}
+              </span>
+            </div>
+            <div className="hud-stat-box">
+              <span className="stat-label">PHOTOS</span>
+              <span className="stat-value">
+                {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length).padStart(2, '0')}
+              </span>
+            </div>
+            <div className="hud-stat-box">
+              <span className="stat-label">SOURCE</span>
+              <span className={`stat-value ${isConnectedToOneDrive ? 'source-connected' : ''}`}>
+                {isConnectedToOneDrive ? 'ONEDRIVE' : 'DEMO STREAM'}
+              </span>
+            </div>
+            <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)} title="Open Settings (M)">
+              [ ⚙ CONFIG ]
+            </button>
+          </div>
+        </div>
+
+        {/* Row 2: Centered Weather Telemetry Pill */}
+        {config.showWeatherSidebars !== false && (
+          <div className="hud-weather-center-pill">
+            <WeatherSvg code={weatherData?.current?.weather_code ?? 0} className="wx-pill-icon" />
+            <span className="wx-pill-temp">
+              {weatherData?.current?.temperature_2m !== undefined
+                ? Math.round(weatherData.current.temperature_2m)
+                : '--'}
+              °{config.tempUnit || 'F'}
+            </span>
+            <span className="wx-pill-cond">
+              {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
+            </span>
+            <div className="wx-pill-hilo">
+              <span className="wx-hi-val">▲ {weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '--'}°</span>
+              <span className="wx-lo-val">▼ {weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '--'}°</span>
+            </div>
+            <span className="wx-pill-stat">HUM {weatherData?.current?.relative_humidity_2m ?? '--'}%</span>
+            <span className="wx-pill-stat">
+              WIND {weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '--'}{' '}
+              {config.tempUnit === 'C' ? 'KM/H' : 'MPH'}
+            </span>
+          </div>
+        )}
+      </header>
 
       {/* Settings Modal */}
       <div className={`modal-backdrop ${isModalOpen ? 'active' : ''}`}>

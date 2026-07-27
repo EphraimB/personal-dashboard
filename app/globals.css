@@ -185,22 +185,32 @@ html, body {
   border-right: 2.5px solid var(--color-orange);
 }
 
-/* Top Tactical System HUD Bar (Expanded Height) */
+/* Top Tactical System HUD Bar (2-Row Auto-Expanding Layout) */
 .system-hud-bar {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: auto;
-  min-height: 115px;
-  padding: 14px 32px;
+  min-height: 125px;
+  padding: 16px 36px;
   z-index: 5;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 10px;
   background: var(--color-hud-bg);
   border-bottom: 1.5px solid var(--color-hud-border);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  overflow: visible;
+}
+
+.system-hud-row-top {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .hud-left-sector {
@@ -423,24 +433,19 @@ html, body {
   font-size: 0.85rem;
 }
 
-/* Bottom Metadata HUD Card */
-.hud-bottom-overlay {
+/* Integrated Glass Caption Footer inside Photo Frame */
+.photo-meta-card-integrated {
   position: absolute;
-  bottom: 24px; left: 32px; right: 32px;
-  z-index: 5;
-  pointer-events: none;
-}
-
-.photo-meta-card {
-  position: relative;
-  background: var(--color-hud-bg);
-  border: 1.5px solid var(--color-hud-border);
-  border-radius: 12px;
-  padding: 16px 20px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+  bottom: 0; left: 0; right: 0;
+  background: rgba(4, 6, 12, 0.75);
+  border-top: 1.5px solid var(--color-hud-border-cyan);
+  border-radius: 0 0 22px 22px;
+  padding: 14px 24px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.8);
   pointer-events: auto;
+  z-index: 10;
 }
 
 .meta-card-header {
