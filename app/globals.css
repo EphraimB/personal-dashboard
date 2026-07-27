@@ -35,7 +35,6 @@
   margin: 0;
   padding: 0;
   user-select: none;
-  cursor: none !important;
 }
 
 html, body {
@@ -46,7 +45,6 @@ html, body {
   font-family: var(--font-mono);
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
-  cursor: none !important;
 }
 
 /* ==============================================================================
@@ -119,6 +117,55 @@ html, body {
 }
 
 /* Corner Brackets */
+.ares-tv-app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-image: url('/location-background.jpeg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.weather-atmosphere-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Centered Slideshow & Weather Banner Wrapper */
+.slideshow-wrapper-centered {
+  position: absolute;
+  top: 54%;
+  left: 50%;
+  transform: translate(-50%, -46%);
+  width: min(88vw, 1720px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Centered 16:9 Glassmorphic Slideshow Container (Doubled Size) */
+.slideshow-viewport-centered {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  z-index: 2;
+  border-radius: 24px;
+  border: 2px solid var(--color-hud-border-cyan);
+  background: rgba(4, 6, 12, 0.45);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 25px 85px rgba(0, 0, 0, 0.9), 0 0 45px rgba(0, 240, 255, 0.25);
+  overflow: hidden;
+}
+
 .avatar-corner, .card-corner {
   position: absolute;
   width: 14px;
@@ -148,21 +195,32 @@ html, body {
   border-right: 2.5px solid var(--color-orange);
 }
 
-/* Top Tactical System HUD Bar */
+/* Top Tactical System HUD Bar (2-Row Auto-Expanding Layout) */
 .system-hud-bar {
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 64px;
-  padding: 0 24px;
+  height: auto;
+  min-height: max-content;
+  padding: 16px 36px 20px 36px;
   z-index: 5;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 12px;
   background: var(--color-hud-bg);
   border-bottom: 1.5px solid var(--color-hud-border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  overflow: visible;
+}
+
+.system-hud-row-top {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
 }
 
 .hud-left-sector {
@@ -246,13 +304,210 @@ html, body {
   align-items: center;
 }
 
+.hud-weather-center-pill {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px dashed rgba(0, 240, 255, 0.4);
+  border-radius: 30px;
+  padding: 6px 22px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+  animation: weatherPillFade 0.6s ease-out forwards;
+}
+
+@keyframes weatherPillFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.wx-pill-icon {
+  width: clamp(28px, 2.5vw, 36px);
+  height: clamp(28px, 2.5vw, 36px);
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
+}
+
+.wx-pill-temp {
+  font-family: var(--font-title);
+  font-size: clamp(1.2rem, 1.5vw, 1.7rem);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.wx-pill-cond {
+  font-size: clamp(0.75rem, 0.9vw, 1rem);
+  font-weight: 700;
+  color: var(--color-cyan);
+  letter-spacing: 0.8px;
+}
+
+.wx-pill-hilo {
+  display: flex;
+  gap: 8px;
+  font-size: clamp(0.75rem, 0.9vw, 1rem);
+  font-weight: 700;
+}
+
+.wx-pill-stat {
+  font-size: clamp(0.7rem, 0.8vw, 0.88rem);
+  color: var(--color-text-sub);
+  border-left: 1px dashed rgba(255, 255, 255, 0.3);
+  padding-left: 12px;
+}
+
+/* Full-Width Dedicated Weather Command Banner Above Photo Frame */
+.hud-standalone-weather-banner {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 24px;
+  background: rgba(4, 6, 12, 0.88);
+  border: 2px solid var(--color-hud-border-cyan);
+  border-radius: 20px;
+  padding: 16px 32px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.9), 0 0 35px rgba(0, 240, 255, 0.25);
+  margin-bottom: 16px;
+  animation: weatherBannerSlideDown 0.7s ease-out forwards;
+}
+
+@keyframes weatherBannerSlideDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.wx-current-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-width: 240px;
+}
+
+.wx-curr-label {
+  font-size: clamp(0.8rem, 1vw, 1.2rem);
+  font-family: var(--font-title);
+  font-weight: 900;
+  color: var(--color-orange);
+  letter-spacing: 2px;
+}
+
+.wx-curr-main-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wx-curr-icon {
+  width: clamp(52px, 5vw, 76px);
+  height: clamp(52px, 5vw, 76px);
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.6));
+}
+
+.wx-curr-temp {
+  font-family: var(--font-title);
+  font-size: clamp(2.5rem, 3.8vw, 4.8rem);
+  font-weight: 900;
+  color: var(--color-cyan);
+  text-shadow: 0 0 20px var(--color-cyan-glow);
+  line-height: 1;
+}
+
+.wx-curr-cond {
+  font-size: clamp(1rem, 1.35vw, 1.6rem);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.wx-curr-hilo {
+  display: flex;
+  gap: 12px;
+  font-size: clamp(0.95rem, 1.2vw, 1.45rem);
+  font-weight: 800;
+}
+
+.wx-curr-meta {
+  font-size: clamp(0.78rem, 0.95vw, 1.15rem);
+  color: var(--color-cyan);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.wx-unified-divider {
+  width: 2px;
+  background: linear-gradient(180deg, transparent, var(--color-cyan), transparent);
+  margin: 0 10px;
+}
+
+.wx-hourly-sequence {
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+  flex-grow: 1;
+  justify-content: space-around;
+}
+
+.wx-hourly-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  min-width: 80px;
+  padding-right: 20px;
+  border-right: 1.5px dashed rgba(0, 240, 255, 0.25);
+}
+
+.wx-hourly-item:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+.wx-hr-time {
+  font-size: clamp(0.9rem, 1.15vw, 1.4rem);
+  font-family: var(--font-title);
+  font-weight: 800;
+  color: var(--color-cyan);
+  letter-spacing: 1px;
+}
+
+.wx-hr-icon {
+  width: clamp(38px, 3.6vw, 54px);
+  height: clamp(38px, 3.6vw, 54px);
+  flex-shrink: 0;
+  margin: 4px 0;
+  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.5));
+}
+
+.wx-hr-temp {
+  font-family: var(--font-title);
+  font-size: clamp(1.4rem, 1.85vw, 2.3rem);
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.wx-hr-pop {
+  font-size: clamp(0.8rem, 0.95vw, 1.15rem);
+  color: #4dadff;
+  font-weight: 800;
+}
+
 .time-main-display {
   font-family: var(--font-title);
-  font-size: 1.6rem;
+  font-size: 2.1rem;
   font-weight: 900;
-  letter-spacing: 2px;
+  letter-spacing: 2.5px;
   color: var(--color-cyan);
-  text-shadow: 0 0 12px var(--color-cyan-glow);
+  text-shadow: 0 0 16px var(--color-cyan-glow);
   line-height: 1;
 }
 
@@ -329,24 +584,19 @@ html, body {
   font-size: 0.85rem;
 }
 
-/* Bottom Metadata HUD Card */
-.hud-bottom-overlay {
+/* Integrated Glass Caption Footer inside Photo Frame */
+.photo-meta-card-integrated {
   position: absolute;
-  bottom: 24px; left: 32px; right: 32px;
-  z-index: 5;
-  pointer-events: none;
-}
-
-.photo-meta-card {
-  position: relative;
-  background: var(--color-hud-bg);
-  border: 1.5px solid var(--color-hud-border);
-  border-radius: 12px;
-  padding: 16px 20px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+  bottom: 0; left: 0; right: 0;
+  background: rgba(4, 6, 12, 0.75);
+  border-top: 1.5px solid var(--color-hud-border-cyan);
+  border-radius: 0 0 22px 22px;
+  padding: 14px 24px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.8);
   pointer-events: auto;
+  z-index: 10;
 }
 
 .meta-card-header {
@@ -556,11 +806,15 @@ html, body {
    ============================================================================== */
 
 .ares-tv-app {
-  position: absolute;
-  inset: 0;
+  position: relative;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  background-image: url('/location-background.jpeg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* Dynamic UI Scale Classes */
@@ -590,17 +844,12 @@ html, body {
 }
 
 /* 4K Header & Clock Enhancement */
-.system-hud-bar {
-  height: clamp(68px, 6vw, 110px);
-  padding: 0 32px;
-}
-
 .time-main-display {
   display: flex;
   align-items: center;
   gap: 12px;
   font-family: var(--font-title);
-  font-size: clamp(1.8rem, 3.2vw, 4.4rem);
+  font-size: clamp(1.4rem, 2.2vw, 2.6rem);
   font-weight: 900;
   letter-spacing: 2px;
   color: var(--color-cyan);
@@ -708,29 +957,323 @@ html, body {
   margin-top: clamp(12px, 1.5vw, 20px);
 }
 
+
 /* ==============================================================================
-   TRANSLUCENT HERO "PHOTO TAKEN" DATE & TIME OVERLAY
+   GLASSMORPHIC WEATHER SIDEBARS & ANIMATED SVGS (CEDARHURST, NY)
+   ============================================================================== */
+
+.weather-sidebar-left {
+  position: absolute;
+  top: clamp(82px, 7vw, 120px);
+  left: clamp(16px, 2vw, 32px);
+  width: clamp(260px, 20vw, 340px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: rgba(4, 6, 12, 0.65);
+  border: 1.5px solid var(--color-hud-border-cyan);
+  border-radius: 16px;
+  padding: clamp(14px, 1.5vw, 22px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75), 0 0 25px rgba(0, 240, 255, 0.15);
+  animation: sidebarSlideLeft 0.6s ease-out forwards;
+}
+
+.weather-sidebar-right {
+  position: absolute;
+  top: clamp(82px, 7vw, 120px);
+  right: clamp(16px, 2vw, 32px);
+  width: clamp(250px, 18vw, 320px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: rgba(4, 6, 12, 0.65);
+  border: 1.5px solid var(--color-hud-border-cyan);
+  border-radius: 16px;
+  padding: clamp(14px, 1.5vw, 22px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75), 0 0 25px rgba(0, 240, 255, 0.15);
+  animation: sidebarSlideRight 0.6s ease-out forwards;
+}
+
+@keyframes sidebarSlideLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sidebarSlideRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Sidebar Header */
+.wx-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px dashed rgba(0, 240, 255, 0.25);
+  padding-bottom: 10px;
+}
+
+.wx-title-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.wx-sys-tag {
+  font-size: clamp(0.55rem, 0.7vw, 0.75rem);
+  color: var(--color-cyan);
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+.wx-location-name {
+  font-family: var(--font-title);
+  font-size: clamp(0.9rem, 1.1vw, 1.25rem);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+.wx-gps-tag {
+  font-size: clamp(0.55rem, 0.65vw, 0.7rem);
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+}
+
+/* Hero Weather Display (Left Sidebar) */
+.wx-hero-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(0, 240, 255, 0.04);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px clamp(10px, 1vw, 16px);
+}
+
+.wx-svg-container {
+  width: clamp(54px, 4.5vw, 75px);
+  height: clamp(54px, 4.5vw, 75px);
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.4));
+}
+
+.wx-temp-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.wx-main-temp {
+  font-family: var(--font-title);
+  font-size: clamp(2rem, 2.6vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1;
+  color: #ffffff;
+  background: linear-gradient(180deg, #ffffff 30%, #00f0ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+}
+
+.wx-hi-lo-badge {
+  display: flex;
+  gap: 10px;
+  font-size: clamp(0.7rem, 0.85vw, 0.95rem);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.wx-hi-val { color: #ff6b6b; }
+.wx-lo-val { color: #4dadff; }
+
+.wx-condition-desc {
+  font-size: clamp(0.85rem, 1vw, 1.1rem);
+  font-weight: 600;
+  color: var(--color-cyan);
+  letter-spacing: 0.5px;
+}
+
+/* Telemetry Grid (Left Sidebar) */
+.wx-telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.wx-telemetry-item {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.wx-tel-label {
+  font-size: clamp(0.5rem, 0.65vw, 0.7rem);
+  color: var(--color-text-dim);
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.wx-tel-value {
+  font-size: clamp(0.75rem, 0.95vw, 1.05rem);
+  font-weight: 700;
+  color: #ffffff;
+  font-family: var(--font-title);
+}
+
+/* 5-Day Forecast List (Right Sidebar) */
+.wx-forecast-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wx-forecast-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 240, 255, 0.03);
+  border: 1px solid rgba(0, 240, 255, 0.12);
+  border-radius: 10px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.wx-forecast-row:hover {
+  background: rgba(0, 240, 255, 0.08);
+  border-color: rgba(0, 240, 255, 0.35);
+  transform: translateX(-3px);
+}
+
+.wx-fc-day {
+  font-family: var(--font-title);
+  font-size: clamp(0.75rem, 0.9vw, 1rem);
+  font-weight: 700;
+  color: var(--color-cyan);
+  width: 42px;
+}
+
+.wx-fc-icon {
+  width: clamp(28px, 2.2vw, 36px);
+  height: clamp(28px, 2.2vw, 36px);
+  flex-shrink: 0;
+}
+
+.wx-fc-temps {
+  display: flex;
+  gap: 8px;
+  font-size: clamp(0.75rem, 0.9vw, 1rem);
+  font-weight: 700;
+}
+
+.wx-fc-pop {
+  font-size: clamp(0.65rem, 0.75vw, 0.8rem);
+  color: #4dadff;
+  font-weight: 600;
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ==============================================================================
+   ANIMATED WEATHER SVG KEYFRAMES
+   ============================================================================== */
+
+.wx-anim-sun {
+  transform-origin: center;
+  animation: sunRotate 20s linear infinite;
+}
+
+.wx-anim-sun-rays {
+  transform-origin: center;
+  animation: sunPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes sunRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sunPulse {
+  0% { opacity: 0.6; transform: scale(0.92); }
+  100% { opacity: 1; transform: scale(1.08); }
+}
+
+.wx-anim-cloud {
+  animation: cloudFloat 4s ease-in-out infinite alternate;
+}
+
+.wx-anim-cloud-back {
+  animation: cloudFloat 6s ease-in-out infinite alternate-reverse;
+  opacity: 0.6;
+}
+
+@keyframes cloudFloat {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(4px, -3px); }
+}
+
+.wx-anim-rain-1 { animation: rainDrop 1.2s linear infinite; }
+.wx-anim-rain-2 { animation: rainDrop 1.2s linear infinite 0.4s; }
+.wx-anim-rain-3 { animation: rainDrop 1.2s linear infinite 0.8s; }
+
+@keyframes rainDrop {
+  0% { transform: translateY(-4px); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(10px); opacity: 0; }
+}
+
+.wx-anim-lightning {
+  animation: lightningFlash 2.5s ease-in-out infinite;
+}
+
+@keyframes lightningFlash {
+  0%, 85%, 100% { opacity: 0.1; }
+  88%, 94% { opacity: 1; filter: drop-shadow(0 0 10px #ffea00); }
+  91% { opacity: 0.3; }
+}
+
+.wx-anim-snow-1 { animation: snowFloat 2s ease-in-out infinite; }
+.wx-anim-snow-2 { animation: snowFloat 2s ease-in-out infinite 0.7s; }
+.wx-anim-snow-3 { animation: snowFloat 2s ease-in-out infinite 1.4s; }
+
+@keyframes snowFloat {
+  0% { transform: translateY(-3px) translateX(0); opacity: 0; }
+  50% { opacity: 1; transform: translateY(4px) translateX(3px); }
+  100% { transform: translateY(10px) translateX(-2px); opacity: 0; }
+}
+/* ==============================================================================
+   HIGH-CONTRAST "PHOTO TAKEN" DATE BADGE (TOP-RIGHT FRAME ANCHOR)
    ============================================================================== */
 
 .photo-taken-hero-overlay {
   position: absolute;
-  top: clamp(82px, 7.5vw, 130px);
-  left: clamp(24px, 4vw, 64px);
-  z-index: 4;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
   pointer-events: none;
 }
 
 .hero-date-badge {
-  background: rgba(4, 6, 12, 0.55);
+  background: rgba(4, 6, 12, 0.88);
   border: 1.5px solid var(--color-hud-border-cyan);
   border-radius: 12px;
-  padding: clamp(8px, 1.2vw, 16px) clamp(16px, 2vw, 28px);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  padding: 10px 18px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
-  gap: 14px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 240, 255, 0.15);
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.85), 0 0 15px rgba(0, 240, 255, 0.2);
   animation: heroBadgeFadeIn 0.8s ease-out forwards;
 }
 
@@ -740,7 +1283,8 @@ html, body {
 }
 
 .badge-icon {
-  font-size: clamp(1.2rem, 1.8vw, 2.2rem);
+  font-size: clamp(1.2rem, 1.6vw, 2rem);
+  filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.5));
 }
 
 .badge-text-group {
@@ -749,19 +1293,31 @@ html, body {
 }
 
 .badge-sub-label {
-  font-size: clamp(0.55rem, 0.75vw, 0.9rem);
+  font-size: clamp(0.6rem, 0.75vw, 0.85rem);
   color: var(--color-cyan);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 1.5px;
 }
 
 .badge-main-date {
-  font-family: var(--font-sans);
-  font-size: clamp(1rem, 1.45vw, 1.95rem);
-  font-weight: 700;
+  font-family: var(--font-title);
+  font-size: clamp(0.95rem, 1.25vw, 1.45rem);
+  font-weight: 800;
   color: #ffffff;
-  letter-spacing: 0.3px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 240, 255, 0.4);
 }
+
+/* Top-Center Photo Frame Slide Counter Hero Badge */
+.photo-frame-top-center-badge {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+
 
 
