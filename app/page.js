@@ -237,6 +237,187 @@ function WeatherSvg({ code = 0, className = 'wx-svg-container' }) {
   );
 }
 
+function WeatherAtmosphereCanvas({ code = 0 }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId = null;
+
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
+    // Weather categorization
+    const isRain = (code >= 51 && code <= 67) || (code >= 80 && code <= 82);
+    const isThunder = code >= 95;
+    const isSnow = (code >= 71 && code <= 77) || code === 85 || code === 86;
+    const isSunny = code === 0;
+    const isCloudyFog = code === 1 || code === 2 || code === 3 || code === 45 || code === 48;
+
+    // Rain / Thunder Particle state
+    const rainCount = isThunder ? 180 : 120;
+    const rainDrops = [];
+    if (isRain || isThunder) {
+      for (let i = 0; i < rainCount; i++) {
+        rainDrops.push({
+          x: Math.random() * (width + 200),
+          y: Math.random() * height,
+          length: 15 + Math.random() * 25,
+          speed: 12 + Math.random() * 10,
+          opacity: 0.2 + Math.random() * 0.5
+        });
+      }
+    }
+
+    // Snow Particle state
+    const snowCount = 100;
+    const snowflakes = [];
+    if (isSnow) {
+      for (let i = 0; i < snowCount; i++) {
+        snowflakes.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: 1.5 + Math.random() * 3,
+          speed: 1 + Math.random() * 2,
+          swing: Math.random() * Math.PI * 2,
+          swingSpeed: 0.02 + Math.random() * 0.03,
+          opacity: 0.3 + Math.random() * 0.6
+        });
+      }
+    }
+
+    // Fog / Cloud Nodes
+    const fogNodes = [];
+    if (isCloudyFog) {
+      for (let i = 0; i < 8; i++) {
+        fogNodes.push({
+          x: Math.random() * width,
+          y: Math.random() * (height * 0.7),
+          radius: 200 + Math.random() * 300,
+          speed: 0.3 + Math.random() * 0.4,
+          opacity: 0.04 + Math.random() * 0.06
+        });
+      }
+    }
+
+    // Lightning Flash State
+    let lightningFlash = 0;
+    let nextLightningTime = Date.now() + 2000 + Math.random() * 4000;
+
+    // Animation Loop
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // --- SUNNY / CLEAR EFFECT ---
+      if (isSunny) {
+        const grad = ctx.createRadialGradient(width * 0.7, 0, 10, width * 0.7, 0, width * 0.6);
+        grad.addColorStop(0, 'rgba(255, 234, 0, 0.22)');
+        grad.addColorStop(0.5, 'rgba(255, 145, 0, 0.08)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+      }
+
+      // --- FOG / CLOUDY EFFECT ---
+      if (isCloudyFog) {
+        fogNodes.forEach((fog) => {
+          fog.x += fog.speed;
+          if (fog.x - fog.radius > width) fog.x = -fog.radius;
+          const grad = ctx.createRadialGradient(fog.x, fog.y, 10, fog.x, fog.y, fog.radius);
+          grad.addColorStop(0, `rgba(0, 240, 255, ${fog.opacity})`);
+          grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(fog.x, fog.y, fog.radius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      // --- SNOW EFFECT ---
+      if (isSnow) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        snowflakes.forEach((flake) => {
+          flake.y += flake.speed;
+          flake.swing += flake.swingSpeed;
+          flake.x += Math.sin(flake.swing) * 0.8;
+
+          if (flake.y > height) {
+            flake.y = -10;
+            flake.x = Math.random() * width;
+          }
+
+          ctx.beginPath();
+          ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+          ctx.globalAlpha = flake.opacity;
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+      }
+
+      // --- RAIN / THUNDER EFFECT ---
+      if (isRain || isThunder) {
+        ctx.lineWidth = 1.5;
+        rainDrops.forEach((drop) => {
+          drop.y += drop.speed;
+          drop.x -= 1.5;
+
+          if (drop.y > height) {
+            drop.y = -drop.length;
+            drop.x = Math.random() * (width + 100);
+          }
+
+          ctx.strokeStyle = `rgba(0, 240, 255, ${drop.opacity})`;
+          ctx.beginPath();
+          ctx.moveTo(drop.x, drop.y);
+          ctx.lineTo(drop.x - 3, drop.y + drop.length);
+          ctx.stroke();
+        });
+
+        const mist = ctx.createLinearGradient(0, height - 150, 0, height);
+        mist.addColorStop(0, 'rgba(0, 240, 255, 0)');
+        mist.addColorStop(1, 'rgba(0, 40, 70, 0.15)');
+        ctx.fillStyle = mist;
+        ctx.fillRect(0, height - 150, width, 150);
+      }
+
+      // --- THUNDERSTORM LIGHTNING FLASH OVERLAY ---
+      if (isThunder) {
+        const now = Date.now();
+        if (now > nextLightningTime) {
+          lightningFlash = 0.85;
+          nextLightningTime = now + 3000 + Math.random() * 5000;
+        }
+
+        if (lightningFlash > 0.01) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${lightningFlash})`;
+          ctx.fillRect(0, 0, width, height);
+          lightningFlash *= 0.88;
+        }
+      }
+
+      animId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (animId) cancelAnimationFrame(animId);
+    };
+  }, [code]);
+
+  return <canvas ref={canvasRef} className="weather-atmosphere-canvas" />;
+}
+
 export default function TvDashboard() {
   const [config, setConfig] = useState({
     onedriveToken: '',
@@ -572,8 +753,16 @@ export default function TvDashboard() {
 
   return (
     <div className={`ares-tv-app ui-scale-${config.uiScale || '150'} ${showControls ? 'user-active' : 'user-idle'}`}>
-      {/* Background Slideshow Viewport */}
-      <div className="slideshow-viewport">
+      {/* Full-Screen Dynamic Weather Atmospheric Effects Engine (Rain, Snow, Lightning, Sun Flare, Fog) */}
+      <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
+
+      {/* Centered 16:9 Glassmorphic Photo Slideshow Viewport */}
+      <div className="slideshow-viewport-centered">
+        <div className="card-corner card-corner--tl" />
+        <div className="card-corner card-corner--tr" />
+        <div className="card-corner card-corner--bl" />
+        <div className="card-corner card-corner--br" />
+
         <div
           className={layer1Class}
           style={{ backgroundImage: layer1Url ? `url("${layer1Url}")` : 'none' }}
@@ -624,7 +813,7 @@ export default function TvDashboard() {
           </span>
         </div>
 
-        {/* Center Clock & Solar Clock Sector */}
+        {/* Center Clock & Solar Clock & Live Weather Sector */}
         <div className="hud-clock-sector">
           <div className="time-main-display">
             <span className="clock-time-val">{clockTime}</span>
@@ -636,6 +825,31 @@ export default function TvDashboard() {
             <span className="solar-label">ARES SOLAR CLOCK //</span>
             <span className="solar-digits">{aresSolarClock}</span>
           </div>
+
+          {/* Centered Weather Pill below clocks */}
+          {config.showWeatherSidebars !== false && (
+            <div className="hud-weather-center-pill">
+              <WeatherSvg code={weatherData?.current?.weather_code ?? 0} className="wx-pill-icon" />
+              <span className="wx-pill-temp">
+                {weatherData?.current?.temperature_2m !== undefined
+                  ? Math.round(weatherData.current.temperature_2m)
+                  : '--'}
+                °{config.tempUnit || 'F'}
+              </span>
+              <span className="wx-pill-cond">
+                {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
+              </span>
+              <div className="wx-pill-hilo">
+                <span className="wx-hi-val">▲ {weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '--'}°</span>
+                <span className="wx-lo-val">▼ {weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '--'}°</span>
+              </div>
+              <span className="wx-pill-stat">HUM {weatherData?.current?.relative_humidity_2m ?? '--'}%</span>
+              <span className="wx-pill-stat">
+                WIND {weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '--'}{' '}
+                {config.tempUnit === 'C' ? 'KM/H' : 'MPH'}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Right Status */}
@@ -663,94 +877,6 @@ export default function TvDashboard() {
           </button>
         </div>
       </header>
-
-      {/* Left Glassmorphic Weather Sidebar - Cedarhurst, NY Live Telemetry */}
-      {config.showWeatherSidebars !== false && (
-        <aside className="weather-sidebar-left">
-          <div className="wx-sidebar-header">
-            <div className="wx-title-stack">
-              <span className="wx-sys-tag">// CEDARHURST, NY</span>
-              <span className="wx-location-name">LOCAL ATMOSPHERE</span>
-            </div>
-            <span className="wx-gps-tag">40.62° N / 73.73° W</span>
-          </div>
-
-          <div className="wx-hero-card">
-            <WeatherSvg code={weatherData?.current?.weather_code ?? 0} />
-            <div className="wx-temp-group">
-              <div className="wx-main-temp">
-                {weatherData?.current?.temperature_2m !== undefined
-                  ? Math.round(weatherData.current.temperature_2m)
-                  : '--'}
-                °{config.tempUnit || 'F'}
-              </div>
-              <div className="wx-hi-lo-badge">
-                <span className="wx-hi-val">▲ {weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '--'}°</span>
-                <span className="wx-lo-val">▼ {weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '--'}°</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="wx-condition-desc">
-            {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
-          </div>
-
-          <div className="wx-telemetry-grid">
-            <div className="wx-telemetry-item">
-              <span className="wx-tel-label">HUMIDITY</span>
-              <span className="wx-tel-value">{weatherData?.current?.relative_humidity_2m ?? '--'}%</span>
-            </div>
-            <div className="wx-telemetry-item">
-              <span className="wx-tel-label">WIND</span>
-              <span className="wx-tel-value">
-                {weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '--'}{' '}
-                <span style={{ fontSize: '0.6rem' }}>{config.tempUnit === 'C' ? 'KM/H' : 'MPH'}</span>
-              </span>
-            </div>
-            <div className="wx-telemetry-item">
-              <span className="wx-tel-label">RAIN %</span>
-              <span className="wx-tel-value">{weatherData?.daily?.precipitation_probability_max?.[0] ?? 0}%</span>
-            </div>
-          </div>
-        </aside>
-      )}
-
-      {/* Right Glassmorphic Weather Sidebar - Cedarhurst, NY 5-Day Forecast */}
-      {config.showWeatherSidebars !== false && (
-        <aside className="weather-sidebar-right">
-          <div className="wx-sidebar-header">
-            <div className="wx-title-stack">
-              <span className="wx-sys-tag">// CEDARHURST, NY</span>
-              <span className="wx-location-name">5-DAY FORECAST</span>
-            </div>
-            <span className="wx-gps-tag">OUTLOOK</span>
-          </div>
-
-          <div className="wx-forecast-list">
-            {(weatherData?.daily?.time || ['', '', '', '', '']).slice(0, 5).map((dateStr, idx) => {
-              const code = weatherData?.daily?.weather_code?.[idx] ?? 0;
-              const maxTemp = weatherData?.daily?.temperature_2m_max?.[idx];
-              const minTemp = weatherData?.daily?.temperature_2m_min?.[idx];
-              const pop = weatherData?.daily?.precipitation_probability_max?.[idx] ?? 0;
-              const dayLabel = getDayAbbrev(dateStr, idx === 0);
-
-              return (
-                <div key={idx} className="wx-forecast-row">
-                  <span className="wx-fc-day">{dayLabel}</span>
-                  <div className="wx-fc-icon">
-                    <WeatherSvg code={code} className="wx-fc-icon" />
-                  </div>
-                  <div className="wx-fc-temps">
-                    <span className="wx-hi-val">{maxTemp !== undefined ? Math.round(maxTemp) : '--'}°</span>
-                    <span className="wx-lo-val">{minTemp !== undefined ? Math.round(minTemp) : '--'}°</span>
-                  </div>
-                  <span className="wx-fc-pop">{pop}%</span>
-                </div>
-              );
-            })}
-          </div>
-        </aside>
-      )}
 
       {/* Bottom Metadata HUD Card */}
       <main className="hud-bottom-overlay">
