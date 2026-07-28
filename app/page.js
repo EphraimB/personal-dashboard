@@ -560,18 +560,18 @@ function formatHourLabel(timeStr, index) {
     const handleMouseMove = () => {
       setShowControls(true);
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      idleTimerRef.current = setTimeout(() => {
-        if (!isModalOpen) setShowControls(false);
-      }, 3500);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('touchstart', handleMouseMove);
-    
-    // Initial auto-hide timer
     idleTimerRef.current = setTimeout(() => {
-      setShowControls(false);
-    }, 4000);
+      if (!isModalOpen) setShowControls(false);
+    }, 2000);
+  };
+
+  window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('touchstart', handleMouseMove);
+  
+  // Initial auto-hide timer
+  idleTimerRef.current = setTimeout(() => {
+    setShowControls(false);
+  }, 2000);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);

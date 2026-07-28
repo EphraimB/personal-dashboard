@@ -835,6 +835,31 @@ html, body {
 .ui-scale-150 { font-size: 20px; } /* Recommended for 4K TV */
 .ui-scale-175 { font-size: 24px; } /* Giant font size */
 
+/* Auto-Hiding Controls & Mouse Cursor Hider for Kiosk Mode */
+.user-idle,
+.user-idle * {
+  cursor: none !important;
+}
+
+.meta-controls-quick,
+.config-hud-btn {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.user-idle .meta-controls-quick,
+.user-idle .config-hud-btn {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+}
+
+.user-active .meta-controls-quick,
+.user-active .config-hud-btn {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
 /* Centered Slideshow & Weather Banner Wrapper */
 .slideshow-wrapper-centered {
   position: relative;

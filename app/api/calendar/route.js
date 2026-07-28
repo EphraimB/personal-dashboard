@@ -117,7 +117,7 @@ function generateSampleSchedule() {
   };
 }
 
-// Robust iCal Date Parser
+// Robust iCal Date Parser (Local Time)
 function parseICalDate(dtStr) {
   if (!dtStr) return null;
   const clean = dtStr.replace(/[^0-9T]/g, '');
@@ -132,12 +132,13 @@ function parseICalDate(dtStr) {
       min = parseInt(clean.substring(tIdx + 3, tIdx + 5), 10) || 0;
       ss = parseInt(clean.substring(tIdx + 5, tIdx + 7), 10) || 0;
     }
-    return new Date(Date.UTC(yyyy, mm, dd, hh, min, ss));
+    // Create Date object in local time
+    return new Date(yyyy, mm, dd, hh, min, ss);
   }
   return null;
 }
 
-// Simple iCal parser for ICS feeds (Filters out past events from years/months ago)
+// Simple iCal parser for ICS feeds (Filters out past events from yesterday and previous years)
 function parseICS(icsText) {
   const rawEvents = [];
   const lines = icsText.split(/\r?\n/);
@@ -179,7 +180,7 @@ function parseICS(icsText) {
         startTime: parsedDate ? formatTimeString(parsedDate) : 'Today'
       };
     })
-    .filter((e) => e.startDateObj && e.startDateObj.getTime() >= (startOfToday.getTime() - 12 * 3600 * 1000))
+    .filter((e) => e.startDateObj && e.startDateObj.getTime() >= startOfToday.getTime())
     .sort((a, b) => (a.startDateObj?.getTime() || 0) - (b.startDateObj?.getTime() || 0));
 
   return futureEvents;
