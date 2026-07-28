@@ -878,13 +878,11 @@ html, body {
   z-index: 2;
 }
 
-/* Centered 16:9 Glassmorphic Slideshow Container (Maximized Hero) */
+/* Centered Glassmorphic Slideshow Container (Full-Width & Giant Across-The-Room TV View) */
 .slideshow-viewport-centered {
   position: relative;
-  width: auto;
-  max-width: 100%;
-  aspect-ratio: 16 / 9;
-  height: clamp(320px, 56vh, 640px);
+  width: 100%;
+  height: clamp(340px, 57vh, 680px);
   z-index: 2;
   border-radius: 20px;
   border: 2px solid var(--color-hud-border-cyan);
