@@ -138,10 +138,10 @@ function parseICS(icsText) {
       } else if (line.startsWith('LOCATION:')) {
         currentEvent.location = line.substring(9);
       } else if (line.startsWith('DTSTART:')) {
-        currentEvent.startRaw = line.substring(8);
+        currentEvent.startTime = line.substring(8);
       } else if (line.startsWith('DTSTART;')) {
         const parts = line.split(':');
-        if (parts.length > 1) currentEvent.startRaw = parts[1];
+        if (parts.length > 1) currentEvent.startTime = parts[1];
       }
     }
   }
@@ -149,31 +149,106 @@ function parseICS(icsText) {
   return events;
 }
 
+function buildCalendarResponse(eventsList, sourceName) {
+  if (!eventsList || eventsList.length === 0) {
+    return {
+      success: true,
+      isConnected: false,
+      source: sourceName,
+      upNext: null,
+      todayEvents: [],
+      weekDays: []
+    };
+  }
+
+  const first = eventsList[0];
+  const upNext = {
+    id: first.id || 'evt-next-1',
+    title: first.title || 'Untitled Event',
+    startTime: first.startTime || 'Upcoming',
+    endTime: first.endTime || '',
+    location: first.location || 'Google Calendar',
+    category: 'Google Event',
+    icon: '⚡',
+    isUpNext: true
+  };
+
+  const todayEvents = eventsList.slice(1, 4).map((it, idx) => ({
+    id: it.id || `evt-today-${idx}`,
+    title: it.title || 'Calendar Event',
+    startTime: it.startTime || 'Scheduled',
+    endTime: it.endTime || '',
+    location: it.location || 'Google Calendar',
+    category: 'Event',
+    icon: '📌'
+  }));
+
+  const now = new Date();
+  const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+  const weekDays = [];
+
+  for (let i = 1; i <= 5; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() + i);
+    const dateStr = formatDateISO(d);
+    const dayName = dayNames[d.getDay()];
+
+    const remaining = eventsList.slice(4 + (i - 1) * 2, 4 + i * 2);
+    const dayEvents = remaining.map((e, idx) => ({
+      id: e.id || `evt-w-${i}-${idx}`,
+      title: e.title || 'Calendar Event',
+      time: e.startTime || '10:00 AM',
+      location: e.location || '',
+      category: 'Upcoming',
+      icon: '📌'
+    }));
+
+    weekDays.push({
+      dateStr,
+      dayName,
+      formattedDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      events: dayEvents
+    });
+  }
+
+  return {
+    success: true,
+    isConnected: true,
+    source: sourceName,
+    upNext,
+    todayEvents,
+    weekDays
+  };
+}
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const icalUrl = searchParams.get('icalUrl');
+    let icalUrl = searchParams.get('icalUrl');
 
-    // 1. Check if direct iCal URL provided
+    // 1. Check if google_calendar_ical.json exists on disk (saved by SSH script)
+    const icalFilePath = path.join(process.cwd(), 'dashboard', 'google_calendar_ical.json');
+    if (!icalUrl && fs.existsSync(icalFilePath)) {
+      try {
+        const rawIcal = fs.readFileSync(icalFilePath, 'utf8');
+        const parsedIcalJson = JSON.parse(rawIcal);
+        if (parsedIcalJson.icalUrl) {
+          icalUrl = parsedIcalJson.icalUrl;
+        }
+      } catch (e) {
+        console.error('Error reading google_calendar_ical.json:', e);
+      }
+    }
+
+    // 2. Fetch iCal ICS Feed if URL available
     if (icalUrl && icalUrl.startsWith('http')) {
       try {
         const res = await fetch(icalUrl, { cache: 'no-store' });
         if (res.ok) {
           const text = await res.text();
-          const parsed = parseICS(text);
-          if (parsed.length > 0) {
-            const sample = generateSampleSchedule();
-            return NextResponse.json({
-              success: true,
-              source: 'ical',
-              upNext: {
-                ...sample.upNext,
-                title: parsed[0]?.title || sample.upNext.title,
-                location: parsed[0]?.location || sample.upNext.location
-              },
-              todayEvents: sample.todayEvents,
-              weekDays: sample.weekDays
-            });
+          const parsedEvents = parseICS(text);
+          if (parsedEvents.length > 0) {
+            return NextResponse.json(buildCalendarResponse(parsedEvents, 'google_ical'));
           }
         }
       } catch (e) {
@@ -181,7 +256,7 @@ export async function GET(request) {
       }
     }
 
-    // 2. Check if google_calendar_tokens.json exists
+    // 3. Check if google_calendar_tokens.json exists
     const tokenFilePath = path.join(process.cwd(), 'dashboard', 'google_calendar_tokens.json');
     if (fs.existsSync(tokenFilePath)) {
       try {
@@ -202,43 +277,21 @@ export async function GET(request) {
             const data = await gRes.json();
             const items = data.items || [];
             if (items.length > 0) {
-              const sample = generateSampleSchedule();
-              const firstItem = items[0];
               const formatGTime = (dtObj) => {
                 if (!dtObj) return '--:--';
                 const d = new Date(dtObj.dateTime || dtObj.date);
                 return formatTimeString(d);
               };
 
-              const upNextG = {
-                id: firstItem.id,
-                title: firstItem.summary || 'Untitled Event',
-                startTime: formatGTime(firstItem.start),
-                endTime: formatGTime(firstItem.end),
-                startRaw: firstItem.start?.dateTime || firstItem.start?.date,
-                location: firstItem.location || 'Google Calendar Sync',
-                category: 'Google Event',
-                icon: '📅',
-                isUpNext: true
-              };
-
-              const todayEventsG = items.slice(1, 4).map((it, idx) => ({
-                id: it.id || `g-today-${idx}`,
+              const gEvents = items.map((it) => ({
+                id: it.id,
                 title: it.summary || 'Google Event',
                 startTime: formatGTime(it.start),
                 endTime: formatGTime(it.end),
-                location: it.location || 'Google Calendar',
-                category: 'Scheduled',
-                icon: '📌'
+                location: it.location || 'Google Calendar'
               }));
 
-              return NextResponse.json({
-                success: true,
-                source: 'google_api',
-                upNext: upNextG,
-                todayEvents: todayEventsG.length > 0 ? todayEventsG : sample.todayEvents,
-                weekDays: sample.weekDays
-              });
+              return NextResponse.json(buildCalendarResponse(gEvents, 'google_api'));
             }
           }
         }
