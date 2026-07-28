@@ -117,9 +117,10 @@ function generateSampleSchedule() {
   };
 }
 
-// Robust iCal Date Parser (Local Time)
+// Robust iCal Date Parser (Converts UTC to Local System Timezone)
 function parseICalDate(dtStr) {
   if (!dtStr) return null;
+  const isUtc = dtStr.trim().toUpperCase().endsWith('Z');
   const clean = dtStr.replace(/[^0-9T]/g, '');
   if (clean.length >= 8) {
     const yyyy = parseInt(clean.substring(0, 4), 10);
@@ -132,7 +133,9 @@ function parseICalDate(dtStr) {
       min = parseInt(clean.substring(tIdx + 3, tIdx + 5), 10) || 0;
       ss = parseInt(clean.substring(tIdx + 5, tIdx + 7), 10) || 0;
     }
-    // Create Date object in local time
+    if (isUtc) {
+      return new Date(Date.UTC(yyyy, mm, dd, hh, min, ss));
+    }
     return new Date(yyyy, mm, dd, hh, min, ss);
   }
   return null;

@@ -874,7 +874,7 @@ html, body {
   justify-content: center;
   align-items: center;
   min-height: 0;
-  padding: clamp(2px, 0.5vh, 10px) 0;
+  padding: 4px 0 0 0;
   z-index: 2;
 }
 
@@ -1285,7 +1285,7 @@ html, body {
   z-index: 10;
   flex: 0 0 auto;
   width: min(94vw, 1720px);
-  margin: 0 auto clamp(8px, 1.2vh, 20px) auto;
+  margin: 8px auto clamp(6px, 1vh, 14px) auto;
   max-height: clamp(160px, 30vh, 320px);
   background: rgba(4, 6, 12, 0.78);
   border: 1.5px solid var(--color-hud-border-cyan);
