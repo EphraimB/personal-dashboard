@@ -35,6 +35,14 @@
   margin: 0;
   padding: 0;
   user-select: none;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 html, body {
@@ -845,13 +853,13 @@ html, body {
   z-index: 2;
 }
 
-/* Centered 16:9 Glassmorphic Slideshow Container */
+/* Centered 16:9 Glassmorphic Slideshow Container (Maximized Hero) */
 .slideshow-viewport-centered {
   position: relative;
   width: auto;
   max-width: 100%;
   aspect-ratio: 16 / 9;
-  height: clamp(200px, 38vh, 520px);
+  height: clamp(320px, 56vh, 640px);
   z-index: 2;
   border-radius: 20px;
   border: 2px solid var(--color-hud-border-cyan);
@@ -1654,6 +1662,129 @@ html, body {
   font-size: clamp(0.85rem, 1vw, 1.2rem);
   color: rgba(255, 255, 255, 0.75);
   line-height: 1.5;
+}
+
+/* ==============================================================================
+   1-ROW COMPACT HORIZONTAL CALENDAR RIBBON (READ-ONLY DISPLAY)
+   ============================================================================== */
+
+.hud-calendar-ribbon-layout {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+}
+
+.up-next-hero-card-compact {
+  flex: 0 0 auto;
+  min-width: 250px;
+  max-width: 360px;
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.16) 0%, rgba(5, 12, 28, 0.9) 100%);
+  border: 2px solid var(--color-cyan);
+  border-radius: 14px;
+  padding: 10px 16px;
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.25);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.up-next-event-title-compact {
+  font-family: var(--font-sans);
+  font-size: clamp(1.1rem, 1.35vw, 1.7rem);
+  font-weight: 900;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.up-next-meta-item-compact {
+  font-size: clamp(0.75rem, 0.85vw, 1rem);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-cal-horizontal-stream {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.hud-cal-horizontal-stream::-webkit-scrollbar {
+  display: none !important;
+}
+
+.ribbon-event-card {
+  flex: 0 0 auto;
+  min-width: 170px;
+  max-width: 230px;
+  background: rgba(8, 12, 24, 0.7);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-left: 3.5px solid var(--color-cyan);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ribbon-event-card.ribbon-today {
+  border-left-color: var(--color-orange);
+  background: rgba(255, 87, 34, 0.08);
+}
+
+.ribbon-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ribbon-tag-today {
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: var(--color-orange);
+  letter-spacing: 1px;
+}
+
+.ribbon-day-name {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--color-cyan);
+  letter-spacing: 1px;
+}
+
+.ribbon-time {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.ribbon-event-title {
+  font-family: var(--font-sans);
+  font-size: clamp(0.8rem, 0.9vw, 1.1rem);
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ribbon-event-loc {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 

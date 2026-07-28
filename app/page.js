@@ -1031,95 +1031,49 @@ function formatHourLabel(timeStr, index) {
             </button>
           </div>
         ) : (
-          <div className="hud-calendar-dual-grid">
-            {/* Left Panel: UP NEXT Spotlight + Today's Schedule */}
-            <div className="hud-cal-left-panel">
-              {/* UP NEXT HERO CARD */}
-              {calendarData?.upNext && (
-                <div className="up-next-hero-card">
-                  <div className="up-next-header-tag">
-                    <span className="up-next-pulse" />
-                    <span className="up-next-label">UP NEXT</span>
-                    <span className="up-next-time-badge">TODAY • {calendarData.upNext.startTime}</span>
-                  </div>
-                  <h2 className="up-next-event-title">{calendarData.upNext.title}</h2>
-                  <div className="up-next-meta-row">
-                    {calendarData.upNext.location && (
-                      <span className="up-next-meta-item">
-                        📍 {calendarData.upNext.location}
-                      </span>
-                    )}
-                    <span className="up-next-meta-item">
-                      ⏰ {calendarData.upNext.startTime} - {calendarData.upNext.endTime}
-                    </span>
-                    {calendarData.upNext.category && (
-                      <span className="up-next-cat-pill">{calendarData.upNext.category}</span>
-                    )}
-                  </div>
+          <div className="hud-calendar-ribbon-layout">
+            {/* Left: UP NEXT Spotlight Hero Card (Bold & Larger Font Size) */}
+            {calendarData?.upNext && (
+              <div className="up-next-hero-card-compact">
+                <div className="up-next-header-tag">
+                  <span className="up-next-pulse" />
+                  <span className="up-next-label">UP NEXT</span>
+                  <span className="up-next-time-badge">{calendarData.upNext.startTime}</span>
                 </div>
+                <h2 className="up-next-event-title-compact">{calendarData.upNext.title}</h2>
+                {calendarData.upNext.location && (
+                  <span className="up-next-meta-item-compact">📍 {calendarData.upNext.location}</span>
+                )}
+              </div>
+            )}
+
+            {/* Right: 1-Row Horizontal Stream of Upcoming Days/Events */}
+            <div className="hud-cal-horizontal-stream">
+              {/* Today's Remaining Events */}
+              {calendarData?.todayEvents?.map((evt) => (
+                <div key={evt.id} className="ribbon-event-card ribbon-today">
+                  <div className="ribbon-card-header">
+                    <span className="ribbon-tag-today">TODAY</span>
+                    <span className="ribbon-time">{evt.startTime}</span>
+                  </div>
+                  <span className="ribbon-event-title">{evt.title}</span>
+                  {evt.location && <span className="ribbon-event-loc">📍 {evt.location}</span>}
+                </div>
+              ))}
+
+              {/* Upcoming Week Days */}
+              {calendarData?.weekDays?.map((day) =>
+                day.events?.map((e) => (
+                  <div key={e.id} className="ribbon-event-card">
+                    <div className="ribbon-card-header">
+                      <span className="ribbon-day-name">{day.dayName}</span>
+                      <span className="ribbon-time">{e.time}</span>
+                    </div>
+                    <span className="ribbon-event-title">{e.title}</span>
+                    {e.location && <span className="ribbon-event-loc">📍 {e.location}</span>}
+                  </div>
+                ))
               )}
-
-              {/* TODAY'S REMAINING SCHEDULE (REGULAR FONT SIZE) */}
-              <div className="today-schedule-block">
-                <div className="schedule-sub-header">
-                  <span>TODAY'S REMAINING SCHEDULE</span>
-                  <span className="sub-header-line" />
-                </div>
-                <div className="today-events-list">
-                  {calendarData?.todayEvents?.length > 0 ? (
-                    calendarData.todayEvents.map((evt) => (
-                      <div key={evt.id} className="today-event-item">
-                        <span className="today-evt-icon">{evt.icon || '📌'}</span>
-                        <div className="today-evt-details">
-                          <span className="today-evt-title">{evt.title}</span>
-                          <span className="today-evt-meta">
-                            {evt.startTime} {evt.endTime ? `- ${evt.endTime}` : ''} {evt.location ? `• ${evt.location}` : ''}
-                          </span>
-                        </div>
-                        <span className="today-evt-cat">{evt.category || 'Event'}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="today-empty-msg">No further events scheduled for today.</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Right Panel: Rest of the Week Agenda */}
-            <div className="hud-cal-right-panel">
-              <div className="schedule-sub-header">
-                <span>REST OF THE WEEK AGENDA</span>
-                <span className="sub-header-line" />
-              </div>
-              <div className="week-agenda-grid custom-scroll">
-                {calendarData?.weekDays?.map((day) => (
-                  <div key={day.dateStr} className="week-day-card">
-                    <div className="week-day-header">
-                      <span className="week-day-name">{day.dayName}</span>
-                      <span className="week-day-date">{day.formattedDate}</span>
-                    </div>
-                    <div className="week-day-events">
-                      {day.events?.length > 0 ? (
-                        day.events.map((e) => (
-                          <div key={e.id} className="week-evt-chip">
-                            <div className="week-evt-top">
-                              <span className="week-evt-time">{e.time}</span>
-                              <span className="week-evt-cat">{e.category}</span>
-                            </div>
-                            <span className="week-evt-title">{e.title}</span>
-                            {e.location && (
-                              <span className="week-evt-loc">📍 {e.location}</span>
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="today-empty-msg">No scheduled events</div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         )}

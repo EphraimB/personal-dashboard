@@ -117,9 +117,29 @@ function generateSampleSchedule() {
   };
 }
 
-// Simple iCal parser for ICS feeds
+// Robust iCal Date Parser
+function parseICalDate(dtStr) {
+  if (!dtStr) return null;
+  const clean = dtStr.replace(/[^0-9T]/g, '');
+  if (clean.length >= 8) {
+    const yyyy = parseInt(clean.substring(0, 4), 10);
+    const mm = parseInt(clean.substring(4, 6), 10) - 1;
+    const dd = parseInt(clean.substring(6, 8), 10);
+    let hh = 0, min = 0, ss = 0;
+    if (clean.length >= 13 && clean.includes('T')) {
+      const tIdx = clean.indexOf('T');
+      hh = parseInt(clean.substring(tIdx + 1, tIdx + 3), 10) || 0;
+      min = parseInt(clean.substring(tIdx + 3, tIdx + 5), 10) || 0;
+      ss = parseInt(clean.substring(tIdx + 5, tIdx + 7), 10) || 0;
+    }
+    return new Date(Date.UTC(yyyy, mm, dd, hh, min, ss));
+  }
+  return null;
+}
+
+// Simple iCal parser for ICS feeds (Filters out past events from years/months ago)
 function parseICS(icsText) {
-  const events = [];
+  const rawEvents = [];
   const lines = icsText.split(/\r?\n/);
   let currentEvent = null;
 
@@ -129,7 +149,7 @@ function parseICS(icsText) {
       currentEvent = {};
     } else if (line === 'END:VEVENT') {
       if (currentEvent && currentEvent.title) {
-        events.push(currentEvent);
+        rawEvents.push(currentEvent);
       }
       currentEvent = null;
     } else if (currentEvent) {
@@ -138,15 +158,31 @@ function parseICS(icsText) {
       } else if (line.startsWith('LOCATION:')) {
         currentEvent.location = line.substring(9);
       } else if (line.startsWith('DTSTART:')) {
-        currentEvent.startTime = line.substring(8);
+        currentEvent.dtStartRaw = line.substring(8);
       } else if (line.startsWith('DTSTART;')) {
         const parts = line.split(':');
-        if (parts.length > 1) currentEvent.startTime = parts[1];
+        if (parts.length > 1) currentEvent.dtStartRaw = parts[1];
       }
     }
   }
 
-  return events;
+  // Filter & sort: Only keep events starting from today onwards!
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+
+  const futureEvents = rawEvents
+    .map((e) => {
+      const parsedDate = parseICalDate(e.dtStartRaw);
+      return {
+        ...e,
+        startDateObj: parsedDate,
+        startTime: parsedDate ? formatTimeString(parsedDate) : 'Today'
+      };
+    })
+    .filter((e) => e.startDateObj && e.startDateObj.getTime() >= (startOfToday.getTime() - 12 * 3600 * 1000))
+    .sort((a, b) => (a.startDateObj?.getTime() || 0) - (b.startDateObj?.getTime() || 0));
+
+  return futureEvents;
 }
 
 function buildCalendarResponse(eventsList, sourceName) {
