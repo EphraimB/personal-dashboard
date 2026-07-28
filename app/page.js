@@ -929,26 +929,23 @@ function formatHourLabel(timeStr, index) {
           />
           <div className="photo-overlay-vignette" />
 
-          {/* Translucent Hero "Photo Taken" Date & Time Overlay */}
-          <div className="photo-taken-hero-overlay">
-            <div className="hero-date-badge">
-              <span className="badge-icon">📅</span>
-              <div className="badge-text-group">
-                <span className="badge-sub-label">PHOTO TAKEN</span>
-                <span className="badge-main-date">{formatHumanDate(currentPhoto.date)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Top-Center Photo Frame Slide Counter Hero Badge */}
-          <div className="photo-frame-top-center-badge">
-            <div className="hero-date-badge">
+          {/* Flex Top Badge Header Bar (Slide Counter + Photo Taken Date) */}
+          <div className="photo-frame-top-bar">
+            <div className="hero-date-badge slide-counter-badge">
               <span className="badge-icon">🖼️</span>
               <div className="badge-text-group">
                 <span className="badge-sub-label">SLIDE / PHOTO</span>
                 <span className="badge-main-date">
                   {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length).padStart(2, '0')}
                 </span>
+              </div>
+            </div>
+
+            <div className="hero-date-badge photo-date-badge">
+              <span className="badge-icon">📅</span>
+              <div className="badge-text-group">
+                <span className="badge-sub-label">PHOTO TAKEN</span>
+                <span className="badge-main-date">{formatHumanDate(currentPhoto.date)}</span>
               </div>
             </div>
           </div>

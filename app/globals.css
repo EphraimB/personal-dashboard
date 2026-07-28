@@ -1161,14 +1161,19 @@ html, body {
   100% { transform: translateY(10px) translateX(-2px); opacity: 0; }
 }
 /* ==============================================================================
-   HIGH-CONTRAST "PHOTO TAKEN" DATE BADGE (TOP-RIGHT FRAME ANCHOR)
+   FLEX TOP BADGE HEADER BAR (SLIDE COUNTER + PHOTO TAKEN DATE)
    ============================================================================== */
 
-.photo-taken-hero-overlay {
+.photo-frame-top-bar {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 14px;
+  left: 14px;
+  right: 14px;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   pointer-events: none;
 }
 
@@ -1176,14 +1181,36 @@ html, body {
   background: rgba(4, 6, 12, 0.88);
   border: 1.5px solid var(--color-hud-border-cyan);
   border-radius: 12px;
-  padding: 10px 18px;
+  padding: 8px 16px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.85), 0 0 15px rgba(0, 240, 255, 0.2);
   animation: heroBadgeFadeIn 0.8s ease-out forwards;
+}
+
+.slide-counter-badge {
+  flex-shrink: 0;
+}
+
+.photo-date-badge {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: calc(100% - 150px);
+  overflow: hidden;
+}
+
+.photo-date-badge .badge-text-group {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.photo-date-badge .badge-main-date {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @keyframes heroBadgeFadeIn {
@@ -1192,8 +1219,9 @@ html, body {
 }
 
 .badge-icon {
-  font-size: clamp(1.2rem, 1.6vw, 2rem);
+  font-size: clamp(1.1rem, 1.4vw, 1.8rem);
   filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.5));
+  flex-shrink: 0;
 }
 
 .badge-text-group {
@@ -1202,7 +1230,7 @@ html, body {
 }
 
 .badge-sub-label {
-  font-size: clamp(0.6rem, 0.75vw, 0.85rem);
+  font-size: clamp(0.55rem, 0.7vw, 0.8rem);
   color: var(--color-cyan);
   font-weight: 800;
   letter-spacing: 1.5px;
@@ -1210,21 +1238,11 @@ html, body {
 
 .badge-main-date {
   font-family: var(--font-title);
-  font-size: clamp(0.95rem, 1.25vw, 1.45rem);
+  font-size: clamp(0.85rem, 1.1vw, 1.35rem);
   font-weight: 800;
   color: #ffffff;
   letter-spacing: 0.5px;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 240, 255, 0.4);
-}
-
-/* Top-Center Photo Frame Slide Counter Hero Badge */
-.photo-frame-top-center-badge {
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  pointer-events: none;
 }
 
 /* ==============================================================================
