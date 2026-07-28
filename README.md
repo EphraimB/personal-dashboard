@@ -76,4 +76,32 @@ To make Next.js run automatically whenever your Raspberry Pi turns on:
    sudo systemctl start tv-dashboard.service
    ```
 
-Now your TV Dashboard will start automatically on boot and stream your OneDrive photos!
+Now your TV Dashboard will start automatically on boot!
+
+---
+
+## 📺 5. Chromium Fullscreen Kiosk Mode (Auto-Launch Browser on Boot)
+
+To automatically launch Chromium in full-screen Kiosk mode pointing to `http://localhost:3000` when the Pi boots into Desktop:
+
+### Automatic Script Setup:
+Run the kiosk setup helper script in your terminal:
+```bash
+./scripts/kiosk-setup.sh
+```
+
+### Manual Autostart Desktop Entry:
+Create `~/.config/autostart/tv-dashboard-kiosk.desktop`:
+```ini
+[Desktop Entry]
+Type=Application
+Name=Ares City TV Dashboard Kiosk
+Exec=chromium-browser --kiosk --noerrdialogs --disable-infobars --no-first-run http://localhost:3000
+X-GNOME-Autostart-enabled=true
+```
+
+### Test Chromium Kiosk Command over SSH:
+```bash
+DISPLAY=:0 chromium-browser --kiosk --noerrdialogs --disable-infobars http://localhost:3000
+```
+
