@@ -810,6 +810,10 @@ html, body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
   background-image: url('/location-background.jpeg');
   background-size: cover;
   background-position: center center;
@@ -818,186 +822,91 @@ html, body {
 }
 
 /* Dynamic UI Scale Classes */
-.ui-scale-100 { font-size: 14px; }
-.ui-scale-125 { font-size: 17px; }
-.ui-scale-150 { font-size: 21px; } /* Recommended for 4K TV */
-.ui-scale-175 { font-size: 25px; } /* Giant font size */
+.ui-scale-100 { font-size: 13px; }
+.ui-scale-125 { font-size: 16px; }
+.ui-scale-150 { font-size: 20px; } /* Recommended for 4K TV */
+.ui-scale-175 { font-size: 24px; } /* Giant font size */
 
-/* Auto-Hiding Controls for Clean Read-Only Ambient TV Mode */
-.meta-controls-quick,
-.config-hud-btn {
-  transition: opacity 0.5s ease, transform 0.5s ease;
+/* Centered Slideshow & Weather Banner Wrapper */
+.slideshow-wrapper-centered {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  width: min(94vw, 1720px);
+  margin: 0 auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  padding: clamp(2px, 0.5vh, 10px) 0;
+  z-index: 2;
 }
 
-.user-idle .meta-controls-quick,
-.user-idle .config-hud-btn {
-  opacity: 0;
+/* Centered 16:9 Glassmorphic Slideshow Container */
+.slideshow-viewport-centered {
+  position: relative;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  height: clamp(200px, 38vh, 520px);
+  z-index: 2;
+  border-radius: 20px;
+  border: 2px solid var(--color-hud-border-cyan);
+  background: rgba(4, 6, 12, 0.45);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 25px 85px rgba(0, 0, 0, 0.9), 0 0 45px rgba(0, 240, 255, 0.25);
+  overflow: hidden;
+}
+
+.avatar-corner, .card-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
   pointer-events: none;
-  transform: translateY(-4px);
-}
-
-.user-active .meta-controls-quick,
-.user-active .config-hud-btn {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-
-/* 4K Header & Clock Enhancement */
-.time-main-display {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-family: var(--font-title);
-  font-size: clamp(1.4rem, 2.2vw, 2.6rem);
-  font-weight: 900;
-  letter-spacing: 2px;
-  color: var(--color-cyan);
-  text-shadow: 0 0 18px var(--color-cyan-glow);
-  line-height: 1;
-}
-
-.clock-date-val {
-  color: var(--color-cyan);
-  font-size: inherit;
-  font-weight: inherit;
-  letter-spacing: 2px;
-}
-
-.clock-sep {
-  color: var(--color-orange);
-  margin: 0 4px;
-}
-
-#clock-ampm {
-  font-size: clamp(0.9rem, 1.4vw, 1.8rem);
-  color: var(--color-orange);
-  margin-left: 4px;
-  text-shadow: 0 0 10px var(--color-orange-glow);
-}
-
-.ares-solar-clock-display {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: clamp(0.75rem, 1.1vw, 1.35rem);
-  letter-spacing: 2px;
-  margin-top: 5px;
-}
-
-.solar-label {
-  color: var(--color-orange);
-  font-weight: 700;
-  font-size: 0.85em;
-}
-
-.solar-digits {
-  color: #ffb300;
-  font-weight: 900;
-  font-family: var(--font-mono);
-  text-shadow: 0 0 12px rgba(255, 179, 0, 0.55);
-}
-
-.hud-sys-tag {
-  font-size: clamp(0.6rem, 0.8vw, 0.95rem);
-}
-
-.hud-sys-name {
-  font-size: clamp(1rem, 1.3vw, 1.6rem);
-}
-
-.status-pill {
-  font-size: clamp(0.7rem, 0.9vw, 1.1rem);
-  padding: 6px 14px;
-}
-
-.stat-label {
-  font-size: clamp(0.6rem, 0.8vw, 0.9rem);
-}
-
-.stat-value {
-  font-size: clamp(0.85rem, 1.1vw, 1.35rem);
-}
-
-/* Photo Description & Bottom HUD Card Revamp */
-.hud-bottom-overlay {
-  bottom: clamp(20px, 3.5vw, 48px);
-  left: clamp(24px, 4vw, 64px);
-  right: clamp(24px, 4vw, 64px);
-}
-
-.photo-meta-card {
-  padding: clamp(18px, 2.2vw, 32px) clamp(22px, 2.8vw, 40px);
-  border-width: 2px;
-}
-
-.meta-sector-label {
-  font-size: clamp(0.65rem, 0.9vw, 1.15rem);
-  color: var(--color-cyan);
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-
-.photo-title {
-  font-family: var(--font-sans);
-  font-size: clamp(1.15rem, 1.75vw, 2.35rem);
-  font-weight: 500;
-  color: #ffffff;
-  letter-spacing: 0.3px;
-  line-height: 1.45;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
-}
-
-.progress-bar-container {
-  height: clamp(3.5px, 0.5vw, 7px);
-  margin-top: clamp(12px, 1.5vw, 20px);
-}
-
-
-/* ==============================================================================
-   GLASSMORPHIC WEATHER SIDEBARS & ANIMATED SVGS (CEDARHURST, NY)
-   ============================================================================== */
-
-.weather-sidebar-left {
-  position: absolute;
-  top: clamp(82px, 7vw, 120px);
-  left: clamp(16px, 2vw, 32px);
-  width: clamp(260px, 20vw, 340px);
   z-index: 10;
+}
+
+.avatar-corner--tl, .card-corner--tl {
+  top: 10px; left: 10px;
+  border-top: 2.5px solid var(--color-orange);
+  border-left: 2.5px solid var(--color-orange);
+}
+.avatar-corner--tr, .card-corner--tr {
+  top: 10px; right: 10px;
+  border-top: 2.5px solid var(--color-orange);
+  border-right: 2.5px solid var(--color-orange);
+}
+.avatar-corner--bl, .card-corner--bl {
+  bottom: 10px; left: 10px;
+  border-bottom: 2.5px solid var(--color-orange);
+  border-left: 2.5px solid var(--color-orange);
+}
+.avatar-corner--br, .card-corner--br {
+  bottom: 10px; right: 10px;
+  border-bottom: 2.5px solid var(--color-orange);
+  border-right: 2.5px solid var(--color-orange);
+}
+
+/* Top Tactical System HUD Bar (2-Row Auto-Expanding Layout) */
+.system-hud-bar {
+  position: relative;
+  top: auto; left: auto; right: auto;
+  flex: 0 0 auto;
+  padding: clamp(8px, 1.2vh, 16px) clamp(16px, 2vw, 36px);
+  z-index: 5;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  background: rgba(4, 6, 12, 0.65);
-  border: 1.5px solid var(--color-hud-border-cyan);
-  border-radius: 16px;
-  padding: clamp(14px, 1.5vw, 22px);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75), 0 0 25px rgba(0, 240, 255, 0.15);
-  animation: sidebarSlideLeft 0.6s ease-out forwards;
-}
-
-.weather-sidebar-right {
-  position: absolute;
-  top: clamp(82px, 7vw, 120px);
-  right: clamp(16px, 2vw, 32px);
-  width: clamp(250px, 18vw, 320px);
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  background: rgba(4, 6, 12, 0.65);
-  border: 1.5px solid var(--color-hud-border-cyan);
-  border-radius: 16px;
-  padding: clamp(14px, 1.5vw, 22px);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75), 0 0 25px rgba(0, 240, 255, 0.15);
-  animation: sidebarSlideRight 0.6s ease-out forwards;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-hud-bg);
+  border-bottom: 1.5px solid var(--color-hud-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
 }
 
 @keyframes sidebarSlideLeft {
@@ -1325,16 +1234,19 @@ html, body {
 .hud-calendar-section-wrapper {
   position: relative;
   z-index: 10;
-  width: min(96%, 1750px);
-  margin: 24px auto 40px auto;
+  flex: 0 0 auto;
+  width: min(94vw, 1720px);
+  margin: 0 auto clamp(8px, 1.2vh, 20px) auto;
+  max-height: clamp(160px, 30vh, 320px);
   background: rgba(4, 6, 12, 0.78);
   border: 1.5px solid var(--color-hud-border-cyan);
-  border-radius: 20px;
-  padding: clamp(16px, 2vw, 28px);
+  border-radius: 16px;
+  padding: clamp(10px, 1.2vh, 20px);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   box-shadow: 0 16px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 240, 255, 0.15);
   animation: calendarFadeIn 0.8s ease-out forwards;
+  overflow: hidden;
 }
 
 @keyframes calendarFadeIn {
@@ -1346,9 +1258,9 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 16px;
+  padding-bottom: clamp(6px, 0.8vh, 12px);
   border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-  margin-bottom: 20px;
+  margin-bottom: clamp(8px, 1vh, 16px);
 }
 
 .hud-cal-title-group {

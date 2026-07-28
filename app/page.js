@@ -491,11 +491,18 @@ function formatHourLabel(timeStr, index) {
       const saved = localStorage.getItem('ares_tv_dashboard_config');
       let loaded = saved ? JSON.parse(saved) : {};
       
-      // Allow URL parameter scale override (e.g. ?scale=150 or ?scale=175)
+      // Allow URL parameter scale override (e.g. ?scale=100 or ?scale=150)
       const urlParams = new URLSearchParams(window.location.search);
       const urlScale = urlParams.get('scale');
       if (urlScale && ['100', '125', '150', '175'].includes(urlScale)) {
         loaded.uiScale = urlScale;
+      } else if (!loaded.uiScale) {
+        // Auto-detect resolution: laptop/desktop displays (< 2000px) default to 100%, 4K TV defaults to 150%
+        if (typeof window !== 'undefined' && window.innerWidth < 2000) {
+          loaded.uiScale = '100';
+        } else {
+          loaded.uiScale = '150';
+        }
       }
 
       setConfig((prev) => ({ ...prev, ...loaded }));
@@ -810,6 +817,45 @@ function formatHourLabel(timeStr, index) {
       {/* Full-Screen Dynamic Weather Atmospheric Effects Engine (Rain, Snow, Lightning, Sun Flare, Fog) */}
       <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
 
+      {/* Top HUD Header Bar */}
+      <header className="system-hud-bar">
+        <div className="system-hud-row-top">
+          <div className="hud-left-sector">
+            <span className="hud-badge-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 3v18M3 12h18" />
+              </svg>
+            </span>
+            <div className="hud-title-stack">
+              <span className="hud-sys-tag">// ARES CITY OS</span>
+              <span className="hud-sys-name">ARES CITY TV DASHBOARD</span>
+            </div>
+          </div>
+
+          {/* Center Clock & Solar Clock Sector */}
+          <div className="hud-clock-sector">
+            <div className="time-main-display">
+              <span className="clock-time-val">{clockTime}</span>
+              <span id="clock-ampm">{clockAmPm}</span>
+              <span className="clock-sep">•</span>
+              <span className="clock-date-val">{clockDate}</span>
+            </div>
+            <div className="ares-solar-clock-display">
+              <span className="solar-label">ARES SOLAR CLOCK //</span>
+              <span className="solar-digits">{aresSolarClock}</span>
+            </div>
+          </div>
+
+          {/* Right Controls */}
+          <div className="hud-right-sector">
+            <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)} title="Open Settings (M)">
+              [ ⚙ CONFIG ]
+            </button>
+          </div>
+        </div>
+      </header>
+
       {/* Centered Photo Frame & Weather Command Banner Wrapper */}
       <div className="slideshow-wrapper-centered">
         {/* Full-Width Dedicated Weather Command Banner */}
@@ -1091,44 +1137,7 @@ function formatHourLabel(timeStr, index) {
       <div className="avatar-corner avatar-corner--bl" />
       <div className="avatar-corner avatar-corner--br" />
 
-      {/* Top HUD Header Bar */}
-      <header className="system-hud-bar">
-        <div className="system-hud-row-top">
-          <div className="hud-left-sector">
-            <span className="hud-badge-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 3v18M3 12h18" />
-              </svg>
-            </span>
-            <div className="hud-title-stack">
-              <span className="hud-sys-tag">// ARES CITY OS</span>
-              <span className="hud-sys-name">ARES CITY TV DASHBOARD</span>
-            </div>
-          </div>
 
-          {/* Center Clock & Solar Clock Sector */}
-          <div className="hud-clock-sector">
-            <div className="time-main-display">
-              <span className="clock-time-val">{clockTime}</span>
-              <span id="clock-ampm">{clockAmPm}</span>
-              <span className="clock-sep">•</span>
-              <span className="clock-date-val">{clockDate}</span>
-            </div>
-            <div className="ares-solar-clock-display">
-              <span className="solar-label">ARES SOLAR CLOCK //</span>
-              <span className="solar-digits">{aresSolarClock}</span>
-            </div>
-          </div>
-
-          {/* Right Controls */}
-          <div className="hud-right-sector">
-            <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)} title="Open Settings (M)">
-              [ ⚙ CONFIG ]
-            </button>
-          </div>
-        </div>
-      </header>
 
       {/* Settings Modal */}
       <div className={`modal-backdrop ${isModalOpen ? 'active' : ''}`}>
