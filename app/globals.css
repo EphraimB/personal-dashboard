@@ -1318,6 +1318,415 @@ html, body {
   pointer-events: none;
 }
 
+/* ==============================================================================
+   GOOGLE CALENDAR & UP NEXT HUD SECTION (BELOW SLIDESHOW)
+   ============================================================================== */
+
+.hud-calendar-section-wrapper {
+  position: relative;
+  z-index: 10;
+  width: min(96%, 1750px);
+  margin: 24px auto 40px auto;
+  background: rgba(4, 6, 12, 0.78);
+  border: 1.5px solid var(--color-hud-border-cyan);
+  border-radius: 20px;
+  padding: clamp(16px, 2vw, 28px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 240, 255, 0.15);
+  animation: calendarFadeIn 0.8s ease-out forwards;
+}
+
+@keyframes calendarFadeIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.hud-calendar-header-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  margin-bottom: 20px;
+}
+
+.hud-cal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hud-cal-badge-icon {
+  font-size: clamp(1.4rem, 2vw, 2.2rem);
+  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.6));
+}
+
+.hud-cal-text-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-cal-sys-tag {
+  font-size: clamp(0.65rem, 0.8vw, 0.95rem);
+  color: var(--color-cyan);
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.hud-cal-main-title {
+  font-family: var(--font-title);
+  font-size: clamp(1.05rem, 1.4vw, 1.75rem);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.hud-cal-source-pill {
+  font-size: clamp(0.7rem, 0.85vw, 0.95rem);
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(0, 240, 255, 0.12);
+  border: 1px solid var(--color-cyan);
+  color: var(--color-cyan);
+  letter-spacing: 1px;
+}
+
+.hud-calendar-dual-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1100px) {
+  .hud-calendar-dual-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* LEFT PANEL — UP NEXT HERO CARD & TODAY'S SCHEDULE */
+.hud-cal-left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* UP NEXT HERO CARD (BOLD & BIGGER FONT SIZE) */
+.up-next-hero-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.14) 0%, rgba(5, 12, 28, 0.85) 100%);
+  border: 2px solid var(--color-cyan);
+  border-radius: 16px;
+  padding: clamp(20px, 2.2vw, 32px);
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.25), inset 0 0 20px rgba(0, 240, 255, 0.1);
+  overflow: hidden;
+}
+
+.up-next-header-tag {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.up-next-pulse {
+  width: 10px;
+  height: 10px;
+  background: #00f0ff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #00f0ff;
+  animation: pulseGlow 1.8s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.3); opacity: 1; }
+}
+
+.up-next-label {
+  font-size: clamp(0.75rem, 0.9vw, 1.15rem);
+  font-weight: 900;
+  letter-spacing: 2.5px;
+  color: #00f0ff;
+}
+
+.up-next-time-badge {
+  margin-left: auto;
+  font-size: clamp(0.75rem, 0.9vw, 1.1rem);
+  font-weight: 800;
+  color: var(--color-orange);
+  background: rgba(255, 145, 0, 0.15);
+  border: 1px solid var(--color-orange);
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+/* BIGGER FONT SIZE & BOLD TYPOGRAPHY FOR UP NEXT TITLE */
+.up-next-event-title {
+  font-family: var(--font-sans);
+  font-size: clamp(1.4rem, 2.1vw, 2.6rem);
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  line-height: 1.25;
+  margin-bottom: 16px;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.4), 0 0 25px rgba(0, 240, 255, 0.3);
+}
+
+.up-next-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.up-next-meta-item {
+  font-size: clamp(0.85rem, 1.05vw, 1.3rem);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.4);
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.up-next-cat-pill {
+  font-size: clamp(0.75rem, 0.9vw, 1.1rem);
+  font-weight: 800;
+  color: #00f0ff;
+  background: rgba(0, 240, 255, 0.15);
+  padding: 6px 14px;
+  border-radius: 8px;
+  letter-spacing: 1px;
+}
+
+/* TODAY'S REMAINING SCHEDULE (REGULAR FONT SIZE) */
+.today-schedule-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.schedule-sub-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: clamp(0.75rem, 0.85vw, 1.05rem);
+  font-weight: 800;
+  color: var(--color-cyan);
+  letter-spacing: 1.5px;
+}
+
+.sub-header-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.3) 0%, rgba(0, 240, 255, 0) 100%);
+}
+
+.today-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.today-event-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(10, 16, 32, 0.6);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px 18px;
+  transition: all 0.25s ease;
+}
+
+.today-event-item:hover {
+  background: rgba(15, 25, 48, 0.85);
+  border-color: var(--color-cyan);
+  transform: translateX(4px);
+}
+
+.today-evt-icon {
+  font-size: clamp(1.1rem, 1.4vw, 1.6rem);
+}
+
+.today-evt-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+/* REGULAR FONT SIZE FOR REST OF TODAY'S EVENTS */
+.today-evt-title {
+  font-family: var(--font-sans);
+  font-size: clamp(0.95rem, 1.15vw, 1.4rem);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.today-evt-meta {
+  font-size: clamp(0.75rem, 0.9vw, 1.1rem);
+  color: rgba(0, 240, 255, 0.75);
+  font-weight: 500;
+}
+
+.today-evt-cat {
+  font-size: clamp(0.7rem, 0.8vw, 0.95rem);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.today-empty-msg {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  padding: 12px;
+}
+
+/* RIGHT PANEL — REST OF THE WEEK AGENDA */
+.hud-cal-right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.week-agenda-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.week-day-card {
+  background: rgba(8, 12, 24, 0.65);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.week-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px dashed rgba(0, 240, 255, 0.15);
+  padding-bottom: 6px;
+}
+
+.week-day-name {
+  font-size: clamp(0.8rem, 0.95vw, 1.2rem);
+  font-weight: 900;
+  color: var(--color-cyan);
+  letter-spacing: 1px;
+}
+
+.week-day-date {
+  font-size: clamp(0.75rem, 0.85vw, 1.05rem);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.week-day-events {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.week-evt-chip {
+  background: rgba(0, 240, 255, 0.05);
+  border-left: 3px solid var(--color-cyan);
+  border-radius: 0 8px 8px 0;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.week-evt-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.week-evt-time {
+  font-size: clamp(0.7rem, 0.8vw, 1rem);
+  font-weight: 800;
+  color: var(--color-orange);
+}
+
+.week-evt-cat {
+  font-size: clamp(0.65rem, 0.75vw, 0.9rem);
+  font-weight: 700;
+  color: rgba(0, 240, 255, 0.8);
+}
+
+.week-evt-title {
+  font-family: var(--font-sans);
+  font-size: clamp(0.85rem, 1vw, 1.25rem);
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.week-evt-loc {
+  font-size: clamp(0.7rem, 0.8vw, 0.95rem);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* DISCONNECTED GOOGLE CALENDAR PROMPT CARD */
+.hud-cal-disconnected-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: rgba(10, 16, 32, 0.65);
+  border: 1.5px dashed rgba(0, 240, 255, 0.35);
+  border-radius: 16px;
+  padding: 24px 32px;
+  margin: 10px 0;
+}
+
+@media (max-width: 768px) {
+  .hud-cal-disconnected-card {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.hud-cal-disc-icon-badge {
+  font-size: clamp(2rem, 3vw, 3.5rem);
+  filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
+}
+
+.hud-cal-disc-text-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.hud-cal-disc-title {
+  font-family: var(--font-title);
+  font-size: clamp(1.2rem, 1.6vw, 2.2rem);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.hud-cal-disc-sub {
+  font-size: clamp(0.85rem, 1vw, 1.2rem);
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.5;
+}
+
+
 
 
 

@@ -422,6 +422,7 @@ export default function TvDashboard() {
   const [config, setConfig] = useState({
     onedriveToken: '',
     onedriveFolder: '',
+    icalUrl: '',
     filterScreenshots: true,
     albumQuery: '',
     slideDuration: 15,
@@ -438,6 +439,7 @@ export default function TvDashboard() {
   });
 
   const [weatherData, setWeatherData] = useState(null);
+  const [calendarData, setCalendarData] = useState(null);
 
   const [photoList, setPhotoList] = useState(DEMO_PHOTOS);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -523,6 +525,28 @@ function formatHourLabel(timeStr, index) {
     const interval = setInterval(fetchWeather, 15 * 60 * 1000); // 15 mins auto-refresh
     return () => clearInterval(interval);
   }, [config.tempUnit]);
+
+  // Fetch Google Calendar / iCal schedule
+  useEffect(() => {
+    const fetchCalendar = async () => {
+      try {
+        const url = config.icalUrl
+          ? `/api/calendar?icalUrl=${encodeURIComponent(config.icalUrl)}`
+          : '/api/calendar';
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          setCalendarData(data);
+        }
+      } catch (err) {
+        console.error('Calendar fetch error:', err);
+      }
+    };
+
+    fetchCalendar();
+    const interval = setInterval(fetchCalendar, 30000);
+    return () => clearInterval(interval);
+  }, [config.icalUrl]);
 
   // Mouse movement & idle detection for TV ambient mode
   useEffect(() => {
@@ -933,6 +957,131 @@ function formatHourLabel(timeStr, index) {
         </div>
       </div>
 
+      {/* Google Calendar & Up Next Schedule Section (Placed Directly Below Slideshow) */}
+      <div className="hud-calendar-section-wrapper">
+        <div className="hud-calendar-header-banner">
+          <div className="hud-cal-title-group">
+            <span className="hud-cal-badge-icon">📅</span>
+            <div className="hud-cal-text-stack">
+              <span className="hud-cal-sys-tag">// GOOGLE CALENDAR STREAM</span>
+              <h3 className="hud-cal-main-title">ARES CITY SCHEDULE & UPCOMING EVENTS</h3>
+            </div>
+          </div>
+          {calendarData?.source && (
+            <span className={`hud-cal-source-pill source-${calendarData.source}`}>
+              ● SYNC: {calendarData.source.toUpperCase().replace('_', ' ')}
+            </span>
+          )}
+        </div>
+
+        {!calendarData?.isConnected ? (
+          <div className="hud-cal-disconnected-card">
+            <div className="hud-cal-disc-icon-badge">📅</div>
+            <div className="hud-cal-disc-text-stack">
+              <h3 className="hud-cal-disc-title">Connect to a Google Calendar</h3>
+              <p className="hud-cal-disc-sub">
+                Run <code style={{ color: '#00f0ff' }}>./scripts/google-calendar-login.sh</code> over SSH on your Raspberry Pi to pair Google Calendar, or paste your iCal feed URL in <strong>[ ⚙ CONFIG ]</strong>.
+              </p>
+            </div>
+            <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)}>
+              [ ⚙ CONFIGURE CALENDAR ]
+            </button>
+          </div>
+        ) : (
+          <div className="hud-calendar-dual-grid">
+            {/* Left Panel: UP NEXT Spotlight + Today's Schedule */}
+            <div className="hud-cal-left-panel">
+              {/* UP NEXT HERO CARD */}
+              {calendarData?.upNext && (
+                <div className="up-next-hero-card">
+                  <div className="up-next-header-tag">
+                    <span className="up-next-pulse" />
+                    <span className="up-next-label">UP NEXT</span>
+                    <span className="up-next-time-badge">TODAY • {calendarData.upNext.startTime}</span>
+                  </div>
+                  <h2 className="up-next-event-title">{calendarData.upNext.title}</h2>
+                  <div className="up-next-meta-row">
+                    {calendarData.upNext.location && (
+                      <span className="up-next-meta-item">
+                        📍 {calendarData.upNext.location}
+                      </span>
+                    )}
+                    <span className="up-next-meta-item">
+                      ⏰ {calendarData.upNext.startTime} - {calendarData.upNext.endTime}
+                    </span>
+                    {calendarData.upNext.category && (
+                      <span className="up-next-cat-pill">{calendarData.upNext.category}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TODAY'S REMAINING SCHEDULE (REGULAR FONT SIZE) */}
+              <div className="today-schedule-block">
+                <div className="schedule-sub-header">
+                  <span>TODAY'S REMAINING SCHEDULE</span>
+                  <span className="sub-header-line" />
+                </div>
+                <div className="today-events-list">
+                  {calendarData?.todayEvents?.length > 0 ? (
+                    calendarData.todayEvents.map((evt) => (
+                      <div key={evt.id} className="today-event-item">
+                        <span className="today-evt-icon">{evt.icon || '📌'}</span>
+                        <div className="today-evt-details">
+                          <span className="today-evt-title">{evt.title}</span>
+                          <span className="today-evt-meta">
+                            {evt.startTime} {evt.endTime ? `- ${evt.endTime}` : ''} {evt.location ? `• ${evt.location}` : ''}
+                          </span>
+                        </div>
+                        <span className="today-evt-cat">{evt.category || 'Event'}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="today-empty-msg">No further events scheduled for today.</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Panel: Rest of the Week Agenda */}
+            <div className="hud-cal-right-panel">
+              <div className="schedule-sub-header">
+                <span>REST OF THE WEEK AGENDA</span>
+                <span className="sub-header-line" />
+              </div>
+              <div className="week-agenda-grid custom-scroll">
+                {calendarData?.weekDays?.map((day) => (
+                  <div key={day.dateStr} className="week-day-card">
+                    <div className="week-day-header">
+                      <span className="week-day-name">{day.dayName}</span>
+                      <span className="week-day-date">{day.formattedDate}</span>
+                    </div>
+                    <div className="week-day-events">
+                      {day.events?.length > 0 ? (
+                        day.events.map((e) => (
+                          <div key={e.id} className="week-evt-chip">
+                            <div className="week-evt-top">
+                              <span className="week-evt-time">{e.time}</span>
+                              <span className="week-evt-cat">{e.category}</span>
+                            </div>
+                            <span className="week-evt-title">{e.title}</span>
+                            {e.location && (
+                              <span className="week-evt-loc">📍 {e.location}</span>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="today-empty-msg">No scheduled events</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Overlays */}
       <div className="city-matrix-underlay" />
 
@@ -1049,6 +1198,33 @@ function formatHourLabel(timeStr, index) {
                       {testResult}
                     </span>
                   )}
+                </div>
+              </div>
+
+              <div className="settings-group">
+                <h4 className="group-title">// GOOGLE CALENDAR CONNECTION</h4>
+                <div
+                  style={{
+                    marginBottom: 12,
+                    padding: 10,
+                    background: 'rgba(0, 240, 255, 0.08)',
+                    border: '1px dashed rgba(0, 240, 255, 0.3)',
+                    borderRadius: 4,
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  <strong>💻 Raspberry Pi / Terminal SSH Command:</strong>
+                  <br />
+                  Run <code style={{ color: '#00f0ff' }}>./scripts/google-calendar-login.sh</code> over SSH to pair Google Calendar!
+                </div>
+                <div className="form-row">
+                  <label>Google iCal Secret Feed URL (.ics):</label>
+                  <input
+                    type="text"
+                    value={config.icalUrl || ''}
+                    onChange={(e) => setConfig({ ...config, icalUrl: e.target.value })}
+                    placeholder="https://calendar.google.com/calendar/ical/.../basic.ics"
+                  />
                 </div>
               </div>
 
