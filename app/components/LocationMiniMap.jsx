@@ -165,21 +165,15 @@ export default function LocationMiniMap({ location, compact = false }) {
 
   const travel = geoData.travelTimes || { walk: '18m', bike: '6m', transit: '14m', drive: '5m' };
 
-  const modeMins = {
-    walk: parseDurationToMins(travel.walk),
-    bike: parseDurationToMins(travel.bike),
-    transit: parseDurationToMins(travel.transit),
-    drive: parseDurationToMins(travel.drive)
-  };
+  // Construct modes array and sort ascending by duration minutes (fastest to slowest, left to right)
+  const modes = [
+    { key: 'walk', icon: '🚶', label: 'Walk', value: travel.walk, mins: parseDurationToMins(travel.walk) },
+    { key: 'bike', icon: '🚴', label: 'Bike', value: travel.bike, mins: parseDurationToMins(travel.bike) },
+    { key: 'transit', icon: '🚆', label: 'Transit', value: travel.transit, mins: parseDurationToMins(travel.transit) },
+    { key: 'drive', icon: '🚗', label: 'Drive', value: travel.drive, mins: parseDurationToMins(travel.drive) }
+  ];
 
-  let fastestKey = 'drive';
-  let minMins = 9999;
-  for (const [key, mins] of Object.entries(modeMins)) {
-    if (mins < minMins) {
-      minMins = mins;
-      fastestKey = key;
-    }
-  }
+  modes.sort((a, b) => a.mins - b.mins);
 
   return (
     <div className={`hud-mini-map-wrapper ${compact ? 'hud-mini-map-compact' : ''}`}>
@@ -198,27 +192,20 @@ export default function LocationMiniMap({ location, compact = false }) {
         </div>
       </div>
 
-      {/* Horizontal Multi-Modal Travel Time Bar */}
+      {/* Horizontal Multi-Modal Travel Time Bar (Sorted Fastest -> Slowest Left to Right) */}
       <div className="hud-travel-mode-bar">
-        <div className={`travel-mode-item ${fastestKey === 'walk' ? 'travel-mode-fastest' : ''}`} title="Walking Duration">
-          <span className="travel-mode-icon">🚶</span>
-          <span className="travel-mode-val">{travel.walk}</span>
-        </div>
-        <span className="travel-mode-sep">•</span>
-        <div className={`travel-mode-item ${fastestKey === 'bike' ? 'travel-mode-fastest' : ''}`} title="Biking Duration">
-          <span className="travel-mode-icon">🚴</span>
-          <span className="travel-mode-val">{travel.bike}</span>
-        </div>
-        <span className="travel-mode-sep">•</span>
-        <div className={`travel-mode-item ${fastestKey === 'transit' ? 'travel-mode-fastest' : ''}`} title="Public Transit / Train Duration">
-          <span className="travel-mode-icon">🚆</span>
-          <span className="travel-mode-val">{travel.transit}</span>
-        </div>
-        <span className="travel-mode-sep">•</span>
-        <div className={`travel-mode-item ${fastestKey === 'drive' ? 'travel-mode-fastest' : ''}`} title="Driving Duration">
-          <span className="travel-mode-icon">🚗</span>
-          <span className="travel-mode-val">{travel.drive}</span>
-        </div>
+        {modes.map((m, idx) => (
+          <React.Fragment key={m.key}>
+            {idx > 0 && <span className="travel-mode-sep">•</span>}
+            <div
+              className={`travel-mode-item ${idx === 0 ? 'travel-mode-fastest' : ''}`}
+              title={`${m.label} Duration`}
+            >
+              <span className="travel-mode-icon">{m.icon}</span>
+              <span className="travel-mode-val">{m.value}</span>
+            </div>
+          </React.Fragment>
+        ))}
       </div>
     </div>
   );
