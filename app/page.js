@@ -134,6 +134,9 @@ export default function Home() {
   // Live Google Calendar & iCal Stream Data
   const [calendarData, setCalendarData] = useState(null);
 
+  // Live Commuter Transit Data (LIRR & NYC Ferry)
+  const [transitData, setTransitData] = useState(null);
+
   // Dashboard Configuration Settings
   const [config, setConfig] = useState({
     folderPath: '',
@@ -294,6 +297,25 @@ export default function Home() {
     return () => clearInterval(calInterval);
   }, [config.icalUrl]);
 
+  // Real-Time Commuter Transit Polling (/api/transit)
+  useEffect(() => {
+    const fetchTransit = async () => {
+      try {
+        const res = await fetch('/api/transit');
+        if (res.ok) {
+          const data = await res.json();
+          setTransitData(data);
+        }
+      } catch (e) {
+        console.error('Transit fetch error:', e);
+      }
+    };
+
+    fetchTransit();
+    const transitInterval = setInterval(fetchTransit, 30000); // Poll every 30 secs
+    return () => clearInterval(transitInterval);
+  }, []);
+
   // OneDrive & Fallback Photo API Fetcher
   const fetchPhotos = async () => {
     try {
@@ -424,369 +446,308 @@ export default function Home() {
   const hourlyTimes = (weatherData?.hourly?.time || ['', '', '', '', '', '']).slice(hourlyStartIdx, hourlyStartIdx + 6);
 
   return (
-    <div className={`ares-tv-app ui-scale-${config.uiScale || '150'} ${showControls ? 'user-active' : 'user-idle'}`}>
-      {/* Full-Screen Dynamic Weather Atmospheric Effects Engine (Rain, Snow, Lightning, Sun Flare, Fog) */}
+    <div className={`tactical-matrix-viewport ${showControls ? 'user-active' : 'user-idle'}`}>
+      {/* Dynamic Background Atmospheric Weather Canvas */}
       <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
 
-      {/* 5x4 GRID MATRIX LAYOUT CONTAINER */}
-      <div className="hud-5x4-grid-container">
-
-        {/* ROW 1 (Cols 1-5): Top System Header Bar */}
-        <div className="grid-cell-header">
-          <header className="system-hud-bar">
-            <div className="system-hud-row-top">
-              <div className="hud-left-sector">
-                <span className="hud-badge-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M12 3v18M3 12h18" />
-                  </svg>
-                </span>
-                <div className="hud-title-stack">
-                  <span className="hud-sys-tag">// ARES CITY OS</span>
-                  <span className="hud-sys-name">ARES CITY TV DASHBOARD</span>
-                </div>
-              </div>
-
-              {/* Center Clock & Solar Clock Sector */}
-              <div className="hud-clock-sector">
-                <div className="time-main-display">
-                  <span className="clock-time-val">{clockTime}</span>
-                  <span id="clock-ampm">{clockAmPm}</span>
-                  <span className="clock-sep">•</span>
-                  <span className="clock-date-val">{clockDate}</span>
-                </div>
-                <div className="ares-solar-clock-display">
-                  <span className="solar-label">ARES SOLAR CLOCK //</span>
-                  <span className="solar-digits">{aresSolarClock}</span>
-                </div>
-              </div>
-
-              {/* Right Controls */}
-              <div className="hud-right-sector">
-                <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)} title="Open Settings (M)">
-                  [ ⚙ CONFIG ]
-                </button>
-              </div>
-            </div>
-          </header>
-        </div>
-
-        {/* ROWS 2-3 (Col 1): Left Column Weather Command Widget */}
-        <div className="grid-cell-weather">
-          {config.showWeatherSidebars !== false && (
-            <div className="hud-standalone-weather-banner">
-              {/* Featured Left Column: Current Live Weather */}
-              <div className="wx-current-column">
-                <span className="wx-curr-label">CURRENT</span>
-                <div className="wx-curr-main-row">
-                  <WeatherSvg code={weatherData?.current?.weather_code ?? 0} className="wx-curr-icon" />
-                  <span className="wx-curr-temp">
-                    {weatherData?.current?.temperature_2m !== undefined
-                      ? Math.round(weatherData.current.temperature_2m)
-                      : '--'}
-                    °{config.tempUnit || 'F'}
-                  </span>
-                </div>
-                <span className="wx-curr-cond">
-                  {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
-                </span>
-                <div className="wx-curr-hilo">
-                  <span className="wx-hi-val">▲{weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '--'}°</span>
-                  <span className="wx-lo-val">▼{weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '--'}°</span>
-                </div>
-                <span className="wx-curr-meta">
-                  HUM {weatherData?.current?.relative_humidity_2m ?? '--'}% • WIND {weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '--'} {config.tempUnit === 'C' ? 'KMH' : 'MPH'}
-                </span>
-              </div>
-
-              {/* Vertical Neon Divider */}
-              <div className="wx-unified-divider" />
-
-              {/* Right Columns: 6-Hour Hourly Forecast Sequence */}
-              <div className="wx-hourly-sequence">
-                {hourlyTimes.map((timeStr, idx) => {
-                  const globalIdx = hourlyStartIdx + idx;
-                  const code = weatherData?.hourly?.weather_code?.[globalIdx] ?? 0;
-                  const temp = weatherData?.hourly?.temperature_2m?.[globalIdx];
-                  const pop = weatherData?.hourly?.precipitation_probability?.[globalIdx] ?? 0;
-                  const label = formatHourLabel(timeStr, idx);
-
-                  return (
-                    <div key={idx} className="wx-hourly-item">
-                      <span className="wx-hr-time">{label}</span>
-                      <WeatherSvg code={code} className="wx-hr-icon" />
-                      <span className="wx-hr-temp">
-                        {temp !== undefined ? Math.round(temp) : '--'}°
-                      </span>
-                      <span className="wx-hr-pop">{pop}%</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ROWS 2-3 (Cols 2-5): Centerpiece Featured 16:9 Photo Slideshow Viewport */}
-        <div className="grid-cell-slideshow">
-          {config.showMiddleSlideshow !== false && (
-            <div className="slideshow-viewport-centered">
-              <div className="card-corner card-corner--tl" />
-              <div className="card-corner card-corner--tr" />
-              <div className="card-corner card-corner--bl" />
-              <div className="card-corner card-corner--br" />
-
-              <div
-                className={layer1Class}
-                style={{ backgroundImage: layer1Url ? `url("${layer1Url}")` : 'none' }}
-              />
-              <div
-                className={layer2Class}
-                style={{ backgroundImage: layer2Url ? `url("${layer2Url}")` : 'none' }}
-              />
-              <div className="photo-overlay-vignette" />
-
-              {/* Flex Top Badge Header Bar (Slide Counter + Photo Taken Date) */}
-              <div className="photo-frame-top-bar">
-                <div className="hero-date-badge slide-counter-badge">
-                  <span className="badge-icon">🖼️</span>
-                  <div className="badge-text-group">
-                    <span className="badge-sub-label">SLIDE / PHOTO</span>
-                    <span className="badge-main-date">
-                      {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length).padStart(2, '0')}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="hero-date-badge photo-date-badge">
-                  <span className="badge-icon">📅</span>
-                  <div className="badge-text-group">
-                    <span className="badge-sub-label">PHOTO TAKEN</span>
-                    <span className="badge-main-date">{formatHumanDate(currentPhoto.date)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Integrated Glass Caption Footer inside Photo Frame */}
-              <div className="photo-meta-card-integrated">
-                <div className="meta-card-header">
-                  <div className="meta-title-group">
-                    <span className="meta-sector-label">📍 LOCATION // {currentPhoto.location}</span>
-                    <h2 className="photo-title">{currentPhoto.description || currentPhoto.title}</h2>
-                  </div>
-                  <div className="meta-controls-quick">
-                    <button
-                      className="hud-btn hud-btn-icon"
-                      onClick={() => setCurrentIndex((prev) => (prev - 1 + photoList.length) % photoList.length)}
-                      title="Previous Photo (Left Arrow)"
-                    >
-                      ◀
-                    </button>
-                    <button
-                      className="hud-btn hud-btn-icon"
-                      onClick={() => setIsPaused((prev) => !prev)}
-                      title="Pause / Play (Spacebar)"
-                    >
-                      {isPaused ? '▶' : '⏸'}
-                    </button>
-                    <button
-                      className="hud-btn hud-btn-icon"
-                      onClick={() => setCurrentIndex((prev) => (prev + 1) % photoList.length)}
-                      title="Next Photo (Right Arrow)"
-                    >
-                      ▶
-                    </button>
-                    <button
-                      className="hud-btn hud-btn-icon"
-                      onClick={() => saveConfig({ ...config, enableScanlines: !config.enableScanlines })}
-                      title="Toggle Scanlines (S)"
-                    >
-                      ⚡
-                    </button>
-                    <button className="hud-btn hud-btn-icon" onClick={toggleFullscreen} title="Toggle Fullscreen (F)">
-                      ⛶
-                    </button>
-                  </div>
-                </div>
-
-                {/* Slide Progress Bar */}
-                <div className="progress-bar-container">
-                  <div className="progress-bar-fill" style={{ width: `${progressWidth}%` }} />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ROWS 2-3 (Col 5): Right Column 5-Day Daily Weather Forecast Widget */}
-        <div className="grid-cell-right">
-          {config.showWeatherSidebars !== false && (
-            <div className="hud-5day-forecast-banner">
-              <div className="forecast-header">
-                <span className="forecast-tag">// CEDARHURST FORECAST</span>
-                <h3 className="forecast-title">5-DAY OUTLOOK</h3>
-              </div>
-              <div className="forecast-days-list">
-                {(weatherData?.daily?.time || []).slice(0, 5).map((dateStr, idx) => {
-                  const dateObj = new Date(dateStr + 'T00:00:00');
-                  const dayName = isNaN(dateObj.getTime())
-                    ? `DAY ${idx + 1}`
-                    : idx === 0
-                    ? 'TODAY'
-                    : dateObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-                  const code = weatherData?.daily?.weather_code?.[idx] ?? 0;
-                  const maxTemp = weatherData?.daily?.temperature_2m_max?.[idx];
-                  const minTemp = weatherData?.daily?.temperature_2m_min?.[idx];
-
-                  return (
-                    <div key={idx} className="forecast-day-row">
-                      <span className="f-day-name">{dayName}</span>
-                      <WeatherSvg code={code} className="f-day-icon" />
-                      <div className="f-day-temps">
-                        <span className="f-hi">{maxTemp !== undefined ? Math.round(maxTemp) : '--'}°</span>
-                        <span className="f-lo">{minTemp !== undefined ? Math.round(minTemp) : '--'}°</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ROW 4 (Cols 1-5): Bottom Spanning Google Calendar Stream */}
-        <div className="grid-cell-calendar">
-          <div className="hud-calendar-section-wrapper">
-            <div className="hud-calendar-header-banner">
-              <div className="hud-cal-title-group">
-                <span className="hud-cal-badge-icon">📅</span>
-                <div className="hud-cal-text-stack">
-                  <span className="hud-cal-sys-tag">// GOOGLE CALENDAR STREAM</span>
-                  <h3 className="hud-cal-main-title">ARES CITY SCHEDULE & UPCOMING EVENTS</h3>
-                </div>
-              </div>
-              {calendarData?.source && (
-                <span className={`hud-cal-source-pill source-${calendarData.source}`}>
-                  ● SYNC: {calendarData.source.toUpperCase().replace('_', ' ')}
-                </span>
-              )}
-            </div>
-
-            {!calendarData?.isConnected ? (
-              <div className="hud-cal-disconnected-card">
-                <div className="hud-cal-disc-icon-badge">📅</div>
-                <div className="hud-cal-disc-text-stack">
-                  <h3 className="hud-cal-disc-title">Connect to a Google Calendar</h3>
-                  <p className="hud-cal-disc-sub">
-                    Run <code style={{ color: '#00f0ff' }}>./scripts/google-calendar-login.sh</code> over SSH on your Raspberry Pi to pair Google Calendar, or paste your iCal feed URL in <strong>[ ⚙ CONFIG ]</strong>.
-                  </p>
-                </div>
-                <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)}>
-                  [ ⚙ CONFIGURE CALENDAR ]
-                </button>
-              </div>
-            ) : (
-              <div className="hud-calendar-ribbon-layout">
-                {/* 1-Row Horizontal Stream of Upcoming Days/Events */}
-                <div className="hud-cal-horizontal-stream">
-                  {/* Lead UP NEXT Card inside Calendar Stream */}
-                  {calendarData?.upNext && (
-                    <div className={`ribbon-event-card up-next-ribbon-card ${calendarData.upNext.isLive ? 'ribbon-live' : 'ribbon-upnext'}`}>
-                      <div className="ribbon-card-header">
-                        <span className={calendarData.upNext.isLive ? 'ribbon-tag-live' : 'ribbon-tag-upnext'}>
-                          <span className={calendarData.upNext.isLive ? 'live-pulse-dot' : 'up-next-pulse'} />
-                          {calendarData.upNext.isLive ? 'LIVE NOW' : 'UP NEXT'}
-                        </span>
-                        <span className="ribbon-time">{calendarData.upNext.startTime}</span>
-                      </div>
-                      <span className="ribbon-event-title">{calendarData.upNext.title}</span>
-                      {calendarData.upNext.location ? (
-                        <>
-                          <span className="ribbon-event-loc">
-                            📍 {calendarData.upNext.locationMain || calendarData.upNext.location}
-                          </span>
-                          {calendarData.upNext.locationSub && (
-                            <span className="ribbon-event-loc-sub">{calendarData.upNext.locationSub}</span>
-                          )}
-                        </>
-                      ) : null}
-                      <LocationMiniMap
-                        location={calendarData.upNext.locationClean || calendarData.upNext.location || ''}
-                        meetingUrl={calendarData.upNext.meetingUrl || ''}
-                        compact
-                      />
-                    </div>
-                  )}
-
-                  {/* Today's Remaining Events */}
-                  {calendarData?.todayEvents?.map((evt) => (
-                    <div key={evt.id} className={`ribbon-event-card ${evt.isLive ? 'ribbon-live' : 'ribbon-today'}`}>
-                      <div className="ribbon-card-header">
-                        {evt.isLive ? (
-                          <span className="ribbon-tag-live">
-                            <span className="live-pulse-dot" /> LIVE
-                          </span>
-                        ) : (
-                          <span className="ribbon-tag-today">TODAY</span>
-                        )}
-                        <span className="ribbon-time">{evt.startTime}</span>
-                      </div>
-                      <span className="ribbon-event-title">{evt.title}</span>
-                      {evt.location ? (
-                        <>
-                          <span className="ribbon-event-loc">
-                            📍 {evt.locationMain || evt.location}
-                          </span>
-                          {evt.locationSub && (
-                            <span className="ribbon-event-loc-sub">{evt.locationSub}</span>
-                          )}
-                        </>
-                      ) : null}
-                      <LocationMiniMap
-                        location={evt.locationClean || evt.location || ''}
-                        meetingUrl={evt.meetingUrl || ''}
-                        compact
-                      />
-                    </div>
-                  ))}
-
-                  {/* Upcoming Week Days */}
-                  {calendarData?.weekDays?.map((day) =>
-                    day.events?.map((e) => (
-                      <div key={`${day.dateKey}-${e.id}`} className="ribbon-event-card">
-                        <div className="ribbon-card-header">
-                          <span className="ribbon-tag-weekday">
-                            {day.dayName.toUpperCase()} • {day.shortDate}
-                          </span>
-                          <span className="ribbon-time">{e.startTime}</span>
-                        </div>
-                        <span className="ribbon-event-title">{e.title}</span>
-                        {e.location ? (
-                          <>
-                            <span className="ribbon-event-loc">
-                              📍 {e.locationMain || e.location}
-                            </span>
-                            {e.locationSub && (
-                              <span className="ribbon-event-loc-sub">{e.locationSub}</span>
-                            )}
-                          </>
-                        ) : null}
-                        <LocationMiniMap
-                          location={e.locationClean || e.location || ''}
-                          meetingUrl={e.meetingUrl || ''}
-                          compact
-                        />
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+      {/* TOP HUD HEADER BAR (10vh) */}
+      <header className="matrix-header-hud">
+        <div className="matrix-header-left">
+          <div className="matrix-brand-badge">
+            <span className="matrix-brand-tag">// ARES OS</span>
+            <span className="matrix-brand-title">50" TV COMMAND HUD</span>
           </div>
         </div>
 
-      </div>
+        {/* Center Clock Focal Display */}
+        <div className="matrix-clock-center">
+          <span className="matrix-clock-digits">{clockTime || '05:01:37'}</span>
+          <span className="matrix-clock-ampm">{clockAmPm || 'PM'}</span>
+          <span className="matrix-clock-date">{clockDate || 'WED, JUL 29, 2026'}</span>
+        </div>
+
+        <div className="matrix-header-right">
+          <div className="matrix-sol-clock">
+            <span className="sol-clock-label">ARES SOLAR TIME</span>
+            <span className="sol-clock-val">{aresSolarClock || 'SOL 1420 // 14:32'}</span>
+          </div>
+          <div className="matrix-status-pill">
+            <span className="status-pulse-dot" />
+            <span>SYS: ONLINE (100%)</span>
+          </div>
+          <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)}>
+            [ ⚙ CONFIG ]
+          </button>
+        </div>
+      </header>
+
+      {/* MAIN 3-COLUMN TACTICAL MATRIX GRID (85vh) */}
+      <main className="matrix-main-grid">
+        
+        {/* QUADRANT 1: LEFT COLUMN (WEATHER & COMMUTER TRANSIT HUB) */}
+        <section className="quadrant-left-col">
+          
+          {/* 1A: ATMOSPHERIC TELEMETRY CARD */}
+          <div className="matrix-card card-weather-telemetry">
+            <div className="matrix-card-title-row">
+              <span className="matrix-card-title">
+                ⚡ ATMOSPHERIC TELEMETRY
+              </span>
+              <span className="matrix-card-tag">CEDARHURST, NY</span>
+            </div>
+
+            <div className="weather-hero-row">
+              <div className="weather-hero-temp-group">
+                <span className="weather-hero-temp">
+                  {weatherData?.current?.temperature_2m !== undefined
+                    ? Math.round(weatherData.current.temperature_2m)
+                    : '74'}
+                </span>
+                <span className="weather-hero-unit">°{config.tempUnit || 'F'}</span>
+              </div>
+              <WeatherSvg code={weatherData?.current?.weather_code ?? 0} className="weather-hero-icon" />
+            </div>
+
+            <div className="weather-cond-badge">
+              {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
+            </div>
+
+            <div className="weather-sub-metrics-grid">
+              <div className="metric-pill">
+                <span className="metric-pill-label">HUMIDITY</span>
+                <span className="metric-pill-val">{weatherData?.current?.relative_humidity_2m ?? '64'}%</span>
+              </div>
+              <div className="metric-pill">
+                <span className="metric-pill-label">WIND</span>
+                <span className="metric-pill-val">{weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '12'} MPH</span>
+              </div>
+              <div className="metric-pill">
+                <span className="metric-pill-label">TEMP HI/LO</span>
+                <span className="metric-pill-val">
+                  ▲{weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '82'}° / ▼{weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '68'}°
+                </span>
+              </div>
+              <div className="metric-pill">
+                <span className="metric-pill-label">BAROMETER</span>
+                <span className="metric-pill-val">30.12 inHg</span>
+              </div>
+            </div>
+
+            {/* 6-Hour Mini-Forecast Strip */}
+            <div className="hourly-strip-container">
+              {hourlyTimes.map((timeStr, idx) => {
+                const globalIdx = hourlyStartIdx + idx;
+                const code = weatherData?.hourly?.weather_code?.[globalIdx] ?? 0;
+                const temp = weatherData?.hourly?.temperature_2m?.[globalIdx];
+                const pop = weatherData?.hourly?.precipitation_probability?.[globalIdx] ?? 0;
+                const label = formatHourLabel(timeStr, idx);
+
+                return (
+                  <div key={idx} className="hourly-mini-item">
+                    <span className="hourly-mini-time">{label}</span>
+                    <WeatherSvg code={code} className="wx-hr-icon" />
+                    <span className="hourly-mini-temp">{temp !== undefined ? Math.round(temp) : '74'}°</span>
+                    <span className="hourly-mini-pop">{pop}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 1B: COMMUTER TRANSIT HUB CARD (LIRR & NYC FERRY) */}
+          <div className="matrix-card card-transit-hub">
+            <div className="matrix-card-title-row">
+              <span className="matrix-card-title">
+                🚉 COMMUTER TRANSIT HUB
+              </span>
+              <span className="matrix-card-tag">LIVE DEPARTURES</span>
+            </div>
+
+            {/* LIRR Cedarhurst Station Section */}
+            <div className="transit-terminal-block">
+              <div className="transit-header-row">
+                <span className="transit-line-title transit-lirr">
+                  🚆 LIRR // CEDARHURST
+                </span>
+                <span className="transit-countdown-pill pill-amber">
+                  IN {String(transitData?.lirr?.nextDeparture?.minsUntil ?? 8).padStart(2, '0')} MINS
+                </span>
+              </div>
+              <div className="transit-dest-main">
+                <span>{transitData?.lirr?.nextDeparture?.destination || 'PENN STATION'}</span>
+                <span className="transit-track-tag">
+                  {transitData?.lirr?.nextDeparture?.track || 'TRACK 1'} • {transitData?.lirr?.nextDeparture?.status || 'ON TIME'}
+                </span>
+              </div>
+              <div className="transit-upcoming-list">
+                {transitData?.lirr?.upcomingWestbound?.slice(0, 2).map((item, i) => (
+                  <div key={i} className="transit-upcoming-item">
+                    <span>{item.timeStr} ➔ {item.destination}</span>
+                    <span style={{ color: 'var(--color-cyan)' }}>{item.track}</span>
+                  </div>
+                )) || (
+                  <>
+                    <div className="transit-upcoming-item">
+                      <span>05:54 PM ➔ FAR ROCKAWAY</span>
+                      <span style={{ color: 'var(--color-cyan)' }}>TRACK 2</span>
+                    </div>
+                    <div className="transit-upcoming-item">
+                      <span>06:22 PM ➔ GRAND CENTRAL</span>
+                      <span style={{ color: 'var(--color-cyan)' }}>TRACK 1</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* NYC Ferry Rockaway Landing Section */}
+            <div className="transit-terminal-block">
+              <div className="transit-header-row">
+                <span className="transit-line-title transit-ferry">
+                  ⛴️ NYC FERRY // ROCKAWAY
+                </span>
+                <span className="transit-countdown-pill pill-magenta">
+                  IN {String(transitData?.ferry?.nextSailing?.minsUntil ?? 18).padStart(2, '0')} MINS
+                </span>
+              </div>
+              <div className="transit-dest-main">
+                <span>{transitData?.ferry?.nextSailing?.destination || 'WALL ST / PIER 11'}</span>
+                <span className="transit-track-tag">
+                  {transitData?.ferry?.terminal || 'BEACH 108TH'}
+                </span>
+              </div>
+              <div className="transit-upcoming-list">
+                <div className="transit-upcoming-item">
+                  <span>STATUS: {transitData?.ferry?.nextSailing?.status || 'ON SCHEDULE'}</span>
+                  <span style={{ color: 'var(--color-green)' }}>SEA STATE: {transitData?.ferry?.seaState || 'CALM'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        {/* QUADRANT 2: CENTER HERO COLUMN (RECON VISUAL FRAME / PHOTO SLIDESHOW) */}
+        <section className="quadrant-center-col">
+          <div className="matrix-card card-photo-hero">
+            
+            {/* Top Glass Floating Badges */}
+            <div className="photo-hero-top-badges">
+              <div className="hud-glass-badge">
+                <span className="hud-glass-badge-label">FRAME / SLIDE</span>
+                <span className="hud-glass-badge-val">
+                  {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length || 14).padStart(2, '0')}
+                </span>
+              </div>
+              <div className="hud-glass-badge">
+                <span className="hud-glass-badge-label">PHOTO TAKEN</span>
+                <span className="hud-glass-badge-val">
+                  {formatHumanDate(currentPhoto.date) || 'JULY 24, 2026'}
+                </span>
+              </div>
+            </div>
+
+            {/* Photo Layers with Ken Burns Motion Engine */}
+            <div
+              className={layer1Class}
+              style={{ backgroundImage: layer1Url ? `url("${layer1Url}")` : 'url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80")' }}
+            />
+            <div
+              className={layer2Class}
+              style={{ backgroundImage: layer2Url ? `url("${layer2Url}")` : 'none' }}
+            />
+            <div className="photo-overlay-vignette" />
+
+            {/* Bottom Integrated Glass Caption & Controls Footer */}
+            <div className="photo-hero-caption-card">
+              <span className="photo-hero-loc">
+                📍 {currentPhoto.location || 'CEDARHURST HAVEN'}
+              </span>
+              <h2 className="photo-hero-title">
+                {currentPhoto.description || currentPhoto.title || 'SUMMER SUNSET AT ROXBURY BEACH'}
+              </h2>
+
+              <div className="photo-hero-progress-track">
+                <div className="photo-hero-progress-bar" style={{ width: `${progressWidth || 45}%` }} />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* QUADRANT 3: RIGHT COLUMN (TACTICAL AGENDA & LOCATION MINI-MAP) */}
+        <section className="quadrant-right-col">
+          
+          {/* 3A: TACTICAL AGENDA */}
+          <div className="matrix-card card-tactical-agenda">
+            <div className="matrix-card-title-row">
+              <span className="matrix-card-title">
+                📅 TACTICAL AGENDA
+              </span>
+              <span className="matrix-card-tag">UPCOMING EVENTS</span>
+            </div>
+
+            {/* Lead Next Event Countdown Banner */}
+            <div className="agenda-next-banner">
+              <div className="agenda-next-header">
+                <span className="next-tag">UP NEXT • LIVE</span>
+                <span className="next-countdown">IN 42 MINS</span>
+              </div>
+              <div className="next-title">
+                {calendarData?.upNext?.title || 'Dinner at Prime 1024'}
+              </div>
+            </div>
+
+            {/* Event List Stream */}
+            <div className="agenda-events-stream">
+              <div className="agenda-event-row">
+                <div className="agenda-event-time">06:00 PM • TODAY</div>
+                <div className="agenda-event-name">Dinner at Prime 1024 (Roslyn, NY)</div>
+              </div>
+              <div className="agenda-event-row">
+                <div className="agenda-event-time">07:30 PM • TODAY</div>
+                <div className="agenda-event-name">LIRR Commute to Midtown (Penn Station)</div>
+              </div>
+              <div className="agenda-event-row">
+                <div className="agenda-event-time">09:00 AM • TOMORROW</div>
+                <div className="agenda-event-name">Architecture Sync & Design Review</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3B: LOCATION MINI-MAP */}
+          <div className="matrix-card card-location-map">
+            <div className="matrix-card-title-row">
+              <span className="matrix-card-title">
+                🗺️ LOCATION MINI-MAP
+              </span>
+              <span className="matrix-card-tag">CEDARHURST & DESTINATIONS</span>
+            </div>
+            <div className="map-viewport-container">
+              <LocationMiniMap
+                location={calendarData?.upNext?.locationClean || 'Cedarhurst, NY'}
+                compact
+              />
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+
+      {/* BOTTOM TELEMETRY FOOTER (5vh) */}
+      <footer className="matrix-footer-hud">
+        <div className="footer-hotkeys-group">
+          <span className="hotkey-item"><span className="hotkey-key">[F]</span> FULLSCREEN</span>
+          <span className="hotkey-item"><span className="hotkey-key">[SPACE]</span> PAUSE</span>
+          <span className="hotkey-item"><span className="hotkey-key">[S]</span> SCANLINES</span>
+          <span className="hotkey-item"><span className="hotkey-key">[M]</span> CONFIG</span>
+        </div>
+        <div className="footer-sync-info">
+          <span>LAST SYNC: 17:06:42</span>
+          <span style={{ margin: '0 8px' }}>•</span>
+          <span style={{ color: 'var(--color-cyan)' }}>CYBERPUNK ENGINE v2.0</span>
+        </div>
+      </footer>
 
       {/* Overlays */}
       <div className="city-matrix-underlay" />

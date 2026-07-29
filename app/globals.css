@@ -2467,6 +2467,687 @@ html, body {
   letter-spacing: 1px;
 }
 
+/* ==============================================================================
+   OPTION 3: MODULAR TACTICAL MATRIX — CYBERPUNK 50-INCH TV DASHBOARD MOCKUP
+   ============================================================================== */
+
+:root {
+  --color-cyber-pink: #ff007f;
+  --color-cyber-pink-glow: rgba(255, 0, 127, 0.4);
+  --color-bg-void: #050811;
+  --color-card-bg: rgba(10, 16, 28, 0.78);
+  --color-card-border: rgba(0, 240, 255, 0.25);
+  --color-card-glow: rgba(0, 240, 255, 0.08);
+}
+
+.tactical-matrix-viewport {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: var(--color-bg-void);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOP HUD HEADER (8vh) */
+.matrix-header-hud {
+  height: 8vh;
+  min-height: 56px;
+  max-height: 70px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: linear-gradient(180deg, rgba(8, 14, 26, 0.95) 0%, rgba(5, 8, 17, 0.8) 100%);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 240, 255, 0.1);
+  z-index: 10;
+}
+
+.matrix-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.matrix-brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid var(--color-cyan);
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+.matrix-brand-tag {
+  font-family: var(--font-title);
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: var(--color-cyan);
+  letter-spacing: 1.5px;
+}
+
+.matrix-brand-title {
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.matrix-clock-center {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.1);
+}
+
+.matrix-clock-digits {
+  font-family: var(--font-title);
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--color-cyan);
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.6), 0 0 40px rgba(0, 240, 255, 0.3);
+  letter-spacing: 1.5px;
+  line-height: 1;
+}
+
+.matrix-clock-ampm {
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--color-gold);
+  text-shadow: 0 0 10px rgba(255, 179, 0, 0.5);
+}
+
+.matrix-clock-date {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 1px;
+}
+
+.matrix-header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.matrix-sol-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.sol-clock-label {
+  font-size: 0.6rem;
+  color: var(--color-gold);
+  letter-spacing: 1px;
+}
+
+.sol-clock-val {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  letter-spacing: 1px;
+}
+
+.matrix-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid var(--color-green);
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-green);
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.2);
+}
+
+.status-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-green);
+  box-shadow: 0 0 8px var(--color-green);
+  animation: statusPulse 2s infinite ease-in-out;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* MAIN MATRIX GRID CONTAINER (87vh) */
+.matrix-main-grid {
+  height: 87vh;
+  width: 100%;
+  max-width: 100vw;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* CYBERPUNK HUD CARD BASE */
+.matrix-card {
+  position: relative;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: 10px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 20px var(--color-card-glow);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.matrix-card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-cyan), transparent);
+  opacity: 0.7;
+}
+
+.matrix-card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.matrix-card-title {
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-cyan);
+  letter-spacing: 1.2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+}
+
+.matrix-card-tag {
+  font-size: 0.6rem;
+  color: var(--color-text-dim);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* QUADRANT 1: LEFT COLUMN (WEATHER & TRANSIT) */
+.quadrant-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+/* 1A: ATMOSPHERIC TELEMETRY CARD */
+.card-weather-telemetry {
+  height: 50%;
+}
+
+.weather-hero-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.weather-hero-temp-group {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.weather-hero-temp {
+  font-family: var(--font-title);
+  font-size: 4rem;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+  line-height: 1;
+}
+
+.weather-hero-unit {
+  font-size: 1.8rem;
+  color: var(--color-cyan);
+  font-weight: 700;
+}
+
+.weather-hero-icon {
+  width: 64px;
+  height: 64px;
+  filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.6));
+}
+
+.weather-cond-badge {
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-cyan);
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+}
+
+.weather-sub-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.metric-pill {
+  background: rgba(0, 240, 255, 0.05);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.metric-pill-label {
+  font-size: 0.65rem;
+  color: var(--color-text-dim);
+  letter-spacing: 1px;
+}
+
+.metric-pill-val {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* 6-HOUR MINI FORECAST STRIP */
+.hourly-strip-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 240, 255, 0.1);
+  margin-top: auto;
+}
+
+.hourly-mini-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.hourly-mini-time {
+  font-size: 0.6rem;
+  color: var(--color-text-dim);
+}
+
+.hourly-mini-temp {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.hourly-mini-pop {
+  font-size: 0.55rem;
+  color: var(--color-cyan);
+}
+
+/* 1B: COMMUTER TRANSIT HUB CARD */
+.card-transit-hub {
+  height: 50%;
+}
+
+.transit-terminal-block {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.transit-terminal-block:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.transit-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.transit-line-title {
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.transit-lirr { color: var(--color-gold); }
+.transit-ferry { color: var(--color-cyber-pink); }
+
+.transit-countdown-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 900;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+
+.pill-amber {
+  background: rgba(255, 179, 0, 0.15);
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold);
+  box-shadow: 0 0 10px rgba(255, 179, 0, 0.3);
+}
+
+.pill-magenta {
+  background: rgba(255, 0, 127, 0.15);
+  border: 1px solid var(--color-cyber-pink);
+  color: var(--color-cyber-pink);
+  box-shadow: 0 0 10px rgba(255, 0, 127, 0.3);
+}
+
+.transit-dest-main {
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.transit-track-tag {
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--color-cyan);
+}
+
+.transit-upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.transit-upcoming-item {
+  font-size: 0.7rem;
+  color: var(--color-text-sub);
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+/* QUADRANT 2: CENTER HERO COLUMN (PHOTO SLIDESHOW) */
+.quadrant-center-col {
+  height: 100%;
+}
+
+.card-photo-hero {
+  height: 100%;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-hero-viewport {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.photo-hero-top-badges {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 5;
+}
+
+.hud-glass-badge {
+  background: rgba(5, 8, 17, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  padding: 6px 14px;
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.hud-glass-badge-label {
+  font-size: 0.6rem;
+  color: var(--color-text-dim);
+  letter-spacing: 1px;
+}
+
+.hud-glass-badge-val {
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-cyan);
+}
+
+.photo-hero-caption-card {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(0deg, rgba(5, 8, 17, 0.95) 0%, rgba(5, 8, 17, 0.7) 70%, transparent 100%);
+  padding: 20px 24px 16px 24px;
+  z-index: 5;
+}
+
+.photo-hero-loc {
+  font-size: 0.7rem;
+  color: var(--color-gold);
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.photo-hero-title {
+  font-family: var(--font-title);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.photo-hero-progress-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.photo-hero-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-cyan), var(--color-green));
+  box-shadow: 0 0 8px var(--color-cyan);
+}
+
+/* QUADRANT 3: RIGHT COLUMN (AGENDA & MAP) */
+.quadrant-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+.card-tactical-agenda {
+  height: 52%;
+}
+
+.agenda-next-banner {
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid var(--color-cyan);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+}
+
+.agenda-next-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.next-tag {
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: var(--color-cyan);
+  letter-spacing: 1px;
+}
+
+.next-countdown {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-green);
+}
+
+.next-title {
+  font-family: var(--font-title);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.agenda-events-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.agenda-event-row {
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 3px solid var(--color-cyan);
+  padding: 8px 12px;
+  border-radius: 0 6px 6px 0;
+}
+
+.agenda-event-time {
+  font-size: 0.65rem;
+  color: var(--color-gold);
+  margin-bottom: 2px;
+}
+
+.agenda-event-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.card-location-map {
+  height: 48%;
+}
+
+.map-viewport-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+/* BOTTOM TELEMETRY FOOTER (5vh) */
+.matrix-footer-hud {
+  height: 5vh;
+  min-height: 32px;
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(5, 8, 17, 0.95);
+  border-top: 1px solid rgba(0, 240, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 10;
+}
+
+.footer-hotkeys-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hotkey-item {
+  font-size: 0.65rem;
+  color: var(--color-text-dim);
+}
+
+.hotkey-key {
+  color: var(--color-cyan);
+  font-weight: 700;
+}
+
+.footer-sync-info {
+  font-size: 0.65rem;
+  color: var(--color-text-dim);
+}
+
 
 
 
