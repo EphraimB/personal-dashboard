@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import LocationMiniMap from './components/LocationMiniMap';
 
 const DEMO_PHOTOS = [
   {
@@ -1042,7 +1043,10 @@ function formatHourLabel(timeStr, index) {
                 </div>
                 <h2 className="up-next-event-title-compact">{calendarData.upNext.title}</h2>
                 {calendarData.upNext.location && (
-                  <span className="up-next-meta-item-compact">📍 {calendarData.upNext.location}</span>
+                  <>
+                    <span className="up-next-meta-item-compact">📍 {calendarData.upNext.location}</span>
+                    <LocationMiniMap location={calendarData.upNext.location} />
+                  </>
                 )}
               </div>
             )}
@@ -1057,7 +1061,12 @@ function formatHourLabel(timeStr, index) {
                     <span className="ribbon-time">{evt.startTime}</span>
                   </div>
                   <span className="ribbon-event-title">{evt.title}</span>
-                  {evt.location && <span className="ribbon-event-loc">📍 {evt.location}</span>}
+                  {evt.location && (
+                    <>
+                      <span className="ribbon-event-loc">📍 {evt.location}</span>
+                      <LocationMiniMap location={evt.location} compact />
+                    </>
+                  )}
                 </div>
               ))}
 
@@ -1070,7 +1079,12 @@ function formatHourLabel(timeStr, index) {
                       <span className="ribbon-time">{e.time}</span>
                     </div>
                     <span className="ribbon-event-title">{e.title}</span>
-                    {e.location && <span className="ribbon-event-loc">📍 {e.location}</span>}
+                    {e.location && (
+                      <>
+                        <span className="ribbon-event-loc">📍 {e.location}</span>
+                        <LocationMiniMap location={e.location} compact />
+                      </>
+                    )}
                   </div>
                 ))
               )}

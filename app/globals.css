@@ -1,3 +1,5 @@
+@import 'leaflet/dist/leaflet.css';
+
 /* ==============================================================================
    ARES CITY OS — NEXT.JS TV DASHBOARD DESIGN SYSTEM
    ============================================================================== */
@@ -1809,6 +1811,143 @@ html, body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ==============================================================================
+   HUD LOCATION MINI-MAP & ROUTE RADAR
+   ============================================================================== */
+
+.hud-mini-map-wrapper {
+  margin-top: 6px;
+  background: rgba(4, 8, 18, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hud-mini-map-wrapper:hover {
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+}
+
+.hud-mini-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: rgba(0, 240, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.hud-mini-map-title {
+  font-family: var(--font-title);
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: var(--color-cyan);
+  letter-spacing: 0.8px;
+}
+
+.hud-mini-map-badge {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--color-orange);
+  background: rgba(255, 87, 34, 0.15);
+  border: 1px solid rgba(255, 87, 34, 0.4);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.hud-mini-map-canvas-container {
+  width: 100%;
+  height: 110px;
+  position: relative;
+  background: #060a12;
+}
+
+.up-next-hero-card-compact .hud-mini-map-canvas-container {
+  height: 125px;
+}
+
+.hud-mini-map-canvas {
+  width: 100%;
+  height: 100%;
+  background: #060a12 !important;
+}
+
+.hud-mini-map-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 8px;
+  background: rgba(4, 8, 18, 0.95);
+  border-top: 1px solid rgba(0, 240, 255, 0.15);
+  gap: 6px;
+}
+
+.hud-mini-map-dest-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.hud-mini-map-nav-btn {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--color-cyan);
+  background: rgba(0, 240, 255, 0.12);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  border-radius: 4px;
+  padding: 2px 6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.hud-mini-map-nav-btn:hover {
+  background: var(--color-cyan);
+  color: #000000;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+}
+
+/* Custom Marker Pins */
+.hud-map-pin {
+  background: transparent;
+  border: none;
+}
+
+.pin-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(4, 6, 12, 0.85);
+  border: 1.5px solid #00f0ff;
+  box-shadow: 0 0 8px #00f0ff;
+  transform: translate(-50%, -50%);
+}
+
+.home-marker {
+  border-color: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+}
+
+.dest-marker {
+  border-color: #ff5722;
+  box-shadow: 0 0 8px #ff5722;
+}
+
 
 
 
