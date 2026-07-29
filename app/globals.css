@@ -2094,8 +2094,22 @@ html, body {
 }
 
 .travel-mode-icon {
-  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
+}
+
+.travel-mode-svg {
+  width: 14px;
+  height: 14px;
+  fill: rgba(255, 255, 255, 0.85);
+  display: block;
+}
+
+.travel-mode-fastest .travel-mode-svg {
+  fill: var(--color-cyan);
+  filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.8));
 }
 
 .travel-mode-val {

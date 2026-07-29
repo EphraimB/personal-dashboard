@@ -26,12 +26,18 @@ function extractVirtualEventData(locStr, meetingUrlParam) {
   const raw = (locStr || '').trim();
   const lower = raw.toLowerCase();
 
-  // Extract HTTP or HTTPS URL from location string if not passed directly
-  const urlMatch = raw.match(/(https?:\/\/[^\s,;<>"']+)/i);
-  let meetingUrl = meetingUrlParam || (urlMatch ? urlMatch[1] : '');
+  // STRICT RULE: If location is generic text like "Virtual", "Online", "TBD", "N/A" without an explicit URL in the location line, DO NOT generate a false link or QR code!
+  const genericTerms = ['virtual', 'online', 'virtual event', 'online event', 'tbd', 'n/a', 'google calendar', 'phone call', 'remote'];
+  if (genericTerms.includes(lower)) {
+    return null;
+  }
 
-  // ONLY return virtual event QR data if an exact meeting URL (http/https) is present!
-  if (!meetingUrl || !meetingUrl.startsWith('http')) {
+  // Extract HTTP or HTTPS URL from location string
+  const urlMatchFromLoc = raw.match(/(https?:\/\/[^\s,;<>"']+)/i);
+  let meetingUrl = urlMatchFromLoc ? urlMatchFromLoc[1] : (meetingUrlParam && meetingUrlParam.startsWith('http') ? meetingUrlParam : '');
+
+  // REQUIRE a full URL starting with http:// or https:// before generating a QR code!
+  if (!meetingUrl || (!meetingUrl.startsWith('http://') && !meetingUrl.startsWith('https://'))) {
     return null;
   }
 
@@ -95,6 +101,7 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
 }
 
 function formatDurationMinutes(totalMinutes) {
+  if (totalMinutes === null || isNaN(totalMinutes)) return 'N/A';
   if (totalMinutes < 1) return '< 1m';
   const hrs = Math.floor(totalMinutes / 60);
   const mins = Math.round(totalMinutes % 60);
@@ -105,12 +112,29 @@ function formatDurationMinutes(totalMinutes) {
 }
 
 async function fetchTravelTimes(lat1, lon1, lat2, lon2, distMiles) {
-  const roadDistMiles = distMiles * 1.25;
+  // Direct pedestrian sidewalk walking speed: ~3.4 mph (17.6 mins/mile)
+  let walkMins = (distMiles * 1.1 / 3.4) * 60;
+  
+  // Bicycle speed: ~12 mph (5 mins/mile)
+  let bikeMins = (distMiles * 1.15 / 12) * 60;
+  
+  // Driving speed in local Cedarhurst / Five Towns: ~22 mph + 1m parking
+  let driveMins = (distMiles * 1.25 / 22) * 60 + 1;
 
-  let driveMins = (roadDistMiles / 28) * 60 + 2;
-  let walkMins = (roadDistMiles / 3.0) * 60;
-  let bikeMins = (roadDistMiles / 11.5) * 60;
-  let transitMins = (roadDistMiles / 26) * 60 + 6;
+  // Realistic Transit Calculation:
+  // For short neighborhood walks (< 0.75 mi), public transit is N/A (walking is faster than taking a train/bus)
+  let transitMins = null;
+  if (distMiles >= 0.75 && distMiles < 2.5) {
+    transitMins = Math.min(walkMins * 0.9, 16 + (distMiles / 12) * 60);
+  } else if (distMiles >= 2.5 && distMiles < 12.0) {
+    // LIRR trip: 8m walk to Cedarhurst station + 8m wait + LIRR ride (38 mph) + 5m destination walk
+    const railTime = (distMiles / 38) * 60;
+    transitMins = 8 + 8 + railTime + 5;
+  } else if (distMiles >= 12.0) {
+    // NYC / Regional LIRR trip: 8m station walk + 8m wait + LIRR express (42 mph) + 8m subway transfer
+    const railTime = (distMiles / 42) * 60;
+    transitMins = 8 + 8 + railTime + 8;
+  }
 
   try {
     const controller = new AbortController();
@@ -124,23 +148,62 @@ async function fetchTravelTimes(lat1, lon1, lat2, lon2, distMiles) {
       const data = await res.json();
       if (data.routes && data.routes.length > 0) {
         const routeSecs = data.routes[0].duration;
-        driveMins = routeSecs / 60;
-        const routeMiles = data.routes[0].distance / 1609.34;
-        walkMins = (routeMiles / 3.0) * 60;
-        bikeMins = (routeMiles / 11.5) * 60;
-        transitMins = (routeMiles / 26) * 60 + 6;
+        driveMins = (routeSecs / 60) + 1; // Real driving route duration + 1m parking buffer
       }
     }
   } catch (e) {
-    // Fallback gracefully on timeout or offline
+    // Fallback gracefully
   }
 
   return {
     walk: formatDurationMinutes(walkMins),
     bike: formatDurationMinutes(bikeMins),
-    transit: formatDurationMinutes(transitMins),
+    transit: transitMins !== null ? formatDurationMinutes(transitMins) : 'N/A',
     drive: formatDurationMinutes(driveMins)
   };
+}
+
+async function performMultiTierGeocode(cleanLoc) {
+  const queryCandidates = [];
+  let baseLoc = cleanLoc;
+  if (!baseLoc.toLowerCase().includes('ny') && !baseLoc.toLowerCase().includes('york') && !baseLoc.toLowerCase().includes('usa')) {
+    baseLoc = `${cleanLoc}, NY`;
+  }
+  queryCandidates.push(baseLoc);
+
+  // Handle Queens-style hyphenated house numbers (e.g. '90-08 Rockaway Beach Blvd')
+  if (/^\d+-\d+/.test(cleanLoc)) {
+    const mainBlockNumber = cleanLoc.replace(/^(\d+)-\d+/, '$1');
+    const qBlock = mainBlockNumber.toLowerCase().includes('ny') ? mainBlockNumber : `${mainBlockNumber}, NY`;
+    queryCandidates.push(qBlock);
+  }
+
+  // Street level fallback without house numbers (e.g. 'Rockaway Beach Blvd, Far Rockaway, NY')
+  const streetOnly = cleanLoc.replace(/^[\d-]+\s*/, '');
+  if (streetOnly && streetOnly !== cleanLoc) {
+    const qStreet = streetOnly.toLowerCase().includes('ny') ? streetOnly : `${streetOnly}, NY`;
+    queryCandidates.push(qStreet);
+  }
+
+  for (const q of queryCandidates) {
+    try {
+      const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
+      const res = await fetch(nominatimUrl, {
+        headers: { 'User-Agent': 'PersonalDashboard/2.0 (personal-dashboard-app)' },
+        next: { revalidate: 86400 }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          return data[0];
+        }
+      }
+    } catch (e) {
+      // Try next query candidate
+    }
+  }
+
+  return null;
 }
 
 export async function GET(request) {
@@ -165,34 +228,30 @@ export async function GET(request) {
     return NextResponse.json({ valid: false, reason: 'empty_location' });
   }
 
+  // Check if location string is non-physical / virtual text (e.g., 'Virtual', 'Online', 'Zoom', 'Teams')
+  const lowerLoc = cleanLoc.toLowerCase().trim();
+  const nonPhysicalKeywords = [
+    'virtual', 'online', 'virtual event', 'online event', 'tbd', 'n/a', 
+    'google calendar', 'phone call', 'zoom', 'teams', 'meet', 'webex', 'discord', 'skype', 'remote'
+  ];
+  const hasUrl = /(https?:\/\/[^\s,;<>"']+)/i.test(cleanLoc) || /(https?:\/\/[^\s,;<>"']+)/i.test(meetingUrlParam);
+  
+  if (!hasUrl && nonPhysicalKeywords.some(kw => lowerLoc === kw || lowerLoc.startsWith(kw + ' '))) {
+    const result = { valid: false, reason: 'non_physical_location' };
+    if (cacheKey.trim() !== '|') geocodeCache.set(cacheKey, result);
+    return NextResponse.json(result);
+  }
+
   try {
-    // Append NY or USA context if location is short to improve OSM Nominatim accuracy in local area
-    let queryLocation = cleanLoc;
-    if (!queryLocation.toLowerCase().includes('ny') && !queryLocation.toLowerCase().includes('york') && !queryLocation.toLowerCase().includes('usa')) {
-      queryLocation = `${cleanLoc}, NY`;
-    }
-
-    const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryLocation)}&limit=1`;
-    const res = await fetch(nominatimUrl, {
-      headers: {
-        'User-Agent': 'PersonalDashboard/2.0 (personal-dashboard-app)'
-      },
-      next: { revalidate: 86400 } // Cache fetch for 24h
-    });
-
-    if (!res.ok) {
-      throw new Error(`Nominatim returned HTTP ${res.status}`);
-    }
-
-    const data = await res.json();
-    if (!data || data.length === 0) {
+    const match = await performMultiTierGeocode(cleanLoc);
+    if (!match) {
       const result = { valid: false, reason: 'not_found' };
       geocodeCache.set(cacheKey, result);
       return NextResponse.json(result);
     }
 
-    const destLat = parseFloat(data[0].lat);
-    const destLon = parseFloat(data[0].lon);
+    const destLat = parseFloat(match.lat);
+    const destLon = parseFloat(match.lon);
 
     const distMiles = calculateHaversineDistance(HOME_LOCATION.lat, HOME_LOCATION.lon, destLat, destLon);
     const formattedDist = distMiles < 0.1 ? '< 0.1 mi away' : `${distMiles.toFixed(1)} mi away`;
@@ -207,7 +266,7 @@ export async function GET(request) {
         lat: destLat,
         lon: destLon,
         label: cleanLoc,
-        displayName: data[0].display_name
+        displayName: match.display_name
       },
       distanceMiles: Math.round(distMiles * 10) / 10,
       formattedDistance: formattedDist,
