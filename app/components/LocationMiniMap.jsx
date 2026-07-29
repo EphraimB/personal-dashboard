@@ -13,7 +13,7 @@ function parseDurationToMins(durStr) {
   return total > 0 ? total : 9999;
 }
 
-export default function LocationMiniMap({ location, compact = false }) {
+export default function LocationMiniMap({ location, meetingUrl = '', compact = false }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const [geoData, setGeoData] = useState(null);
@@ -21,13 +21,16 @@ export default function LocationMiniMap({ location, compact = false }) {
 
   useEffect(() => {
     let isMounted = true;
-    if (!location) {
+    if ((!location || !location.trim()) && (!meetingUrl || !meetingUrl.trim())) {
+      setGeoData(null);
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    fetch(`/api/geocode?location=${encodeURIComponent(location)}`)
+    const queryUrl = `/api/geocode?location=${encodeURIComponent(location || '')}&meetingUrl=${encodeURIComponent(meetingUrl || '')}`;
+
+    fetch(queryUrl)
       .then((res) => res.json())
       .then((data) => {
         if (isMounted) {
@@ -50,10 +53,10 @@ export default function LocationMiniMap({ location, compact = false }) {
     return () => {
       isMounted = false;
     };
-  }, [location]);
+  }, [location, meetingUrl]);
 
   useEffect(() => {
-    if (!geoData || !mapRef.current) return;
+    if (!geoData || geoData.isVirtual || !mapRef.current) return;
 
     let mapInstance = null;
 
@@ -148,11 +151,45 @@ export default function LocationMiniMap({ location, compact = false }) {
   }, [geoData]);
 
   if (loading) {
-    return null; // Silent placeholder while checking location
+    return null; // Silent placeholder while loading
   }
 
-  if (!geoData) {
-    return null; // Hide mini map entirely if non-physical or unresolvable
+  // Completely hide container for events without physical locations or virtual URLs
+  if (!geoData || !geoData.valid) {
+    return null;
+  }
+
+  // Render Virtual Meeting HUD Card with Scan-to-Join QR Code for Online Events
+  if (geoData.isVirtual) {
+    const meetingUrlData = geoData.meetingUrl || meetingUrl || 'https://zoom.us';
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=3&color=00f0ff&bgcolor=080c18&data=${encodeURIComponent(
+      meetingUrlData
+    )}`;
+
+    return (
+      <div className={`hud-mini-map-wrapper hud-virtual-wrapper ${compact ? 'hud-mini-map-compact' : ''}`}>
+        <div className="hud-mini-map-header hud-virtual-header">
+          <span className="hud-mini-map-title">
+            {geoData.platformIcon} {geoData.platformName}
+          </span>
+          <span className="hud-virtual-status-badge">ONLINE</span>
+        </div>
+
+        <div className="hud-virtual-body">
+          <div className="hud-virtual-qr-container">
+            <img src={qrImageUrl} alt="Scan to Join Virtual Meeting" className="hud-virtual-qr-img" />
+            <span className="hud-virtual-qr-tag">SCAN TO JOIN 📱</span>
+          </div>
+
+          <div className="hud-virtual-info-stack">
+            <span className="hud-virtual-platform-tag">{geoData.platformName}</span>
+            <span className="hud-virtual-url-preview" title={meetingUrlData}>
+              {meetingUrlData.replace(/^https?:\/\//i, '')}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(

@@ -2057,6 +2057,126 @@ html, body {
   color: rgba(0, 240, 255, 0.35);
 }
 
+/* ==============================================================================
+   VIRTUAL MEETING HUD CARD & SCAN-TO-JOIN QR CODE
+   ============================================================================== */
+
+.hud-virtual-wrapper {
+  border-color: rgba(0, 240, 255, 0.45);
+  background: linear-gradient(135deg, rgba(8, 12, 24, 0.95) 0%, rgba(4, 8, 18, 0.98) 100%);
+}
+
+.hud-virtual-header {
+  background: rgba(0, 240, 255, 0.15);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+}
+
+.hud-virtual-status-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.15);
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  border-radius: 4px;
+  padding: 1px 6px;
+  letter-spacing: 1px;
+}
+
+.hud-virtual-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(6, 10, 20, 0.9);
+}
+
+.hud-virtual-qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: rgba(4, 6, 12, 0.95);
+  border: 1.5px solid var(--color-cyan);
+  border-radius: 8px;
+  padding: 5px;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+}
+
+.hud-virtual-qr-img {
+  width: 58px;
+  height: 58px;
+  border-radius: 4px;
+  display: block;
+}
+
+.hud-virtual-qr-tag {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 900;
+  color: var(--color-cyan);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.hud-virtual-info-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.hud-virtual-platform-tag {
+  font-family: var(--font-title);
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.hud-virtual-url-preview {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--color-cyan);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.9;
+}
+
+/* ==============================================================================
+   NO LOCATION SPECIFIED HUD BADGE
+   ============================================================================== */
+
+.hud-no-location-wrapper {
+  background: rgba(8, 12, 24, 0.5);
+  border: 1px dashed rgba(0, 240, 255, 0.2);
+  margin-top: 6px;
+}
+
+.hud-no-location-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+}
+
+.hud-no-location-icon {
+  font-size: 0.8rem;
+  opacity: 0.4;
+}
+
+.hud-no-location-text {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 1px;
+}
+
+
+
 
 
 

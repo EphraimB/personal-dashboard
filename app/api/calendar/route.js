@@ -68,6 +68,19 @@ function cleanIcalText(str) {
     .trim();
 }
 
+function extractMeetingUrlFromText(...sources) {
+  for (const text of sources) {
+    if (!text) continue;
+    const str = String(text);
+    const meetingMatch = str.match(/(https?:\/\/[^\s,;<>"']*(?:zoom\.us|meet\.google|teams\.microsoft|webex\.com|discord\.gg|gotomeeting|whereby)[^\s,;<>"']*)/i);
+    if (meetingMatch) return meetingMatch[1];
+    
+    const generalUrlMatch = str.match(/(https?:\/\/[^\s,;<>"']+)/i);
+    if (generalUrlMatch) return generalUrlMatch[1];
+  }
+  return '';
+}
+
 function formatLocationObject(rawLocation) {
   if (!rawLocation) {
     return { location: '', locationMain: '', locationSub: '', locationClean: '' };
@@ -117,6 +130,8 @@ function parseICS(icsText) {
         currentEvent.location = line.substring(9);
       } else if (line.startsWith('DESCRIPTION:')) {
         currentEvent.description = cleanIcalText(line.substring(12));
+      } else if (line.startsWith('URL:')) {
+        currentEvent.url = line.substring(4).trim();
       } else if (line.startsWith('DTSTART:')) {
         currentEvent.dtStartRaw = line.substring(8);
       } else if (line.startsWith('DTSTART;')) {
@@ -132,8 +147,10 @@ function parseICS(icsText) {
   const futureEvents = rawEvents
     .map((e) => {
       const parsedDate = parseICalDate(e.dtStartRaw);
+      const meetingUrl = extractMeetingUrlFromText(e.url, e.location, e.description);
       return {
         ...e,
+        meetingUrl,
         startDateObj: parsedDate,
         startTime: parsedDate ? formatTimeString(parsedDate) : 'Today'
       };
@@ -175,7 +192,8 @@ function buildCalendarResponse(eventsList, sourceName) {
 
   // 1. UP NEXT: The single next immediate event
   const first = sortedEvents[0];
-  const firstLoc = formatLocationObject(first.location || 'Google Calendar');
+  const firstLoc = formatLocationObject(first.location || '');
+  const firstMeetingUrl = first.meetingUrl || extractMeetingUrlFromText(first.location, first.description);
 
   const upNext = {
     id: first.id || 'evt-next-1',
@@ -186,6 +204,7 @@ function buildCalendarResponse(eventsList, sourceName) {
     locationMain: firstLoc.locationMain,
     locationSub: firstLoc.locationSub,
     locationClean: firstLoc.locationClean,
+    meetingUrl: firstMeetingUrl,
     category: 'Google Event',
     icon: '⚡',
     isUpNext: true
@@ -201,7 +220,8 @@ function buildCalendarResponse(eventsList, sourceName) {
   });
 
   const todayEvents = todayItems.map((it, idx) => {
-    const locObj = formatLocationObject(it.location || 'Google Calendar');
+    const locObj = formatLocationObject(it.location || '');
+    const meetingUrl = it.meetingUrl || extractMeetingUrlFromText(it.location, it.description);
     return {
       id: it.id || `evt-today-${idx}`,
       title: cleanIcalText(it.title) || 'Calendar Event',
@@ -211,6 +231,7 @@ function buildCalendarResponse(eventsList, sourceName) {
       locationMain: locObj.locationMain,
       locationSub: locObj.locationSub,
       locationClean: locObj.locationClean,
+      meetingUrl,
       category: 'Event',
       icon: '📌'
     };
@@ -237,6 +258,7 @@ function buildCalendarResponse(eventsList, sourceName) {
     }
 
     const locObj = formatLocationObject(e.location || '');
+    const meetingUrl = e.meetingUrl || extractMeetingUrlFromText(e.location, e.description);
     dayMap.get(dateKey).events.push({
       id: e.id || `evt-${dateKey}-${dayMap.get(dateKey).events.length}`,
       title: cleanIcalText(e.title) || 'Calendar Event',
@@ -245,6 +267,7 @@ function buildCalendarResponse(eventsList, sourceName) {
       locationMain: locObj.locationMain,
       locationSub: locObj.locationSub,
       locationClean: locObj.locationClean,
+      meetingUrl,
       category: 'Upcoming',
       icon: '📌'
     });
@@ -337,13 +360,17 @@ export async function GET(request) {
 
               const gEvents = items.map((it) => {
                 const startDateObj = new Date(it.start?.dateTime || it.start?.date || Date.now());
+                const hangoutUrl = it.hangoutLink || (it.conferenceData?.entryPoints?.find(ep => ep.uri?.startsWith('http'))?.uri) || '';
+                const meetingUrl = extractMeetingUrlFromText(hangoutUrl, it.location, it.description);
                 return {
                   id: it.id,
                   title: it.summary || 'Google Event',
                   startDateObj,
                   startTime: formatGTime(it.start),
                   endTime: formatGTime(it.end),
-                  location: it.location || 'Google Calendar'
+                  location: it.location || '',
+                  meetingUrl,
+                  description: it.description || ''
                 };
               });
 

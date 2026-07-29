@@ -9,11 +9,6 @@ const HOME_LOCATION = {
   label: '141 Grove Av, Cedarhurst, NY'
 };
 
-const VIRTUAL_KEYWORDS = [
-  'zoom', 'teams', 'meet.google', 'http://', 'https://', 'online', 
-  'virtual', 'webinar', 'tbd', 'n/a', 'google calendar', 'phone call', 'discord'
-];
-
 function sanitizeLocationString(locStr) {
   if (!locStr) return '';
   return locStr
@@ -27,10 +22,62 @@ function sanitizeLocationString(locStr) {
     .join(', ');
 }
 
-function isVirtualLocation(locStr) {
-  if (!locStr) return true;
-  const lower = locStr.toLowerCase().trim();
-  return VIRTUAL_KEYWORDS.some(kw => lower.includes(kw));
+function extractVirtualEventData(locStr, meetingUrlParam) {
+  const raw = (locStr || '').trim();
+  const lower = raw.toLowerCase();
+
+  // Extract HTTP or HTTPS URL from location string if not passed directly
+  const urlMatch = raw.match(/(https?:\/\/[^\s,;<>"']+)/i);
+  let meetingUrl = meetingUrlParam || (urlMatch ? urlMatch[1] : '');
+
+  // ONLY return virtual event QR data if an exact meeting URL (http/https) is present!
+  if (!meetingUrl || !meetingUrl.startsWith('http')) {
+    return null;
+  }
+
+  const urlLower = meetingUrl.toLowerCase();
+  let platform = 'WEB';
+  let platformName = 'ONLINE MEETING';
+  let platformIcon = '🌐';
+  let themeColor = '#00F0FF';
+
+  if (urlLower.includes('zoom.us') || lower.includes('zoom')) {
+    platform = 'ZOOM';
+    platformName = 'ZOOM MEETING';
+    platformIcon = '📹';
+    themeColor = '#2D8CFF';
+  } else if (urlLower.includes('meet.google') || lower.includes('google meet')) {
+    platform = 'MEET';
+    platformName = 'GOOGLE MEET';
+    platformIcon = '🟢';
+    themeColor = '#00875A';
+  } else if (urlLower.includes('teams.microsoft') || lower.includes('teams')) {
+    platform = 'TEAMS';
+    platformName = 'MICROSOFT TEAMS';
+    platformIcon = '🟦';
+    themeColor = '#6264A7';
+  } else if (urlLower.includes('webex') || lower.includes('webex')) {
+    platform = 'WEBEX';
+    platformName = 'WEBEX MEETING';
+    platformIcon = '🟣';
+    themeColor = '#00E676';
+  } else if (urlLower.includes('discord') || lower.includes('discord')) {
+    platform = 'DISCORD';
+    platformName = 'DISCORD SERVER';
+    platformIcon = '💬';
+    themeColor = '#5865F2';
+  }
+
+  return {
+    valid: true,
+    isVirtual: true,
+    meetingUrl,
+    rawLocation: raw,
+    platform,
+    platformName,
+    platformIcon,
+    themeColor
+  };
 }
 
 function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
@@ -99,15 +146,23 @@ async function fetchTravelTimes(lat1, lon1, lat2, lon2, distMiles) {
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const rawLocation = searchParams.get('location');
+  const meetingUrlParam = searchParams.get('meetingUrl') || '';
   const cleanLoc = sanitizeLocationString(rawLocation);
 
-  if (!cleanLoc || isVirtualLocation(cleanLoc)) {
-    return NextResponse.json({ valid: false, reason: 'virtual_or_empty' });
+  const cacheKey = `${(cleanLoc || rawLocation || '').toLowerCase()}|${meetingUrlParam.toLowerCase()}`;
+  if (cacheKey.trim() !== '|' && geocodeCache.has(cacheKey)) {
+    return NextResponse.json(geocodeCache.get(cacheKey));
   }
 
-  const cacheKey = cleanLoc.toLowerCase();
-  if (geocodeCache.has(cacheKey)) {
-    return NextResponse.json(geocodeCache.get(cacheKey));
+  // Check if location or meetingUrl contains an exact virtual meeting URL
+  const virtualData = extractVirtualEventData(rawLocation || cleanLoc, meetingUrlParam);
+  if (virtualData) {
+    if (cacheKey.trim() !== '|') geocodeCache.set(cacheKey, virtualData);
+    return NextResponse.json(virtualData);
+  }
+
+  if (!cleanLoc || !cleanLoc.trim()) {
+    return NextResponse.json({ valid: false, reason: 'empty_location' });
   }
 
   try {
@@ -146,6 +201,7 @@ export async function GET(request) {
 
     const result = {
       valid: true,
+      isVirtual: false,
       origin: HOME_LOCATION,
       destination: {
         lat: destLat,

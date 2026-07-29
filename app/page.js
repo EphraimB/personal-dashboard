@@ -1042,7 +1042,7 @@ function formatHourLabel(timeStr, index) {
                   <span className="up-next-time-badge">{calendarData.upNext.startTime}</span>
                 </div>
                 <h2 className="up-next-event-title-compact">{calendarData.upNext.title}</h2>
-                {calendarData.upNext.location && (
+                {calendarData.upNext.location ? (
                   <>
                     <span className="up-next-meta-item-compact">
                       📍 {calendarData.upNext.locationMain || calendarData.upNext.location}
@@ -1050,9 +1050,12 @@ function formatHourLabel(timeStr, index) {
                     {calendarData.upNext.locationSub && (
                       <span className="up-next-meta-loc-sub">{calendarData.upNext.locationSub}</span>
                     )}
-                    <LocationMiniMap location={calendarData.upNext.locationClean || calendarData.upNext.location} />
                   </>
-                )}
+                ) : null}
+                <LocationMiniMap
+                  location={calendarData.upNext.locationClean || calendarData.upNext.location || ''}
+                  meetingUrl={calendarData.upNext.meetingUrl || ''}
+                />
               </div>
             )}
 
@@ -1066,7 +1069,7 @@ function formatHourLabel(timeStr, index) {
                     <span className="ribbon-time">{evt.startTime}</span>
                   </div>
                   <span className="ribbon-event-title">{evt.title}</span>
-                  {evt.location && (
+                  {evt.location ? (
                     <>
                       <span className="ribbon-event-loc">
                         📍 {evt.locationMain || evt.location}
@@ -1074,9 +1077,13 @@ function formatHourLabel(timeStr, index) {
                       {evt.locationSub && (
                         <span className="ribbon-event-loc-sub">{evt.locationSub}</span>
                       )}
-                      <LocationMiniMap location={evt.locationClean || evt.location} compact />
                     </>
-                  )}
+                  ) : null}
+                  <LocationMiniMap
+                    location={evt.locationClean || evt.location || ''}
+                    meetingUrl={evt.meetingUrl || ''}
+                    compact
+                  />
                 </div>
               ))}
 
@@ -1091,7 +1098,7 @@ function formatHourLabel(timeStr, index) {
                       <span className="ribbon-time">{e.time}</span>
                     </div>
                     <span className="ribbon-event-title">{e.title}</span>
-                    {e.location && (
+                    {e.location ? (
                       <>
                         <span className="ribbon-event-loc">
                           📍 {e.locationMain || e.location}
@@ -1099,9 +1106,13 @@ function formatHourLabel(timeStr, index) {
                         {e.locationSub && (
                           <span className="ribbon-event-loc-sub">{e.locationSub}</span>
                         )}
-                        <LocationMiniMap location={e.locationClean || e.location} compact />
                       </>
-                    )}
+                    ) : null}
+                    <LocationMiniMap
+                      location={e.locationClean || e.location || ''}
+                      meetingUrl={e.meetingUrl || ''}
+                      compact
+                    />
                   </div>
                 ))
               )}
