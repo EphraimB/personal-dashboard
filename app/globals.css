@@ -3078,6 +3078,13 @@ html, body {
   color: #ffffff;
 }
 
+.next-time-sub {
+  font-size: 0.68rem;
+  color: var(--color-gold);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
 .next-loc-sub {
   font-size: 0.65rem;
   color: var(--color-gold);

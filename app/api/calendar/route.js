@@ -220,12 +220,21 @@ function buildCalendarResponse(eventsList, sourceName) {
   const firstLoc = formatLocationObject(first.location || '');
   const firstMeetingUrl = first.meetingUrl || extractMeetingUrlFromText(first.location, first.description);
   const firstIsLive = checkIsLive(first);
+  const firstDate = first.startDateObj ? new Date(first.startDateObj) : now;
+  const isFirstToday = isSameDay(firstDate, now);
+  const tmrObj = new Date(now);
+  tmrObj.setDate(tmrObj.getDate() + 1);
+  const isFirstTomorrow = isSameDay(firstDate, tmrObj);
+  const monthDayStr = firstDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+  const fullDayStr = firstDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+  const upNextDateStr = isFirstToday ? `TODAY, ${monthDayStr}` : isFirstTomorrow ? `TOMORROW, ${monthDayStr}` : fullDayStr;
 
   const upNext = {
     id: first.id || 'evt-next-1',
     title: cleanIcalText(first.title) || 'Untitled Event',
     startTime: first.startTime || 'Upcoming',
     endTime: first.endTime || '',
+    dateStr: upNextDateStr,
     location: firstLoc.location,
     locationMain: firstLoc.locationMain,
     locationSub: firstLoc.locationSub,
@@ -238,6 +247,7 @@ function buildCalendarResponse(eventsList, sourceName) {
   };
 
   const remainingEvents = sortedEvents.slice(1);
+  const todayMonthDay = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
 
   // 2. TODAY Events: All events occurring on today's calendar date
   const todayItems = remainingEvents.filter((e) => {
@@ -255,6 +265,7 @@ function buildCalendarResponse(eventsList, sourceName) {
       title: cleanIcalText(it.title) || 'Calendar Event',
       startTime: it.startTime || 'Scheduled',
       endTime: it.endTime || '',
+      dateStr: `TODAY, ${todayMonthDay}`,
       location: locObj.location,
       locationMain: locObj.locationMain,
       locationSub: locObj.locationSub,
@@ -289,10 +300,13 @@ function buildCalendarResponse(eventsList, sourceName) {
     const locObj = formatLocationObject(e.location || '');
     const meetingUrl = e.meetingUrl || extractMeetingUrlFromText(e.location, e.description);
     const isLive = checkIsLive(e);
+    const eventDateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+
     dayMap.get(dateKey).events.push({
       id: e.id || `evt-${dateKey}-${dayMap.get(dateKey).events.length}`,
       title: cleanIcalText(e.title) || 'Calendar Event',
-      time: e.startTime || '10:00 AM',
+      startTime: e.startTime || '10:00 AM',
+      dateStr: eventDateStr,
       location: locObj.location,
       locationMain: locObj.locationMain,
       locationSub: locObj.locationSub,
@@ -309,11 +323,23 @@ function buildCalendarResponse(eventsList, sourceName) {
 
   for (const [dateKey, entry] of dayMap.entries()) {
     const d = entry.dObj;
+    const dayName = dayNames[d.getDay()];
+    const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+    const fullDateStr = `${dayName}, ${formattedDate}`;
+
+    const formattedEvents = entry.events.map((e) => ({
+      ...e,
+      startTime: e.startTime || e.time || 'Scheduled',
+      time: e.startTime || e.time || 'Scheduled',
+      dateStr: e.dateStr || fullDateStr
+    }));
+
     weekDays.push({
       dateStr: dateKey,
-      dayName: dayNames[d.getDay()],
-      formattedDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      events: entry.events
+      dayName,
+      formattedDate,
+      shortDate: formattedDate,
+      events: formattedEvents
     });
   }
 

@@ -706,20 +706,25 @@ export default function Home() {
                   <div className="agenda-next-banner">
                     <div className="agenda-next-header">
                       <span className={calendarData.upNext.isLive ? 'next-tag next-tag-live' : 'next-tag'}>
-                        {calendarData.upNext.isLive ? '● LIVE NOW' : 'UP NEXT'}
+                        {calendarData.upNext.isLive
+                          ? '● LIVE NOW'
+                          : calendarData.upNext.dateStr
+                          ? `UP NEXT • ${calendarData.upNext.dateStr}`
+                          : 'UP NEXT'}
                       </span>
                       <span className="next-countdown">
                         {calendarData.upNext.isLive
                           ? 'IN PROGRESS'
                           : calendarData.upNext.minsUntil !== undefined && calendarData.upNext.minsUntil < 60
                           ? `IN ${calendarData.upNext.minsUntil} MINS`
-                          : calendarData.upNext.startTime}
+                          : calendarData.upNext.startTime || 'UPCOMING'}
                       </span>
                     </div>
                     <div className="next-title">{calendarData.upNext.title}</div>
-                    {calendarData.upNext.locationMain && (
-                      <div className="next-loc-sub">📍 {calendarData.upNext.locationMain}</div>
-                    )}
+                    <div className="next-time-sub">
+                      ⏰ {calendarData.upNext.startTime || 'Scheduled'}
+                      {calendarData.upNext.locationMain && ` • 📍 ${calendarData.upNext.locationMain}`}
+                    </div>
                   </div>
                 ) : (
                   <div className="agenda-empty-banner">
@@ -733,7 +738,8 @@ export default function Home() {
                   {calendarData?.todayEvents?.map((evt) => (
                     <div key={evt.id} className="agenda-event-row">
                       <div className="agenda-event-time">
-                        {evt.startTime} • TODAY {evt.isLive && <span style={{ color: 'var(--color-green)' }}>● LIVE</span>}
+                        📅 {evt.dateStr || 'TODAY'} • ⏰ {evt.startTime || evt.time || 'Scheduled'}{' '}
+                        {evt.isLive && <span style={{ color: 'var(--color-green)' }}>● LIVE</span>}
                       </div>
                       <div className="agenda-event-name">{evt.title}</div>
                       {evt.locationMain && <div className="agenda-event-loc">📍 {evt.locationMain}</div>}
@@ -742,15 +748,25 @@ export default function Home() {
 
                   {/* Upcoming Week Days Events */}
                   {calendarData?.weekDays?.map((day) =>
-                    day.events?.map((e) => (
-                      <div key={`${day.dateKey}-${e.id}`} className="agenda-event-row">
-                        <div className="agenda-event-time">
-                          {e.startTime} • {day.dayName.toUpperCase()}, {day.shortDate}
+                    day.events?.map((e) => {
+                      const displayDate =
+                        e.dateStr ||
+                        (day.dayName
+                          ? `${day.dayName.toUpperCase()}${
+                              day.formattedDate || day.shortDate ? `, ${day.formattedDate || day.shortDate}` : ''
+                            }`
+                          : 'UPCOMING');
+                      const displayTime = e.startTime || e.time || 'Scheduled';
+                      return (
+                        <div key={`${day.dateStr || day.dayName}-${e.id}`} className="agenda-event-row">
+                          <div className="agenda-event-time">
+                            📅 {displayDate} • ⏰ {displayTime}
+                          </div>
+                          <div className="agenda-event-name">{e.title}</div>
+                          {e.locationMain && <div className="agenda-event-loc">📍 {e.locationMain}</div>}
                         </div>
-                        <div className="agenda-event-name">{e.title}</div>
-                        {e.locationMain && <div className="agenda-event-loc">📍 {e.locationMain}</div>}
-                      </div>
-                    ))
+                      );
+                    })
                   )}
 
                   {(!calendarData?.todayEvents || calendarData.todayEvents.length === 0) &&
