@@ -9,28 +9,23 @@ function parseICalDate(icalStr) {
   if (!icalStr) return null;
 
   try {
-    const cleanStr = icalStr.replace(/[^0-9T]/g, '');
+    const isUtc = String(icalStr).trim().endsWith('Z');
+    const cleanStr = String(icalStr).replace(/[^0-9T]/g, '');
+    const match = cleanStr.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?)?/);
 
-    if (cleanStr.length === 8) {
-      const year = parseInt(cleanStr.substring(0, 4), 10);
-      const month = parseInt(cleanStr.substring(4, 6), 10) - 1;
-      const day = parseInt(cleanStr.substring(6, 8), 10);
-      return new Date(year, month, day, 9, 0, 0);
+    if (!match) return null;
+
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    const hour = match[4] ? parseInt(match[4], 10) : 9;
+    const minute = match[5] ? parseInt(match[5], 10) : 0;
+    const second = match[6] ? parseInt(match[6], 10) : 0;
+
+    if (isUtc) {
+      return new Date(Date.UTC(year, month, day, hour, minute, second));
     }
-
-    if (cleanStr.length >= 15) {
-      const year = parseInt(cleanStr.substring(0, 4), 10);
-      const month = parseInt(cleanStr.substring(4, 6), 10) - 1;
-      const day = parseInt(cleanStr.substring(6, 8), 10);
-      const hour = parseInt(cleanStr.substring(9, 11), 10);
-      const minute = parseInt(cleanStr.substring(11, 13), 10);
-      const second = parseInt(cleanStr.substring(13, 15), 10);
-
-      if (icalStr.endsWith('Z')) {
-        return new Date(Date.UTC(year, month, day, hour, minute, second));
-      }
-      return new Date(year, month, day, hour, minute, second);
-    }
+    return new Date(year, month, day, hour, minute, second);
   } catch (e) {
     console.error('Failed parsing iCal date:', icalStr, e);
   }
@@ -124,47 +119,150 @@ function parseICS(icsText) {
       }
       currentEvent = null;
     } else if (currentEvent) {
-      if (line.startsWith('SUMMARY:')) {
-        currentEvent.title = cleanIcalText(line.substring(8));
-      } else if (line.startsWith('LOCATION:')) {
-        currentEvent.location = line.substring(9);
-      } else if (line.startsWith('DESCRIPTION:')) {
-        currentEvent.description = cleanIcalText(line.substring(12));
-      } else if (line.startsWith('URL:')) {
-        currentEvent.url = line.substring(4).trim();
-      } else if (line.startsWith('DTSTART:')) {
-        currentEvent.dtStartRaw = line.substring(8);
-      } else if (line.startsWith('DTSTART;')) {
-        const parts = line.split(':');
-        if (parts.length > 1) currentEvent.dtStartRaw = parts[1];
-      } else if (line.startsWith('DTEND:')) {
-        currentEvent.dtEndRaw = line.substring(6);
-      } else if (line.startsWith('DTEND;')) {
-        const parts = line.split(':');
-        if (parts.length > 1) currentEvent.dtEndRaw = parts[1];
+      if (line.startsWith('SUMMARY:') || line.startsWith('SUMMARY;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.title = cleanIcalText(line.substring(colonIdx + 1));
+      } else if (line.startsWith('LOCATION:') || line.startsWith('LOCATION;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.location = line.substring(colonIdx + 1);
+      } else if (line.startsWith('DESCRIPTION:') || line.startsWith('DESCRIPTION;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.description = cleanIcalText(line.substring(colonIdx + 1));
+      } else if (line.startsWith('URL:') || line.startsWith('URL;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.url = line.substring(colonIdx + 1).trim();
+      } else if (line.startsWith('DTSTART:') || line.startsWith('DTSTART;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.dtStartRaw = line.substring(colonIdx + 1).trim();
+      } else if (line.startsWith('DTEND:') || line.startsWith('DTEND;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.dtEndRaw = line.substring(colonIdx + 1).trim();
+      } else if (line.startsWith('RRULE:') || line.startsWith('RRULE;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.rrule = line.substring(colonIdx + 1).trim();
+      } else if (line.startsWith('EXDATE:') || line.startsWith('EXDATE;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) {
+          if (!currentEvent.exdates) currentEvent.exdates = [];
+          currentEvent.exdates.push(line.substring(colonIdx + 1).trim());
+        }
       }
     }
   }
 
   const now = new Date();
+  const cutoffMs = now.getTime() + 14 * 24 * 60 * 60 * 1000;
+  const dayNameMap = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
 
-  const futureEvents = rawEvents
+  const expandedRaw = [];
+
+  for (const e of rawEvents) {
+    const baseStart = parseICalDate(e.dtStartRaw);
+    if (!baseStart) continue;
+
+    const durationMs = e.dtEndRaw
+      ? (parseICalDate(e.dtEndRaw)?.getTime() || baseStart.getTime() + 3600000) - baseStart.getTime()
+      : 3600000;
+
+    // Non-recurring event
+    if (!e.rrule) {
+      const endMs = baseStart.getTime() + durationMs;
+      if (endMs > now.getTime()) {
+        expandedRaw.push({
+          ...e,
+          startDateObj: baseStart,
+          endDateObj: new Date(endMs)
+        });
+      }
+      continue;
+    }
+
+    // Recurring event (RRULE expansion)
+    const rrule = e.rrule.toUpperCase();
+
+    // 1. Skip if recurring series UNTIL date has passed
+    const untilMatch = rrule.match(/UNTIL=([0-9T]+)/);
+    const untilDate = untilMatch ? parseICalDate(untilMatch[1]) : null;
+    if (untilDate && untilDate.getTime() < now.getTime()) {
+      continue; // Series ended in the past - do not generate any instances
+    }
+
+    const maxUntilMs = untilDate ? untilDate.getTime() : cutoffMs + 86400000;
+    const freqMatch = rrule.match(/FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)/);
+    const freq = freqMatch ? freqMatch[1] : 'WEEKLY';
+
+    const bydayMatch = rrule.match(/BYDAY=([A-Z,]+)/);
+    const targetDays = bydayMatch
+      ? bydayMatch[1].split(',').map((d) => dayNameMap[d]).filter((d) => d !== undefined)
+      : [baseStart.getDay()];
+
+    const countMatch = rrule.match(/COUNT=([0-9]+)/);
+    const maxCount = countMatch ? parseInt(countMatch[1], 10) : 1000;
+
+    let current = new Date(baseStart);
+
+    // Fast-forward long-standing active recurring events close to now
+    if (now.getTime() - current.getTime() > 14 * 86400000) {
+      const daysDiff = Math.floor((now.getTime() - current.getTime()) / 86400000) - 7;
+      if (freq === 'WEEKLY') {
+        const weeksDiff = Math.floor(daysDiff / 7);
+        current.setDate(current.getDate() + weeksDiff * 7);
+      } else if (freq === 'DAILY') {
+        current.setDate(current.getDate() + daysDiff);
+      }
+    }
+
+    let iterations = 0;
+    let generatedCount = 0;
+
+    while (current.getTime() <= Math.min(cutoffMs, maxUntilMs) && iterations < 500 && generatedCount < maxCount) {
+      iterations++;
+      const curMs = current.getTime();
+      const endMs = curMs + durationMs;
+
+      if (curMs <= cutoffMs) {
+        if (freq !== 'WEEKLY' || targetDays.includes(current.getDay())) {
+          generatedCount++;
+
+          // Only add instance if it hasn't already ended in the past
+          if (endMs > now.getTime()) {
+            // Check EXDATE cancellations
+            const isExcluded = e.exdates?.some((ex) => {
+              const exD = parseICalDate(ex);
+              return exD && isSameDay(exD, current);
+            });
+
+            if (!isExcluded) {
+              expandedRaw.push({
+                ...e,
+                startDateObj: new Date(curMs),
+                endDateObj: new Date(endMs)
+              });
+            }
+          }
+        }
+      }
+
+      if (freq === 'DAILY') {
+        current.setDate(current.getDate() + 1);
+      } else if (freq === 'WEEKLY') {
+        current.setDate(current.getDate() + 1);
+      } else if (freq === 'MONTHLY') {
+        current.setMonth(current.getMonth() + 1);
+      } else {
+        current.setDate(current.getDate() + 7);
+      }
+    }
+  }
+
+  const futureEvents = expandedRaw
     .map((e) => {
-      const parsedDate = parseICalDate(e.dtStartRaw);
-      const parsedEndDate = e.dtEndRaw ? parseICalDate(e.dtEndRaw) : (parsedDate ? new Date(parsedDate.getTime() + 3600000) : null);
       const meetingUrl = extractMeetingUrlFromText(e.url, e.location, e.description);
       return {
         ...e,
         meetingUrl,
-        startDateObj: parsedDate,
-        endDateObj: parsedEndDate,
-        startTime: parsedDate ? formatTimeString(parsedDate) : 'Today'
+        startTime: e.startDateObj ? formatTimeString(e.startDateObj) : 'Today'
       };
-    })
-    .filter((e) => {
-      if (!e.startDateObj) return false;
-      const endMs = e.endDateObj ? e.endDateObj.getTime() : e.startDateObj.getTime() + 3600000;
-      return endMs > now.getTime(); // Hide events whose end time has passed
     })
     .sort((a, b) => (a.startDateObj?.getTime() || 0) - (b.startDateObj?.getTime() || 0));
 
