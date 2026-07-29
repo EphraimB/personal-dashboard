@@ -47,6 +47,55 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   return R * c; // Distance in miles
 }
 
+function formatDurationMinutes(totalMinutes) {
+  if (totalMinutes < 1) return '< 1m';
+  const hrs = Math.floor(totalMinutes / 60);
+  const mins = Math.round(totalMinutes % 60);
+  if (hrs > 0) {
+    return `${hrs}h ${mins}m`;
+  }
+  return `${mins}m`;
+}
+
+async function fetchTravelTimes(lat1, lon1, lat2, lon2, distMiles) {
+  const roadDistMiles = distMiles * 1.25;
+
+  let driveMins = (roadDistMiles / 28) * 60 + 2;
+  let walkMins = (roadDistMiles / 3.0) * 60;
+  let bikeMins = (roadDistMiles / 11.5) * 60;
+  let transitMins = (roadDistMiles / 26) * 60 + 6;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
+
+    const osrmUrl = `http://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`;
+    const res = await fetch(osrmUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.routes && data.routes.length > 0) {
+        const routeSecs = data.routes[0].duration;
+        driveMins = routeSecs / 60;
+        const routeMiles = data.routes[0].distance / 1609.34;
+        walkMins = (routeMiles / 3.0) * 60;
+        bikeMins = (routeMiles / 11.5) * 60;
+        transitMins = (routeMiles / 26) * 60 + 6;
+      }
+    }
+  } catch (e) {
+    // Fallback gracefully on timeout or offline
+  }
+
+  return {
+    walk: formatDurationMinutes(walkMins),
+    bike: formatDurationMinutes(bikeMins),
+    transit: formatDurationMinutes(transitMins),
+    drive: formatDurationMinutes(driveMins)
+  };
+}
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const rawLocation = searchParams.get('location');
@@ -93,6 +142,8 @@ export async function GET(request) {
     const distMiles = calculateHaversineDistance(HOME_LOCATION.lat, HOME_LOCATION.lon, destLat, destLon);
     const formattedDist = distMiles < 0.1 ? '< 0.1 mi away' : `${distMiles.toFixed(1)} mi away`;
 
+    const travelTimes = await fetchTravelTimes(HOME_LOCATION.lat, HOME_LOCATION.lon, destLat, destLon, distMiles);
+
     const result = {
       valid: true,
       origin: HOME_LOCATION,
@@ -103,7 +154,8 @@ export async function GET(request) {
         displayName: data[0].display_name
       },
       distanceMiles: Math.round(distMiles * 10) / 10,
-      formattedDistance: formattedDist
+      formattedDistance: formattedDist,
+      travelTimes
     };
 
     geocodeCache.set(cacheKey, result);

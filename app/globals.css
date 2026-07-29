@@ -1969,6 +1969,73 @@ html, body {
   box-shadow: 0 0 8px #ff5722;
 }
 
+/* TV QR Code Overlay Badge */
+.hud-mini-map-qr-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 500;
+  background: rgba(8, 12, 24, 0.92);
+  border: 1px solid rgba(0, 240, 255, 0.5);
+  border-radius: 6px;
+  padding: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+
+.hud-qr-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 4px;
+  display: block;
+}
+
+.hud-qr-tag {
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  font-weight: 900;
+  color: var(--color-cyan);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Horizontal Multi-Modal Travel Mode Bar */
+.hud-travel-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 4px 6px;
+  background: rgba(4, 8, 18, 0.95);
+  border-top: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.travel-mode-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.travel-mode-icon {
+  font-size: 0.75rem;
+}
+
+.travel-mode-val {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.travel-mode-sep {
+  font-size: 0.6rem;
+  color: rgba(0, 240, 255, 0.4);
+}
+
+
 
 
 

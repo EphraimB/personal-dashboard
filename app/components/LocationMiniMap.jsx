@@ -66,12 +66,16 @@ export default function LocationMiniMap({ location, compact = false }) {
 
       const { origin, destination } = geoData;
 
-      // Create map
+      // Create static read-only TV map (disable all drag, zoom, touch, and scroll wheel interactions)
       mapInstance = L.map(mapRef.current, {
         zoomControl: false,
         attributionControl: false,
-        dragging: !L.Browser.mobile,
-        scrollWheelZoom: false
+        dragging: false,
+        touchZoom: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        keyboard: false
       });
 
       // Add CartoDB Dark Matter tile layer
@@ -97,14 +101,11 @@ export default function LocationMiniMap({ location, compact = false }) {
       });
 
       // Add markers
-      const homeMarker = L.marker([origin.lat, origin.lon], { icon: homeIcon }).addTo(mapInstance);
-      homeMarker.bindPopup(`<b>HOME</b><br/>141 Grove Av, Cedarhurst, NY`);
-
-      const destMarker = L.marker([destination.lat, destination.lon], { icon: destIcon }).addTo(mapInstance);
-      destMarker.bindPopup(`<b>DESTINATION</b><br/>${destination.label}`);
+      L.marker([origin.lat, origin.lon], { icon: homeIcon }).addTo(mapInstance);
+      L.marker([destination.lat, destination.lon], { icon: destIcon }).addTo(mapInstance);
 
       // Add dashed connection line between Home and Destination
-      const line = L.polyline(
+      L.polyline(
         [
           [origin.lat, origin.lon],
           [destination.lat, destination.lon]
@@ -147,6 +148,12 @@ export default function LocationMiniMap({ location, compact = false }) {
     '141 Grove Av, Cedarhurst, NY'
   )}&destination=${encodeURIComponent(geoData.destination.label)}`;
 
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=3&color=00f0ff&bgcolor=080c18&data=${encodeURIComponent(
+    googleMapsUrl
+  )}`;
+
+  const travel = geoData.travelTimes || { walk: '18m', bike: '6m', transit: '14m', drive: '5m' };
+
   return (
     <div className={`hud-mini-map-wrapper ${compact ? 'hud-mini-map-compact' : ''}`}>
       <div className="hud-mini-map-header">
@@ -156,21 +163,35 @@ export default function LocationMiniMap({ location, compact = false }) {
 
       <div className="hud-mini-map-canvas-container">
         <div ref={mapRef} className="hud-mini-map-canvas" />
+
+        {/* Scan-to-Navigate QR Code Badge for TV display */}
+        <div className="hud-mini-map-qr-badge" title="Scan with Phone Camera for Google Maps Directions">
+          <img src={qrImageUrl} alt="Scan QR Code for Directions" className="hud-qr-img" />
+          <span className="hud-qr-tag">SCAN NAV 📱</span>
+        </div>
       </div>
 
-      <div className="hud-mini-map-footer">
-        <span className="hud-mini-map-dest-label" title={geoData.destination.label}>
-          TO: {geoData.destination.label}
-        </span>
-        <a
-          href={googleMapsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hud-mini-map-nav-btn"
-          onClick={(e) => e.stopPropagation()}
-        >
-          MAPS ↗
-        </a>
+      {/* Horizontal Multi-Modal Travel Time Bar */}
+      <div className="hud-travel-mode-bar">
+        <div className="travel-mode-item" title="Walking Duration">
+          <span className="travel-mode-icon">🚶</span>
+          <span className="travel-mode-val">{travel.walk}</span>
+        </div>
+        <span className="travel-mode-sep">•</span>
+        <div className="travel-mode-item" title="Biking Duration">
+          <span className="travel-mode-icon">🚴</span>
+          <span className="travel-mode-val">{travel.bike}</span>
+        </div>
+        <span className="travel-mode-sep">•</span>
+        <div className="travel-mode-item" title="Public Transit / Train Duration">
+          <span className="travel-mode-icon">🚆</span>
+          <span className="travel-mode-val">{travel.transit}</span>
+        </div>
+        <span className="travel-mode-sep">•</span>
+        <div className="travel-mode-item" title="Driving Duration">
+          <span className="travel-mode-icon">🚗</span>
+          <span className="travel-mode-val">{travel.drive}</span>
+        </div>
       </div>
     </div>
   );
