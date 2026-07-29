@@ -144,8 +144,17 @@ function parseICS(icsText) {
         const colonIdx = line.indexOf(':');
         if (colonIdx !== -1) {
           if (!currentEvent.exdates) currentEvent.exdates = [];
-          currentEvent.exdates.push(line.substring(colonIdx + 1).trim());
+          const val = line.substring(colonIdx + 1).trim();
+          val.split(',').forEach((dStr) => {
+            if (dStr.trim()) currentEvent.exdates.push(dStr.trim());
+          });
         }
+      } else if (line.startsWith('STATUS:') || line.startsWith('STATUS;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.status = line.substring(colonIdx + 1).trim().toUpperCase();
+      } else if (line.startsWith('RECURRENCE-ID:') || line.startsWith('RECURRENCE-ID;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.recurrenceIdRaw = line.substring(colonIdx + 1).trim();
       }
     }
   }
@@ -154,9 +163,40 @@ function parseICS(icsText) {
   const cutoffMs = now.getTime() + 14 * 24 * 60 * 60 * 1000;
   const dayNameMap = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
 
+  // Collect all explicitly cancelled instance dates from VEVENT blocks with STATUS:CANCELLED or RECURRENCE-ID
+  const cancelledEvents = [];
+  for (const e of rawEvents) {
+    if (e.status === 'CANCELLED' || e.status === 'CANCEL') {
+      const recDate = parseICalDate(e.recurrenceIdRaw || e.dtStartRaw);
+      if (recDate) {
+        cancelledEvents.push({
+          title: cleanIcalText(e.title || '').toLowerCase(),
+          dateMs: recDate.getTime()
+        });
+      }
+    }
+  }
+
+  // Collect all manual non-recurring (one-time) events to override any recurring instances on the same day
+  const singleManualEvents = [];
+  for (const e of rawEvents) {
+    if (!e.rrule && e.status !== 'CANCELLED' && e.status !== 'CANCEL') {
+      const sDate = parseICalDate(e.dtStartRaw);
+      if (sDate) {
+        singleManualEvents.push({
+          titleNorm: cleanIcalText(e.title || '').toLowerCase().replace(/[^a-z0-9]/g, ''),
+          dateObj: sDate
+        });
+      }
+    }
+  }
+
+  // Filter out standalone CANCELLED event markers so they aren't rendered as active events
+  const validRawEvents = rawEvents.filter((e) => e.status !== 'CANCELLED' && e.status !== 'CANCEL');
+
   const expandedRaw = [];
 
-  for (const e of rawEvents) {
+  for (const e of validRawEvents) {
     const baseStart = parseICalDate(e.dtStartRaw);
     if (!baseStart) continue;
 
@@ -214,6 +254,8 @@ function parseICS(icsText) {
 
     let iterations = 0;
     let generatedCount = 0;
+    const eventTitleLower = cleanIcalText(e.title || '').toLowerCase();
+    const eventTitleNorm = eventTitleLower.replace(/[^a-z0-9]/g, '');
 
     while (current.getTime() <= Math.min(cutoffMs, maxUntilMs) && iterations < 500 && generatedCount < maxCount) {
       iterations++;
@@ -226,13 +268,27 @@ function parseICS(icsText) {
 
           // Only add instance if it hasn't already ended in the past
           if (endMs > now.getTime()) {
-            // Check EXDATE cancellations
-            const isExcluded = e.exdates?.some((ex) => {
-              const exD = parseICalDate(ex);
-              return exD && isSameDay(exD, current);
+            // Check EXDATE comma-separated cancellations and STATUS:CANCELLED RECURRENCE-IDs
+            const isExdated = e.exdates?.some((exStr) => {
+              const exD = parseICalDate(exStr);
+              return exD && (isSameDay(exD, current) || Math.abs(exD.getTime() - curMs) < 18 * 3600 * 1000);
             });
 
-            if (!isExcluded) {
+            const isCancelledRecurrence = cancelledEvents.some((c) => {
+              const timeDiffHours = Math.abs(c.dateMs - curMs) / (3600 * 1000);
+              const sameDay = isSameDay(new Date(c.dateMs), current);
+              const titleMatches = !c.title || !eventTitleLower || c.title.includes(eventTitleLower) || eventTitleLower.includes(c.title);
+              return (timeDiffHours < 24 || sameDay) && titleMatches;
+            });
+
+            // Check if user manually created a single one-time event with same/similar title on this exact day
+            const isOverriddenBySingleEvent = singleManualEvents.some((s) => {
+              const sameDay = isSameDay(s.dateObj, current);
+              const titleMatch = s.titleNorm === eventTitleNorm || (s.titleNorm.length > 4 && eventTitleNorm.length > 4 && (s.titleNorm.includes(eventTitleNorm) || eventTitleNorm.includes(s.titleNorm)));
+              return sameDay && titleMatch;
+            });
+
+            if (!isExdated && !isCancelledRecurrence && !isOverriddenBySingleEvent) {
               expandedRaw.push({
                 ...e,
                 startDateObj: new Date(curMs),
