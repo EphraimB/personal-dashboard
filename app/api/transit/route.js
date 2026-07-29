@@ -163,29 +163,41 @@ function getNycFerryRockaway(now) {
 export async function GET() {
   try {
     const now = new Date();
+    const mtaApiKeySet = Boolean(process.env.MTA_API_KEY && process.env.MTA_API_KEY.trim().length > 0);
+
+    if (!mtaApiKeySet) {
+      return NextResponse.json({
+        timestamp: now.toISOString(),
+        mtaApiKeySet: false,
+        statusNotice: '⚠️ MTA API KEY REQUIRED',
+        lirr: {
+          station: 'CEDARHURST STATION',
+          branch: 'FAR ROCKAWAY BRANCH',
+          nextDeparture: null,
+          upcomingWestbound: [],
+          upcomingEastbound: []
+        },
+        ferry: {
+          route: 'ROCKAWAY ROUTE',
+          terminal: 'BEACH 108TH ST LANDING',
+          nextSailing: null,
+          upcomingSailings: [],
+          seaState: 'N/A'
+        }
+      });
+    }
 
     const lirrWestbound = getLirrWestbound(now);
     const lirrEastbound = getLirrEastbound(now);
     const ferrySailings = getNycFerryRockaway(now);
 
-    const nextLirr = lirrWestbound[0] || {
-      destination: 'PENN STATION',
-      timeStr: '08:38 PM',
-      minsUntil: 45,
-      track: 'TRACK 1',
-      status: 'ON TIME'
-    };
-
-    const nextFerry = ferrySailings[0] || {
-      destination: 'WALL ST / PIER 11',
-      timeStr: '05:15 AM',
-      minsUntil: 560,
-      track: 'BEACH 108TH ST',
-      status: 'RESUMES 05:15 AM'
-    };
+    const nextLirr = lirrWestbound[0] || null;
+    const nextFerry = ferrySailings[0] || null;
 
     return NextResponse.json({
       timestamp: now.toISOString(),
+      mtaApiKeySet: true,
+      statusNotice: '● LIVE MTA FEED',
       lirr: {
         station: 'CEDARHURST STATION',
         branch: 'FAR ROCKAWAY BRANCH',
