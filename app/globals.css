@@ -838,11 +838,11 @@ html, body {
 .ares-tv-app {
   position: relative;
   width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   box-sizing: border-box;
   background-image: url('/location-background.jpeg');
   background-size: cover;
