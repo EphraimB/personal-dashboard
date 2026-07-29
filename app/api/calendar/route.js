@@ -201,12 +201,20 @@ function buildCalendarResponse(eventsList, sourceName) {
     };
   }
 
-  // Sort remaining events by startDateObj ascending
-  const sortedEvents = [...activeAndFuture].sort((a, b) => {
-    const tA = a.startDateObj ? new Date(a.startDateObj).getTime() : 0;
-    const tB = b.startDateObj ? new Date(b.startDateObj).getTime() : 0;
-    return tA - tB;
-  });
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  const cutoffMs = now.getTime() + sevenDaysMs;
+
+  // Sort and filter events up to 7 days out
+  const sortedEvents = [...activeAndFuture]
+    .filter((e) => {
+      const startMs = e.startDateObj ? new Date(e.startDateObj).getTime() : 0;
+      return startMs <= cutoffMs;
+    })
+    .sort((a, b) => {
+      const tA = a.startDateObj ? new Date(a.startDateObj).getTime() : 0;
+      const tB = b.startDateObj ? new Date(b.startDateObj).getTime() : 0;
+      return tA - tB;
+    });
 
   function checkIsLive(e) {
     if (!e || !e.startDateObj) return false;
@@ -215,7 +223,7 @@ function buildCalendarResponse(eventsList, sourceName) {
     return startMs <= now.getTime() && now.getTime() <= endMs;
   }
 
-  // 1. UP NEXT: The single next immediate or currently live event
+  // 1. UP NEXT: The single next immediate or currently live event (for hero banner & map focus)
   const first = sortedEvents[0];
   const firstLoc = formatLocationObject(first.location || '');
   const firstMeetingUrl = first.meetingUrl || extractMeetingUrlFromText(first.location, first.description);
@@ -246,11 +254,12 @@ function buildCalendarResponse(eventsList, sourceName) {
     isUpNext: true
   };
 
-  const remainingEvents = sortedEvents.slice(1);
+  // Include ALL events for the next 7 days in the event stream (do not slice out sortedEvents[0])
+  const allStreamEvents = sortedEvents;
   const todayMonthDay = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
 
   // 2. TODAY Events: All events occurring on today's calendar date
-  const todayItems = remainingEvents.filter((e) => {
+  const todayItems = allStreamEvents.filter((e) => {
     if (!e.startDateObj) return false;
     const d = new Date(e.startDateObj);
     return isSameDay(d, now);
@@ -277,8 +286,8 @@ function buildCalendarResponse(eventsList, sourceName) {
     };
   });
 
-  // 3. UPCOMING DAYS: Group remaining future events by their actual target date
-  const futureItems = remainingEvents.filter((e) => {
+  // 3. UPCOMING DAYS: Group all future events up to 7 days out by their target date
+  const futureItems = allStreamEvents.filter((e) => {
     if (!e.startDateObj) return false;
     const d = new Date(e.startDateObj);
     return !isSameDay(d, now) && d.getTime() > now.getTime();
@@ -399,7 +408,7 @@ export async function GET(request) {
           const gRes = await fetch(
             `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(
               nowIso
-            )}&singleEvents=true&orderBy=startTime&maxResults=15`,
+            )}&singleEvents=true&orderBy=startTime&maxResults=100`,
             {
               headers: { Authorization: `Bearer ${tokens.access_token}` },
               cache: 'no-store'
