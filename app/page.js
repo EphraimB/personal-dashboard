@@ -1035,10 +1035,10 @@ function formatHourLabel(timeStr, index) {
           <div className="hud-calendar-ribbon-layout">
             {/* Left: UP NEXT Spotlight Hero Card (Bold & Larger Font Size) */}
             {calendarData?.upNext && (
-              <div className="up-next-hero-card-compact">
-                <div className="up-next-header-tag">
-                  <span className="up-next-pulse" />
-                  <span className="up-next-label">UP NEXT</span>
+              <div className={`up-next-hero-card-compact ${calendarData.upNext.isLive ? 'up-next-live' : ''}`}>
+                <div className={`up-next-header-tag ${calendarData.upNext.isLive ? 'up-next-live-tag' : ''}`}>
+                  <span className={calendarData.upNext.isLive ? 'live-pulse-dot' : 'up-next-pulse'} />
+                  <span className="up-next-label">{calendarData.upNext.isLive ? 'LIVE NOW' : 'UP NEXT'}</span>
                   <span className="up-next-time-badge">{calendarData.upNext.startTime}</span>
                 </div>
                 <h2 className="up-next-event-title-compact">{calendarData.upNext.title}</h2>
@@ -1063,9 +1063,15 @@ function formatHourLabel(timeStr, index) {
             <div className="hud-cal-horizontal-stream">
               {/* Today's Remaining Events */}
               {calendarData?.todayEvents?.map((evt) => (
-                <div key={evt.id} className="ribbon-event-card ribbon-today">
+                <div key={evt.id} className={`ribbon-event-card ${evt.isLive ? 'ribbon-live' : 'ribbon-today'}`}>
                   <div className="ribbon-card-header">
-                    <span className="ribbon-tag-today">TODAY</span>
+                    {evt.isLive ? (
+                      <span className="ribbon-tag-live">
+                        <span className="live-pulse-dot" /> LIVE
+                      </span>
+                    ) : (
+                      <span className="ribbon-tag-today">TODAY</span>
+                    )}
                     <span className="ribbon-time">{evt.startTime}</span>
                   </div>
                   <span className="ribbon-event-title">{evt.title}</span>
@@ -1090,11 +1096,17 @@ function formatHourLabel(timeStr, index) {
               {/* Upcoming Week Days */}
               {calendarData?.weekDays?.map((day) =>
                 day.events?.map((e) => (
-                  <div key={e.id} className="ribbon-event-card">
+                  <div key={e.id} className={`ribbon-event-card ${e.isLive ? 'ribbon-live' : ''}`}>
                     <div className="ribbon-card-header">
-                      <span className="ribbon-day-name">
-                        {day.dayName} {day.formattedDate ? `• ${day.formattedDate}` : ''}
-                      </span>
+                      {e.isLive ? (
+                        <span className="ribbon-tag-live">
+                          <span className="live-pulse-dot" /> LIVE
+                        </span>
+                      ) : (
+                        <span className="ribbon-day-name">
+                          {day.dayName} {day.formattedDate ? `• ${day.formattedDate}` : ''}
+                        </span>
+                      )}
                       <span className="ribbon-time">{e.time}</span>
                     </div>
                     <span className="ribbon-event-title">{e.title}</span>

@@ -1773,6 +1773,24 @@ html, body {
   background: rgba(255, 87, 34, 0.08);
 }
 
+.ribbon-event-card.ribbon-live {
+  border-left: 4px solid #ff0055;
+  border-color: rgba(255, 0, 85, 0.5);
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.15) 0%, rgba(8, 12, 24, 0.85) 100%);
+  box-shadow: 0 0 20px rgba(255, 0, 85, 0.35);
+}
+
+.up-next-hero-card-compact.up-next-live {
+  border: 2px solid #ff0055;
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.22) 0%, rgba(5, 12, 28, 0.95) 100%);
+  box-shadow: 0 0 30px rgba(255, 0, 85, 0.4);
+}
+
+.up-next-header-tag.up-next-live-tag {
+  background: rgba(255, 0, 85, 0.2);
+  border-color: rgba(255, 0, 85, 0.5);
+}
+
 .ribbon-card-header {
   display: flex;
   align-items: center;
@@ -1784,6 +1802,45 @@ html, body {
   font-weight: 900;
   color: var(--color-orange);
   letter-spacing: 1px;
+}
+
+.ribbon-tag-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #ff2a6d;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(255, 42, 109, 0.8);
+}
+
+.live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  background-color: #ff0055;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #ff0055;
+  animation: livePulseAnim 1.2s infinite ease-in-out;
+}
+
+@keyframes livePulseAnim {
+  0% {
+    transform: scale(0.9);
+    box-shadow: 0 0 4px #ff0055;
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.35);
+    box-shadow: 0 0 14px #ff0055, 0 0 20px #ff0055;
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 4px #ff0055;
+    opacity: 0.8;
+  }
 }
 
 .ribbon-day-name {

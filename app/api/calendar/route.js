@@ -137,25 +137,35 @@ function parseICS(icsText) {
       } else if (line.startsWith('DTSTART;')) {
         const parts = line.split(':');
         if (parts.length > 1) currentEvent.dtStartRaw = parts[1];
+      } else if (line.startsWith('DTEND:')) {
+        currentEvent.dtEndRaw = line.substring(6);
+      } else if (line.startsWith('DTEND;')) {
+        const parts = line.split(':');
+        if (parts.length > 1) currentEvent.dtEndRaw = parts[1];
       }
     }
   }
 
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
 
   const futureEvents = rawEvents
     .map((e) => {
       const parsedDate = parseICalDate(e.dtStartRaw);
+      const parsedEndDate = e.dtEndRaw ? parseICalDate(e.dtEndRaw) : (parsedDate ? new Date(parsedDate.getTime() + 3600000) : null);
       const meetingUrl = extractMeetingUrlFromText(e.url, e.location, e.description);
       return {
         ...e,
         meetingUrl,
         startDateObj: parsedDate,
+        endDateObj: parsedEndDate,
         startTime: parsedDate ? formatTimeString(parsedDate) : 'Today'
       };
     })
-    .filter((e) => e.startDateObj && e.startDateObj.getTime() >= startOfToday.getTime())
+    .filter((e) => {
+      if (!e.startDateObj) return false;
+      const endMs = e.endDateObj ? e.endDateObj.getTime() : e.startDateObj.getTime() + 3600000;
+      return endMs > now.getTime(); // Hide events whose end time has passed
+    })
     .sort((a, b) => (a.startDateObj?.getTime() || 0) - (b.startDateObj?.getTime() || 0));
 
   return futureEvents;
@@ -170,10 +180,20 @@ function isSameDay(d1, d2) {
 }
 
 function buildCalendarResponse(eventsList, sourceName) {
-  if (!eventsList || eventsList.length === 0) {
+  const now = new Date();
+
+  // Filter out any events whose end time has passed (endDateObj < now)
+  const activeAndFuture = (eventsList || []).filter((e) => {
+    if (!e.startDateObj) return false;
+    const startMs = new Date(e.startDateObj).getTime();
+    const endMs = e.endDateObj ? new Date(e.endDateObj).getTime() : startMs + 3600000;
+    return endMs > now.getTime();
+  });
+
+  if (activeAndFuture.length === 0) {
     return {
       success: true,
-      isConnected: false,
+      isConnected: true,
       source: sourceName,
       upNext: null,
       todayEvents: [],
@@ -181,19 +201,25 @@ function buildCalendarResponse(eventsList, sourceName) {
     };
   }
 
-  const now = new Date();
-
-  // Sort all events by startDateObj ascending
-  const sortedEvents = [...eventsList].sort((a, b) => {
+  // Sort remaining events by startDateObj ascending
+  const sortedEvents = [...activeAndFuture].sort((a, b) => {
     const tA = a.startDateObj ? new Date(a.startDateObj).getTime() : 0;
     const tB = b.startDateObj ? new Date(b.startDateObj).getTime() : 0;
     return tA - tB;
   });
 
-  // 1. UP NEXT: The single next immediate event
+  function checkIsLive(e) {
+    if (!e || !e.startDateObj) return false;
+    const startMs = new Date(e.startDateObj).getTime();
+    const endMs = e.endDateObj ? new Date(e.endDateObj).getTime() : startMs + 3600000;
+    return startMs <= now.getTime() && now.getTime() <= endMs;
+  }
+
+  // 1. UP NEXT: The single next immediate or currently live event
   const first = sortedEvents[0];
   const firstLoc = formatLocationObject(first.location || '');
   const firstMeetingUrl = first.meetingUrl || extractMeetingUrlFromText(first.location, first.description);
+  const firstIsLive = checkIsLive(first);
 
   const upNext = {
     id: first.id || 'evt-next-1',
@@ -205,8 +231,9 @@ function buildCalendarResponse(eventsList, sourceName) {
     locationSub: firstLoc.locationSub,
     locationClean: firstLoc.locationClean,
     meetingUrl: firstMeetingUrl,
+    isLive: firstIsLive,
     category: 'Google Event',
-    icon: '⚡',
+    icon: firstIsLive ? '🔴' : '⚡',
     isUpNext: true
   };
 
@@ -222,6 +249,7 @@ function buildCalendarResponse(eventsList, sourceName) {
   const todayEvents = todayItems.map((it, idx) => {
     const locObj = formatLocationObject(it.location || '');
     const meetingUrl = it.meetingUrl || extractMeetingUrlFromText(it.location, it.description);
+    const isLive = checkIsLive(it);
     return {
       id: it.id || `evt-today-${idx}`,
       title: cleanIcalText(it.title) || 'Calendar Event',
@@ -232,8 +260,9 @@ function buildCalendarResponse(eventsList, sourceName) {
       locationSub: locObj.locationSub,
       locationClean: locObj.locationClean,
       meetingUrl,
+      isLive,
       category: 'Event',
-      icon: '📌'
+      icon: isLive ? '🔴' : '📌'
     };
   });
 
@@ -259,6 +288,7 @@ function buildCalendarResponse(eventsList, sourceName) {
 
     const locObj = formatLocationObject(e.location || '');
     const meetingUrl = e.meetingUrl || extractMeetingUrlFromText(e.location, e.description);
+    const isLive = checkIsLive(e);
     dayMap.get(dateKey).events.push({
       id: e.id || `evt-${dateKey}-${dayMap.get(dateKey).events.length}`,
       title: cleanIcalText(e.title) || 'Calendar Event',
@@ -268,8 +298,9 @@ function buildCalendarResponse(eventsList, sourceName) {
       locationSub: locObj.locationSub,
       locationClean: locObj.locationClean,
       meetingUrl,
+      isLive,
       category: 'Upcoming',
-      icon: '📌'
+      icon: isLive ? '🔴' : '📌'
     });
   }
 
@@ -360,12 +391,14 @@ export async function GET(request) {
 
               const gEvents = items.map((it) => {
                 const startDateObj = new Date(it.start?.dateTime || it.start?.date || Date.now());
+                const endDateObj = new Date(it.end?.dateTime || it.end?.date || (startDateObj.getTime() + 3600000));
                 const hangoutUrl = it.hangoutLink || (it.conferenceData?.entryPoints?.find(ep => ep.uri?.startsWith('http'))?.uri) || '';
                 const meetingUrl = extractMeetingUrlFromText(hangoutUrl, it.location, it.description);
                 return {
                   id: it.id,
                   title: it.summary || 'Google Event',
                   startDateObj,
+                  endDateObj,
                   startTime: formatGTime(it.start),
                   endTime: formatGTime(it.end),
                   location: it.location || '',
