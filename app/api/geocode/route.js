@@ -4,8 +4,8 @@ import { NextResponse } from 'next/server';
 const geocodeCache = new Map();
 
 const HOME_LOCATION = {
-  lat: 40.6226,
-  lon: -73.7275,
+  lat: 40.6253378,
+  lon: -73.7206490,
   label: '141 Grove Av, Cedarhurst, NY'
 };
 

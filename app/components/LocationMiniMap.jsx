@@ -161,7 +161,15 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
         [origin.lat, origin.lon],
         [destination.lat, destination.lon]
       ]);
-      mapInstance.fitBounds(bounds, { padding: [25, 25], maxZoom: 15 });
+      mapInstance.fitBounds(bounds, { padding: [35, 35], maxZoom: 15 });
+
+      // Invalidate size to ensure Leaflet recalculates exact canvas dimensions and aligns markers
+      setTimeout(() => {
+        if (mapInstance) {
+          mapInstance.invalidateSize();
+          mapInstance.fitBounds(bounds, { padding: [35, 35], maxZoom: 15 });
+        }
+      }, 150);
 
       mapInstanceRef.current = mapInstance;
     });
