@@ -683,35 +683,86 @@ export default function Home() {
               <span className="matrix-card-title">
                 📅 TACTICAL AGENDA
               </span>
-              <span className="matrix-card-tag">UPCOMING EVENTS</span>
+              <span className="matrix-card-tag">
+                {calendarData?.source ? `SYNC: ${calendarData.source.toUpperCase().replace('_', ' ')}` : 'UPCOMING EVENTS'}
+              </span>
             </div>
 
-            {/* Lead Next Event Countdown Banner */}
-            <div className="agenda-next-banner">
-              <div className="agenda-next-header">
-                <span className="next-tag">UP NEXT • LIVE</span>
-                <span className="next-countdown">IN 42 MINS</span>
+            {!calendarData?.isConnected ? (
+              <div className="agenda-disconnected-box">
+                <span className="agenda-disc-icon">📅</span>
+                <span className="agenda-disc-title">CALENDAR DISCONNECTED</span>
+                <p className="agenda-disc-sub">
+                  Paste your Google iCal URL in Settings or run login script.
+                </p>
+                <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)}>
+                  [ ⚙ CONNECT CALENDAR ]
+                </button>
               </div>
-              <div className="next-title">
-                {calendarData?.upNext?.title || 'Dinner at Prime 1024'}
-              </div>
-            </div>
+            ) : (
+              <>
+                {/* Lead Next Event Countdown Banner */}
+                {calendarData?.upNext ? (
+                  <div className="agenda-next-banner">
+                    <div className="agenda-next-header">
+                      <span className={calendarData.upNext.isLive ? 'next-tag next-tag-live' : 'next-tag'}>
+                        {calendarData.upNext.isLive ? '● LIVE NOW' : 'UP NEXT'}
+                      </span>
+                      <span className="next-countdown">
+                        {calendarData.upNext.isLive
+                          ? 'IN PROGRESS'
+                          : calendarData.upNext.minsUntil !== undefined && calendarData.upNext.minsUntil < 60
+                          ? `IN ${calendarData.upNext.minsUntil} MINS`
+                          : calendarData.upNext.startTime}
+                      </span>
+                    </div>
+                    <div className="next-title">{calendarData.upNext.title}</div>
+                    {calendarData.upNext.locationMain && (
+                      <div className="next-loc-sub">📍 {calendarData.upNext.locationMain}</div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="agenda-empty-banner">
+                    <span>// NO MORE EVENTS SCHEDULED TODAY</span>
+                  </div>
+                )}
 
-            {/* Event List Stream */}
-            <div className="agenda-events-stream">
-              <div className="agenda-event-row">
-                <div className="agenda-event-time">06:00 PM • TODAY</div>
-                <div className="agenda-event-name">Dinner at Prime 1024 (Roslyn, NY)</div>
-              </div>
-              <div className="agenda-event-row">
-                <div className="agenda-event-time">07:30 PM • TODAY</div>
-                <div className="agenda-event-name">LIRR Commute to Midtown (Penn Station)</div>
-              </div>
-              <div className="agenda-event-row">
-                <div className="agenda-event-time">09:00 AM • TOMORROW</div>
-                <div className="agenda-event-name">Architecture Sync & Design Review</div>
-              </div>
-            </div>
+                {/* Event List Stream */}
+                <div className="agenda-events-stream">
+                  {/* Remaining Today Events */}
+                  {calendarData?.todayEvents?.map((evt) => (
+                    <div key={evt.id} className="agenda-event-row">
+                      <div className="agenda-event-time">
+                        {evt.startTime} • TODAY {evt.isLive && <span style={{ color: 'var(--color-green)' }}>● LIVE</span>}
+                      </div>
+                      <div className="agenda-event-name">{evt.title}</div>
+                      {evt.locationMain && <div className="agenda-event-loc">📍 {evt.locationMain}</div>}
+                    </div>
+                  ))}
+
+                  {/* Upcoming Week Days Events */}
+                  {calendarData?.weekDays?.map((day) =>
+                    day.events?.map((e) => (
+                      <div key={`${day.dateKey}-${e.id}`} className="agenda-event-row">
+                        <div className="agenda-event-time">
+                          {e.startTime} • {day.dayName.toUpperCase()}, {day.shortDate}
+                        </div>
+                        <div className="agenda-event-name">{e.title}</div>
+                        {e.locationMain && <div className="agenda-event-loc">📍 {e.locationMain}</div>}
+                      </div>
+                    ))
+                  )}
+
+                  {(!calendarData?.todayEvents || calendarData.todayEvents.length === 0) &&
+                    (!calendarData?.weekDays || calendarData.weekDays.length === 0) &&
+                    !calendarData?.upNext && (
+                      <div className="agenda-empty-sub">
+                        <span>No upcoming events this week.</span>
+                      </div>
+                    )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* 3B: LOCATION MINI-MAP */}
