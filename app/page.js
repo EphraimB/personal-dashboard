@@ -619,33 +619,8 @@ export default function Home() {
           )}
         </div>
 
-        {/* ROWS 2-3 (Col 5): Right Column System Telemetry & Quick Status Widget */}
-        <div className="grid-cell-right">
-          <div className="hud-standalone-telemetry-banner">
-            <div className="telemetry-header">
-              <span className="telemetry-tag">// SYSTEM TELEMETRY</span>
-              <h3 className="telemetry-title">ARES CITY STATUS</h3>
-            </div>
-            <div className="telemetry-grid-stack">
-              <div className="telemetry-stat-card">
-                <span className="stat-card-label">STORAGE / ONEDRIVE</span>
-                <span className="stat-card-val">{photoList.length} PHOTOS LOADED</span>
-              </div>
-              <div className="telemetry-stat-card">
-                <span className="stat-card-label">CALENDAR SYNC</span>
-                <span className="stat-card-val">{calendarData?.source?.toUpperCase() || 'ONLINE'}</span>
-              </div>
-              <div className="telemetry-stat-card">
-                <span className="stat-card-label">WEATHER STATION</span>
-                <span className="stat-card-val">CEDARHURST, NY</span>
-              </div>
-              <div className="telemetry-stat-card">
-                <span className="stat-card-label">ARES SOLAR CLOCK</span>
-                <span className="stat-card-val">{aresSolarClock}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* ROWS 2-3 (Col 5): Open Spacious Column after Slideshow */}
+        <div className="grid-cell-right" />
 
         {/* ROW 4 (Cols 1-5): Bottom Spanning Google Calendar Stream */}
         <div className="grid-cell-calendar">
