@@ -1085,7 +1085,9 @@ function formatHourLabel(timeStr, index) {
                 day.events?.map((e) => (
                   <div key={e.id} className="ribbon-event-card">
                     <div className="ribbon-card-header">
-                      <span className="ribbon-day-name">{day.dayName}</span>
+                      <span className="ribbon-day-name">
+                        {day.dayName} {day.formattedDate ? `• ${day.formattedDate}` : ''}
+                      </span>
                       <span className="ribbon-time">{e.time}</span>
                     </div>
                     <span className="ribbon-event-title">{e.title}</span>

@@ -5,145 +5,56 @@ import path from 'path';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Helper to format Date object into YYYY-MM-DD
-function formatDateISO(date) {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
+function parseICalDate(icalStr) {
+  if (!icalStr) return null;
 
-// Helper to format Date object into 12-hour time string "9:30 AM"
-function formatTimeString(date) {
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-}
+  try {
+    const cleanStr = icalStr.replace(/[^0-9T]/g, '');
 
-// Generate realistic default / sample schedule for today and rest of week
-function generateSampleSchedule() {
-  const now = new Date();
-  
-  // Today's events relative to current time
-  const t1 = new Date(now.getTime() + 35 * 60 * 1000); // 35 mins from now (UP NEXT)
-  const t1End = new Date(t1.getTime() + 45 * 60 * 1000);
-  
-  const t2 = new Date(now.getTime() + 3 * 3600 * 1000); // 3 hours from now
-  const t2End = new Date(t2.getTime() + 60 * 60 * 1000);
-  
-  const t3 = new Date(now.getTime() + 7 * 3600 * 1000); // 7 hours from now
-  const t3End = new Date(t3.getTime() + 90 * 60 * 1000);
-
-  const todayStr = formatDateISO(now);
-
-  const upNext = {
-    id: 'sample-next-1',
-    title: 'Connect to a Google Calendar',
-    startTime: formatTimeString(t1),
-    endTime: formatTimeString(t1End),
-    startRaw: t1.toISOString(),
-    endRaw: t1End.toISOString(),
-    location: 'Run ./scripts/google-calendar-login.sh or paste iCal URL',
-    category: 'Setup Needed',
-    icon: '⚡',
-    isUpNext: true
-  };
-
-  const todayEvents = [
-    {
-      id: 'sample-today-2',
-      title: 'Connect to a Google Calendar',
-      startTime: formatTimeString(t2),
-      endTime: formatTimeString(t2End),
-      startRaw: t2.toISOString(),
-      endRaw: t2End.toISOString(),
-      location: 'Settings Modal',
-      category: 'Setup',
-      icon: '📌'
-    },
-    {
-      id: 'sample-today-3',
-      title: 'Connect to a Google Calendar',
-      startTime: formatTimeString(t3),
-      endTime: formatTimeString(t3End),
-      startRaw: t3.toISOString(),
-      endRaw: t3End.toISOString(),
-      location: 'Settings Modal',
-      category: 'Setup',
-      icon: '📌'
+    if (cleanStr.length === 8) {
+      const year = parseInt(cleanStr.substring(0, 4), 10);
+      const month = parseInt(cleanStr.substring(4, 6), 10) - 1;
+      const day = parseInt(cleanStr.substring(6, 8), 10);
+      return new Date(year, month, day, 9, 0, 0);
     }
-  ];
 
-  // Generate Rest of Week days (next 5 days)
-  const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-  const weekDays = [];
+    if (cleanStr.length >= 15) {
+      const year = parseInt(cleanStr.substring(0, 4), 10);
+      const month = parseInt(cleanStr.substring(4, 6), 10) - 1;
+      const day = parseInt(cleanStr.substring(6, 8), 10);
+      const hour = parseInt(cleanStr.substring(9, 11), 10);
+      const minute = parseInt(cleanStr.substring(11, 13), 10);
+      const second = parseInt(cleanStr.substring(13, 15), 10);
 
-  for (let i = 1; i <= 5; i++) {
-    const d = new Date(now);
-    d.setDate(now.getDate() + i);
-    const dateStr = formatDateISO(d);
-    const dayName = dayNames[d.getDay()];
-
-    const dayEvents = [
-      {
-        id: `sample-w-${i}-1`,
-        title: 'Connect to a Google Calendar',
-        time: '10:00 AM',
-        location: 'Settings Modal',
-        category: 'Setup',
-        icon: '📌'
-      },
-      {
-        id: `sample-w-${i}-2`,
-        title: 'Connect to a Google Calendar',
-        time: '02:30 PM',
-        location: 'Settings Modal',
-        category: 'Setup',
-        icon: '📌'
+      if (icalStr.endsWith('Z')) {
+        return new Date(Date.UTC(year, month, day, hour, minute, second));
       }
-    ];
-
-    weekDays.push({
-      dateStr,
-      dayName,
-      formattedDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      events: dayEvents
-    });
-  }
-
-  return {
-    todayStr,
-    upNext,
-    todayEvents,
-    weekDays
-  };
-}
-
-// Robust iCal Date Parser (Converts UTC to Local System Timezone)
-function parseICalDate(dtStr) {
-  if (!dtStr) return null;
-  const isUtc = dtStr.trim().toUpperCase().endsWith('Z');
-  const clean = dtStr.replace(/[^0-9T]/g, '');
-  if (clean.length >= 8) {
-    const yyyy = parseInt(clean.substring(0, 4), 10);
-    const mm = parseInt(clean.substring(4, 6), 10) - 1;
-    const dd = parseInt(clean.substring(6, 8), 10);
-    let hh = 0, min = 0, ss = 0;
-    if (clean.length >= 13 && clean.includes('T')) {
-      const tIdx = clean.indexOf('T');
-      hh = parseInt(clean.substring(tIdx + 1, tIdx + 3), 10) || 0;
-      min = parseInt(clean.substring(tIdx + 3, tIdx + 5), 10) || 0;
-      ss = parseInt(clean.substring(tIdx + 5, tIdx + 7), 10) || 0;
+      return new Date(year, month, day, hour, minute, second);
     }
-    if (isUtc) {
-      return new Date(Date.UTC(yyyy, mm, dd, hh, min, ss));
-    }
-    return new Date(yyyy, mm, dd, hh, min, ss);
+  } catch (e) {
+    console.error('Failed parsing iCal date:', icalStr, e);
   }
   return null;
 }
 
+function formatTimeString(dateObj) {
+  if (!dateObj || isNaN(dateObj.getTime())) return 'Scheduled';
+  return dateObj.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+}
+
+function formatDateISO(dateObj) {
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function unfoldICS(icsText) {
   if (!icsText) return '';
-  // RFC 5545: Unfold lines that continue on next line starting with space or tab
   return icsText.replace(/\r?\n[ \t]/g, '');
 }
 
@@ -184,7 +95,6 @@ function formatLocationObject(rawLocation) {
   };
 }
 
-// Simple iCal parser for ICS feeds (Filters out past events from yesterday and previous years)
 function parseICS(icsText) {
   const rawEvents = [];
   const unfoldedText = unfoldICS(icsText);
@@ -216,7 +126,6 @@ function parseICS(icsText) {
     }
   }
 
-  // Filter & sort: Only keep events starting from today onwards!
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
 
@@ -235,6 +144,14 @@ function parseICS(icsText) {
   return futureEvents;
 }
 
+function isSameDay(d1, d2) {
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+}
+
 function buildCalendarResponse(eventsList, sourceName) {
   if (!eventsList || eventsList.length === 0) {
     return {
@@ -247,7 +164,17 @@ function buildCalendarResponse(eventsList, sourceName) {
     };
   }
 
-  const first = eventsList[0];
+  const now = new Date();
+
+  // Sort all events by startDateObj ascending
+  const sortedEvents = [...eventsList].sort((a, b) => {
+    const tA = a.startDateObj ? new Date(a.startDateObj).getTime() : 0;
+    const tB = b.startDateObj ? new Date(b.startDateObj).getTime() : 0;
+    return tA - tB;
+  });
+
+  // 1. UP NEXT: The single next immediate event
+  const first = sortedEvents[0];
   const firstLoc = formatLocationObject(first.location || 'Google Calendar');
 
   const upNext = {
@@ -264,7 +191,16 @@ function buildCalendarResponse(eventsList, sourceName) {
     isUpNext: true
   };
 
-  const todayEvents = eventsList.slice(1, 4).map((it, idx) => {
+  const remainingEvents = sortedEvents.slice(1);
+
+  // 2. TODAY Events: All events occurring on today's calendar date
+  const todayItems = remainingEvents.filter((e) => {
+    if (!e.startDateObj) return false;
+    const d = new Date(e.startDateObj);
+    return isSameDay(d, now);
+  });
+
+  const todayEvents = todayItems.map((it, idx) => {
     const locObj = formatLocationObject(it.location || 'Google Calendar');
     return {
       id: it.id || `evt-today-${idx}`,
@@ -280,37 +216,50 @@ function buildCalendarResponse(eventsList, sourceName) {
     };
   });
 
-  const now = new Date();
+  // 3. UPCOMING DAYS: Group remaining future events by their actual target date
+  const futureItems = remainingEvents.filter((e) => {
+    if (!e.startDateObj) return false;
+    const d = new Date(e.startDateObj);
+    return !isSameDay(d, now) && d.getTime() > now.getTime();
+  });
+
+  const dayMap = new Map(); // key: 'YYYY-MM-DD' -> { dObj, events: [] }
+
+  for (const e of futureItems) {
+    const d = new Date(e.startDateObj);
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    if (!dayMap.has(dateKey)) {
+      dayMap.set(dateKey, {
+        dObj: d,
+        events: []
+      });
+    }
+
+    const locObj = formatLocationObject(e.location || '');
+    dayMap.get(dateKey).events.push({
+      id: e.id || `evt-${dateKey}-${dayMap.get(dateKey).events.length}`,
+      title: cleanIcalText(e.title) || 'Calendar Event',
+      time: e.startTime || '10:00 AM',
+      location: locObj.location,
+      locationMain: locObj.locationMain,
+      locationSub: locObj.locationSub,
+      locationClean: locObj.locationClean,
+      category: 'Upcoming',
+      icon: '📌'
+    });
+  }
+
   const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
   const weekDays = [];
 
-  for (let i = 1; i <= 5; i++) {
-    const d = new Date(now);
-    d.setDate(now.getDate() + i);
-    const dateStr = formatDateISO(d);
-    const dayName = dayNames[d.getDay()];
-
-    const remaining = eventsList.slice(4 + (i - 1) * 2, 4 + i * 2);
-    const dayEvents = remaining.map((e, idx) => {
-      const locObj = formatLocationObject(e.location || '');
-      return {
-        id: e.id || `evt-w-${i}-${idx}`,
-        title: cleanIcalText(e.title) || 'Calendar Event',
-        time: e.startTime || '10:00 AM',
-        location: locObj.location,
-        locationMain: locObj.locationMain,
-        locationSub: locObj.locationSub,
-        locationClean: locObj.locationClean,
-        category: 'Upcoming',
-        icon: '📌'
-      };
-    });
-
+  for (const [dateKey, entry] of dayMap.entries()) {
+    const d = entry.dObj;
     weekDays.push({
-      dateStr,
-      dayName,
+      dateStr: dateKey,
+      dayName: dayNames[d.getDay()],
       formattedDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      events: dayEvents
+      events: entry.events
     });
   }
 
@@ -386,13 +335,17 @@ export async function GET(request) {
                 return formatTimeString(d);
               };
 
-              const gEvents = items.map((it) => ({
-                id: it.id,
-                title: it.summary || 'Google Event',
-                startTime: formatGTime(it.start),
-                endTime: formatGTime(it.end),
-                location: it.location || 'Google Calendar'
-              }));
+              const gEvents = items.map((it) => {
+                const startDateObj = new Date(it.start?.dateTime || it.start?.date || Date.now());
+                return {
+                  id: it.id,
+                  title: it.summary || 'Google Event',
+                  startDateObj,
+                  startTime: formatGTime(it.start),
+                  endTime: formatGTime(it.end),
+                  location: it.location || 'Google Calendar'
+                };
+              });
 
               return NextResponse.json(buildCalendarResponse(gEvents, 'google_api'));
             }

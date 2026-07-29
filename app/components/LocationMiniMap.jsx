@@ -2,6 +2,17 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
+function parseDurationToMins(durStr) {
+  if (!durStr) return 9999;
+  if (durStr.includes('< 1m')) return 0.5;
+  let total = 0;
+  const hMatch = durStr.match(/(\d+)\s*h/);
+  const mMatch = durStr.match(/(\d+)\s*m/);
+  if (hMatch) total += parseInt(hMatch[1], 10) * 60;
+  if (mMatch) total += parseInt(mMatch[1], 10);
+  return total > 0 ? total : 9999;
+}
+
 export default function LocationMiniMap({ location, compact = false }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -154,6 +165,22 @@ export default function LocationMiniMap({ location, compact = false }) {
 
   const travel = geoData.travelTimes || { walk: '18m', bike: '6m', transit: '14m', drive: '5m' };
 
+  const modeMins = {
+    walk: parseDurationToMins(travel.walk),
+    bike: parseDurationToMins(travel.bike),
+    transit: parseDurationToMins(travel.transit),
+    drive: parseDurationToMins(travel.drive)
+  };
+
+  let fastestKey = 'drive';
+  let minMins = 9999;
+  for (const [key, mins] of Object.entries(modeMins)) {
+    if (mins < minMins) {
+      minMins = mins;
+      fastestKey = key;
+    }
+  }
+
   return (
     <div className={`hud-mini-map-wrapper ${compact ? 'hud-mini-map-compact' : ''}`}>
       <div className="hud-mini-map-header">
@@ -173,22 +200,22 @@ export default function LocationMiniMap({ location, compact = false }) {
 
       {/* Horizontal Multi-Modal Travel Time Bar */}
       <div className="hud-travel-mode-bar">
-        <div className="travel-mode-item" title="Walking Duration">
+        <div className={`travel-mode-item ${fastestKey === 'walk' ? 'travel-mode-fastest' : ''}`} title="Walking Duration">
           <span className="travel-mode-icon">🚶</span>
           <span className="travel-mode-val">{travel.walk}</span>
         </div>
         <span className="travel-mode-sep">•</span>
-        <div className="travel-mode-item" title="Biking Duration">
+        <div className={`travel-mode-item ${fastestKey === 'bike' ? 'travel-mode-fastest' : ''}`} title="Biking Duration">
           <span className="travel-mode-icon">🚴</span>
           <span className="travel-mode-val">{travel.bike}</span>
         </div>
         <span className="travel-mode-sep">•</span>
-        <div className="travel-mode-item" title="Public Transit / Train Duration">
+        <div className={`travel-mode-item ${fastestKey === 'transit' ? 'travel-mode-fastest' : ''}`} title="Public Transit / Train Duration">
           <span className="travel-mode-icon">🚆</span>
           <span className="travel-mode-val">{travel.transit}</span>
         </div>
         <span className="travel-mode-sep">•</span>
-        <div className="travel-mode-item" title="Driving Duration">
+        <div className={`travel-mode-item ${fastestKey === 'drive' ? 'travel-mode-fastest' : ''}`} title="Driving Duration">
           <span className="travel-mode-icon">🚗</span>
           <span className="travel-mode-val">{travel.drive}</span>
         </div>
