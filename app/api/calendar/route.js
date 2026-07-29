@@ -266,8 +266,8 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     let icalUrl = searchParams.get('icalUrl');
 
-    // 1. Check if google_calendar_ical.json exists on disk (saved by SSH script)
-    const icalFilePath = path.join(process.cwd(), 'dashboard', 'google_calendar_ical.json');
+    const dashboardDir = path.join(process.cwd(), 'dashboard');
+    const icalFilePath = path.join(dashboardDir, 'google_calendar_ical.json');
     if (!icalUrl && fs.existsSync(icalFilePath)) {
       try {
         const rawIcal = fs.readFileSync(icalFilePath, 'utf8');
@@ -297,7 +297,7 @@ export async function GET(request) {
     }
 
     // 3. Check if google_calendar_tokens.json exists
-    const tokenFilePath = path.join(process.cwd(), 'dashboard', 'google_calendar_tokens.json');
+    const tokenFilePath = path.join(dashboardDir, 'google_calendar_tokens.json');
     if (fs.existsSync(tokenFilePath)) {
       try {
         const rawTokens = fs.readFileSync(tokenFilePath, 'utf8');
