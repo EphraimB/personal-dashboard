@@ -734,39 +734,43 @@ export default function Home() {
 
                 {/* Event List Stream */}
                 <div className="agenda-events-stream">
-                  {/* Remaining Today Events */}
-                  {calendarData?.todayEvents?.map((evt) => (
-                    <div key={evt.id} className="agenda-event-row">
-                      <div className="agenda-event-time">
-                        📅 {evt.dateStr || 'TODAY'} • ⏰ {evt.startTime || evt.time || 'Scheduled'}{' '}
-                        {evt.isLive && <span style={{ color: 'var(--color-green)' }}>● LIVE</span>}
+                  {/* Remaining Today Events (Excluding the event already featured in UP NEXT) */}
+                  {calendarData?.todayEvents
+                    ?.filter((evt) => evt.id !== calendarData?.upNext?.id && evt.title !== calendarData?.upNext?.title)
+                    ?.map((evt) => (
+                      <div key={evt.id} className="agenda-event-row">
+                        <div className="agenda-event-time">
+                          📅 {evt.dateStr || 'TODAY'} • ⏰ {evt.startTime || evt.time || 'Scheduled'}{' '}
+                          {evt.isLive && <span style={{ color: 'var(--color-green)' }}>● LIVE</span>}
+                        </div>
+                        <div className="agenda-event-name">{evt.title}</div>
+                        {evt.locationMain && <div className="agenda-event-loc">📍 {evt.locationMain}</div>}
                       </div>
-                      <div className="agenda-event-name">{evt.title}</div>
-                      {evt.locationMain && <div className="agenda-event-loc">📍 {evt.locationMain}</div>}
-                    </div>
-                  ))}
+                    ))}
 
                   {/* Upcoming Week Days Events */}
                   {calendarData?.weekDays?.map((day) =>
-                    day.events?.map((e) => {
-                      const displayDate =
-                        e.dateStr ||
-                        (day.dayName
-                          ? `${day.dayName.toUpperCase()}${
-                              day.formattedDate || day.shortDate ? `, ${day.formattedDate || day.shortDate}` : ''
-                            }`
-                          : 'UPCOMING');
-                      const displayTime = e.startTime || e.time || 'Scheduled';
-                      return (
-                        <div key={`${day.dateStr || day.dayName}-${e.id}`} className="agenda-event-row">
-                          <div className="agenda-event-time">
-                            📅 {displayDate} • ⏰ {displayTime}
+                    day.events
+                      ?.filter((e) => e.id !== calendarData?.upNext?.id && e.title !== calendarData?.upNext?.title)
+                      ?.map((e) => {
+                        const displayDate =
+                          e.dateStr ||
+                          (day.dayName
+                            ? `${day.dayName.toUpperCase()}${
+                                day.formattedDate || day.shortDate ? `, ${day.formattedDate || day.shortDate}` : ''
+                              }`
+                            : 'UPCOMING');
+                        const displayTime = e.startTime || e.time || 'Scheduled';
+                        return (
+                          <div key={`${day.dateStr || day.dayName}-${e.id}`} className="agenda-event-row">
+                            <div className="agenda-event-time">
+                              📅 {displayDate} • ⏰ {displayTime}
+                            </div>
+                            <div className="agenda-event-name">{e.title}</div>
+                            {e.locationMain && <div className="agenda-event-loc">📍 {e.locationMain}</div>}
                           </div>
-                          <div className="agenda-event-name">{e.title}</div>
-                          {e.locationMain && <div className="agenda-event-loc">📍 {e.locationMain}</div>}
-                        </div>
-                      );
-                    })
+                        );
+                      })
                   )}
 
                   {(!calendarData?.todayEvents || calendarData.todayEvents.length === 0) &&
