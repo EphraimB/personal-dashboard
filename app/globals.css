@@ -1701,23 +1701,24 @@ html, body {
 }
 
 .up-next-hero-card-compact {
-  flex: 0 0 auto;
-  min-width: 250px;
-  max-width: 360px;
+  flex: 0 0 270px;
+  width: 270px;
+  min-width: 270px;
+  max-width: 270px;
   background: linear-gradient(135deg, rgba(0, 240, 255, 0.16) 0%, rgba(5, 12, 28, 0.9) 100%);
   border: 2px solid var(--color-cyan);
-  border-radius: 14px;
-  padding: 10px 16px;
+  border-radius: 12px;
+  padding: 10px 14px;
   box-shadow: 0 0 25px rgba(0, 240, 255, 0.25);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   gap: 4px;
 }
 
 .up-next-event-title-compact {
   font-family: var(--font-sans);
-  font-size: clamp(1.1rem, 1.35vw, 1.7rem);
+  font-size: clamp(1.05rem, 1.2vw, 1.4rem);
   font-weight: 900;
   color: #ffffff;
   white-space: nowrap;
@@ -1737,7 +1738,7 @@ html, body {
 .hud-cal-horizontal-stream {
   flex: 1;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 14px;
   overflow-x: auto;
   padding: 4px 36px 12px 4px;
@@ -1751,9 +1752,10 @@ html, body {
 }
 
 .ribbon-event-card {
-  flex: 0 0 auto;
-  min-width: 220px;
-  max-width: 285px;
+  flex: 0 0 270px;
+  width: 270px;
+  min-width: 270px;
+  max-width: 270px;
   background: rgba(8, 12, 24, 0.75);
   border: 1px solid rgba(0, 240, 255, 0.25);
   border-left: 3.5px solid var(--color-cyan);
@@ -1761,6 +1763,7 @@ html, body {
   padding: 10px 14px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: 4px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
