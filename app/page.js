@@ -914,7 +914,8 @@ function formatHourLabel(timeStr, index) {
         )}
 
         {/* Centered 16:9 Glassmorphic Photo Slideshow Viewport */}
-        <div className="slideshow-viewport-centered">
+        {config.showMiddleSlideshow !== false && (
+          <div className="slideshow-viewport-centered">
           <div className="card-corner card-corner--tl" />
           <div className="card-corner card-corner--tr" />
           <div className="card-corner card-corner--bl" />
@@ -999,6 +1000,7 @@ function formatHourLabel(timeStr, index) {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* Google Calendar & Up Next Schedule Section (Placed Directly Below Slideshow) */}
@@ -1328,6 +1330,15 @@ function formatHourLabel(timeStr, index) {
                     onChange={(e) => setConfig({ ...config, showDescription: e.target.checked })}
                   />
                   <label htmlFor="cfg-desc">Display Photo Description & Caption</label>
+                </div>
+                <div className="form-row checkbox-row">
+                  <input
+                    type="checkbox"
+                    id="cfg-middleslideshow"
+                    checked={config.showMiddleSlideshow !== false}
+                    onChange={(e) => setConfig({ ...config, showMiddleSlideshow: e.target.checked })}
+                  />
+                  <label htmlFor="cfg-middleslideshow">Display Center Photo Slideshow Frame</label>
                 </div>
                 <div className="form-row checkbox-row">
                   <input
