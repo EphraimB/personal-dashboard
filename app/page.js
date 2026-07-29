@@ -619,8 +619,41 @@ export default function Home() {
           )}
         </div>
 
-        {/* ROWS 2-3 (Col 5): Open Spacious Column after Slideshow */}
-        <div className="grid-cell-right" />
+        {/* ROWS 2-3 (Col 5): Right Column 5-Day Daily Weather Forecast Widget */}
+        <div className="grid-cell-right">
+          {config.showWeatherSidebars !== false && (
+            <div className="hud-5day-forecast-banner">
+              <div className="forecast-header">
+                <span className="forecast-tag">// CEDARHURST FORECAST</span>
+                <h3 className="forecast-title">5-DAY OUTLOOK</h3>
+              </div>
+              <div className="forecast-days-list">
+                {(weatherData?.daily?.time || []).slice(0, 5).map((dateStr, idx) => {
+                  const dateObj = new Date(dateStr + 'T00:00:00');
+                  const dayName = isNaN(dateObj.getTime())
+                    ? `DAY ${idx + 1}`
+                    : idx === 0
+                    ? 'TODAY'
+                    : dateObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+                  const code = weatherData?.daily?.weather_code?.[idx] ?? 0;
+                  const maxTemp = weatherData?.daily?.temperature_2m_max?.[idx];
+                  const minTemp = weatherData?.daily?.temperature_2m_min?.[idx];
+
+                  return (
+                    <div key={idx} className="forecast-day-row">
+                      <span className="f-day-name">{dayName}</span>
+                      <WeatherSvg code={code} className="f-day-icon" />
+                      <div className="f-day-temps">
+                        <span className="f-hi">{maxTemp !== undefined ? Math.round(maxTemp) : '--'}°</span>
+                        <span className="f-lo">{minTemp !== undefined ? Math.round(minTemp) : '--'}°</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* ROW 4 (Cols 1-5): Bottom Spanning Google Calendar Stream */}
         <div className="grid-cell-calendar">
