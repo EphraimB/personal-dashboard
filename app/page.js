@@ -1044,8 +1044,13 @@ function formatHourLabel(timeStr, index) {
                 <h2 className="up-next-event-title-compact">{calendarData.upNext.title}</h2>
                 {calendarData.upNext.location && (
                   <>
-                    <span className="up-next-meta-item-compact">📍 {calendarData.upNext.location}</span>
-                    <LocationMiniMap location={calendarData.upNext.location} />
+                    <span className="up-next-meta-item-compact">
+                      📍 {calendarData.upNext.locationMain || calendarData.upNext.location}
+                    </span>
+                    {calendarData.upNext.locationSub && (
+                      <span className="up-next-meta-loc-sub">{calendarData.upNext.locationSub}</span>
+                    )}
+                    <LocationMiniMap location={calendarData.upNext.locationClean || calendarData.upNext.location} />
                   </>
                 )}
               </div>
@@ -1063,8 +1068,13 @@ function formatHourLabel(timeStr, index) {
                   <span className="ribbon-event-title">{evt.title}</span>
                   {evt.location && (
                     <>
-                      <span className="ribbon-event-loc">📍 {evt.location}</span>
-                      <LocationMiniMap location={evt.location} compact />
+                      <span className="ribbon-event-loc">
+                        📍 {evt.locationMain || evt.location}
+                      </span>
+                      {evt.locationSub && (
+                        <span className="ribbon-event-loc-sub">{evt.locationSub}</span>
+                      )}
+                      <LocationMiniMap location={evt.locationClean || evt.location} compact />
                     </>
                   )}
                 </div>
@@ -1081,8 +1091,13 @@ function formatHourLabel(timeStr, index) {
                     <span className="ribbon-event-title">{e.title}</span>
                     {e.location && (
                       <>
-                        <span className="ribbon-event-loc">📍 {e.location}</span>
-                        <LocationMiniMap location={e.location} compact />
+                        <span className="ribbon-event-loc">
+                          📍 {e.locationMain || e.location}
+                        </span>
+                        {e.locationSub && (
+                          <span className="ribbon-event-loc-sub">{e.locationSub}</span>
+                        )}
+                        <LocationMiniMap location={e.locationClean || e.location} compact />
                       </>
                     )}
                   </div>

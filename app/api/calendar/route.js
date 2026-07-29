@@ -141,10 +141,54 @@ function parseICalDate(dtStr) {
   return null;
 }
 
+function unfoldICS(icsText) {
+  if (!icsText) return '';
+  // RFC 5545: Unfold lines that continue on next line starting with space or tab
+  return icsText.replace(/\r?\n[ \t]/g, '');
+}
+
+function cleanIcalText(str) {
+  if (!str) return '';
+  return str
+    .replace(/\\n/gi, '\n')
+    .replace(/\\,/g, ',')
+    .replace(/\\;/g, ';')
+    .replace(/\\\\/g, '\\')
+    .trim();
+}
+
+function formatLocationObject(rawLocation) {
+  if (!rawLocation) {
+    return { location: '', locationMain: '', locationSub: '', locationClean: '' };
+  }
+
+  const cleaned = cleanIcalText(rawLocation);
+  const lines = cleaned
+    .split(/\r?\n/)
+    .map((line) => line.trim().replace(/^[,;\s]+|[,;\s]+$/g, ''))
+    .filter(Boolean);
+
+  if (lines.length === 0) {
+    return { location: '', locationMain: '', locationSub: '', locationClean: '' };
+  }
+
+  const locationMain = lines[0];
+  const locationSub = lines.slice(1).join(', ');
+  const locationClean = lines.join(', ');
+
+  return {
+    location: cleaned,
+    locationMain,
+    locationSub,
+    locationClean
+  };
+}
+
 // Simple iCal parser for ICS feeds (Filters out past events from yesterday and previous years)
 function parseICS(icsText) {
   const rawEvents = [];
-  const lines = icsText.split(/\r?\n/);
+  const unfoldedText = unfoldICS(icsText);
+  const lines = unfoldedText.split(/\r?\n/);
   let currentEvent = null;
 
   for (let i = 0; i < lines.length; i++) {
@@ -158,9 +202,11 @@ function parseICS(icsText) {
       currentEvent = null;
     } else if (currentEvent) {
       if (line.startsWith('SUMMARY:')) {
-        currentEvent.title = line.substring(8);
+        currentEvent.title = cleanIcalText(line.substring(8));
       } else if (line.startsWith('LOCATION:')) {
         currentEvent.location = line.substring(9);
+      } else if (line.startsWith('DESCRIPTION:')) {
+        currentEvent.description = cleanIcalText(line.substring(12));
       } else if (line.startsWith('DTSTART:')) {
         currentEvent.dtStartRaw = line.substring(8);
       } else if (line.startsWith('DTSTART;')) {
@@ -202,26 +248,37 @@ function buildCalendarResponse(eventsList, sourceName) {
   }
 
   const first = eventsList[0];
+  const firstLoc = formatLocationObject(first.location || 'Google Calendar');
+
   const upNext = {
     id: first.id || 'evt-next-1',
-    title: first.title || 'Untitled Event',
+    title: cleanIcalText(first.title) || 'Untitled Event',
     startTime: first.startTime || 'Upcoming',
     endTime: first.endTime || '',
-    location: first.location || 'Google Calendar',
+    location: firstLoc.location,
+    locationMain: firstLoc.locationMain,
+    locationSub: firstLoc.locationSub,
+    locationClean: firstLoc.locationClean,
     category: 'Google Event',
     icon: '⚡',
     isUpNext: true
   };
 
-  const todayEvents = eventsList.slice(1, 4).map((it, idx) => ({
-    id: it.id || `evt-today-${idx}`,
-    title: it.title || 'Calendar Event',
-    startTime: it.startTime || 'Scheduled',
-    endTime: it.endTime || '',
-    location: it.location || 'Google Calendar',
-    category: 'Event',
-    icon: '📌'
-  }));
+  const todayEvents = eventsList.slice(1, 4).map((it, idx) => {
+    const locObj = formatLocationObject(it.location || 'Google Calendar');
+    return {
+      id: it.id || `evt-today-${idx}`,
+      title: cleanIcalText(it.title) || 'Calendar Event',
+      startTime: it.startTime || 'Scheduled',
+      endTime: it.endTime || '',
+      location: locObj.location,
+      locationMain: locObj.locationMain,
+      locationSub: locObj.locationSub,
+      locationClean: locObj.locationClean,
+      category: 'Event',
+      icon: '📌'
+    };
+  });
 
   const now = new Date();
   const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
@@ -234,14 +291,20 @@ function buildCalendarResponse(eventsList, sourceName) {
     const dayName = dayNames[d.getDay()];
 
     const remaining = eventsList.slice(4 + (i - 1) * 2, 4 + i * 2);
-    const dayEvents = remaining.map((e, idx) => ({
-      id: e.id || `evt-w-${i}-${idx}`,
-      title: e.title || 'Calendar Event',
-      time: e.startTime || '10:00 AM',
-      location: e.location || '',
-      category: 'Upcoming',
-      icon: '📌'
-    }));
+    const dayEvents = remaining.map((e, idx) => {
+      const locObj = formatLocationObject(e.location || '');
+      return {
+        id: e.id || `evt-w-${i}-${idx}`,
+        title: cleanIcalText(e.title) || 'Calendar Event',
+        time: e.startTime || '10:00 AM',
+        location: locObj.location,
+        locationMain: locObj.locationMain,
+        locationSub: locObj.locationSub,
+        locationClean: locObj.locationClean,
+        category: 'Upcoming',
+        icon: '📌'
+      };
+    });
 
     weekDays.push({
       dateStr,

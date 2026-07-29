@@ -1806,10 +1806,31 @@ html, body {
 
 .ribbon-event-loc {
   font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.ribbon-event-loc-sub {
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--color-cyan);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 14px;
+}
+
+.up-next-meta-loc-sub {
+  font-size: clamp(0.7rem, 0.8vw, 0.9rem);
+  font-weight: 600;
+  color: var(--color-cyan);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 18px;
 }
 
 /* ==============================================================================

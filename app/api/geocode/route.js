@@ -14,6 +14,19 @@ const VIRTUAL_KEYWORDS = [
   'virtual', 'webinar', 'tbd', 'n/a', 'google calendar', 'phone call', 'discord'
 ];
 
+function sanitizeLocationString(locStr) {
+  if (!locStr) return '';
+  return locStr
+    .replace(/\\n/gi, '\n')
+    .replace(/\\,/g, ',')
+    .replace(/\\;/g, ';')
+    .replace(/\\\\/g, '\\')
+    .split(/\r?\n/)
+    .map(line => line.trim().replace(/^[,;\s]+|[,;\s]+$/g, ''))
+    .filter(Boolean)
+    .join(', ');
+}
+
 function isVirtualLocation(locStr) {
   if (!locStr) return true;
   const lower = locStr.toLowerCase().trim();
@@ -37,21 +50,22 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const rawLocation = searchParams.get('location');
+  const cleanLoc = sanitizeLocationString(rawLocation);
 
-  if (!rawLocation || isVirtualLocation(rawLocation)) {
+  if (!cleanLoc || isVirtualLocation(cleanLoc)) {
     return NextResponse.json({ valid: false, reason: 'virtual_or_empty' });
   }
 
-  const cacheKey = rawLocation.trim().toLowerCase();
+  const cacheKey = cleanLoc.toLowerCase();
   if (geocodeCache.has(cacheKey)) {
     return NextResponse.json(geocodeCache.get(cacheKey));
   }
 
   try {
     // Append NY or USA context if location is short to improve OSM Nominatim accuracy in local area
-    let queryLocation = rawLocation;
+    let queryLocation = cleanLoc;
     if (!queryLocation.toLowerCase().includes('ny') && !queryLocation.toLowerCase().includes('york') && !queryLocation.toLowerCase().includes('usa')) {
-      queryLocation = `${rawLocation}, NY`;
+      queryLocation = `${cleanLoc}, NY`;
     }
 
     const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryLocation)}&limit=1`;
@@ -85,7 +99,7 @@ export async function GET(request) {
       destination: {
         lat: destLat,
         lon: destLon,
-        label: rawLocation,
+        label: cleanLoc,
         displayName: data[0].display_name
       },
       distanceMiles: Math.round(distMiles * 10) / 10,
@@ -95,7 +109,7 @@ export async function GET(request) {
     geocodeCache.set(cacheKey, result);
     return NextResponse.json(result);
   } catch (err) {
-    console.error('Geocoding error for location:', rawLocation, err);
+    console.error('Geocoding error for location:', cleanLoc, err);
     return NextResponse.json({ valid: false, reason: 'error', message: err.message });
   }
 }
