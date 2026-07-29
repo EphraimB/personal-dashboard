@@ -86,6 +86,7 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
     if (geoData && geoData.isVirtual) return;
 
     let mapInstance = null;
+    let timerId = null;
 
     // Dynamically import Leaflet client-side only
     import('leaflet').then((L) => {
@@ -101,7 +102,9 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
 
       // Cleanup existing map instance if re-rendering
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        try {
+          mapInstanceRef.current.remove();
+        } catch (e) {}
         mapInstanceRef.current = null;
       }
 
@@ -120,6 +123,8 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
         boxZoom: false,
         keyboard: false
       });
+
+      mapInstanceRef.current = mapInstance;
 
       // Add CartoDB Dark Matter tile layer
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -168,30 +173,35 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
         ]);
         mapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
 
-        setTimeout(() => {
-          if (mapInstance) {
-            mapInstance.invalidateSize();
-            mapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+        timerId = setTimeout(() => {
+          if (mapInstanceRef.current === mapInstance && mapRef.current) {
+            try {
+              mapInstance.invalidateSize();
+              mapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+            } catch (e) {}
           }
         }, 150);
       } else {
         // Standby Mode: Center on Home (141 Grove Av, Cedarhurst)
         mapInstance.setView([HOME_COORDS.lat, HOME_COORDS.lon], 14);
 
-        setTimeout(() => {
-          if (mapInstance) {
-            mapInstance.invalidateSize();
-            mapInstance.setView([HOME_COORDS.lat, HOME_COORDS.lon], 14);
+        timerId = setTimeout(() => {
+          if (mapInstanceRef.current === mapInstance && mapRef.current) {
+            try {
+              mapInstance.invalidateSize();
+              mapInstance.setView([HOME_COORDS.lat, HOME_COORDS.lon], 14);
+            } catch (e) {}
           }
         }, 150);
       }
-
-      mapInstanceRef.current = mapInstance;
     });
 
     return () => {
+      if (timerId) clearTimeout(timerId);
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        try {
+          mapInstanceRef.current.remove();
+        } catch (e) {}
         mapInstanceRef.current = null;
       }
     };
@@ -239,7 +249,7 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
       )}&destination=${encodeURIComponent(geoData.destination.label)}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location || '141 Grove Av, Cedarhurst, NY')}`;
 
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=3&color=00f0ff&bgcolor=080c18&data=${encodeURIComponent(
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&margin=2&color=00f0ff&bgcolor=080c18&data=${encodeURIComponent(
     googleMapsUrl
   )}`;
 

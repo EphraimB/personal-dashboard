@@ -76,13 +76,28 @@ function extractMeetingUrlFromText(...sources) {
   return '';
 }
 
-function formatLocationObject(rawLocation) {
-  if (!rawLocation) {
+function formatLocationObject(rawLocation, rawDescription = '') {
+  const locCleaned = cleanIcalText(rawLocation || '');
+  const descCleaned = cleanIcalText(rawDescription || '');
+
+  let combined = locCleaned;
+
+  // Extract street address from description if location doesn't contain a house/street number
+  if (descCleaned && !/\d+\s+[A-Za-z]/.test(locCleaned)) {
+    const addressMatch = descCleaned.match(/(?:\b\d+\s+[A-Za-z0-9\s.,'-]+(?:St|Street|Ave|Avenue|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Pl|Place|Pkwy|Parkway|Ct|Court|Bldg|Building|Suite|Ste|Floor|Fl)\b[^\n]*)/i);
+    if (addressMatch) {
+      const matchText = addressMatch[0].trim();
+      if (!locCleaned.toLowerCase().includes(matchText.toLowerCase())) {
+        combined = locCleaned ? `${locCleaned}, ${matchText}` : matchText;
+      }
+    }
+  }
+
+  if (!combined) {
     return { location: '', locationMain: '', locationSub: '', locationClean: '' };
   }
 
-  const cleaned = cleanIcalText(rawLocation);
-  const lines = cleaned
+  const lines = combined
     .split(/\r?\n/)
     .map((line) => line.trim().replace(/^[,;\s]+|[,;\s]+$/g, ''))
     .filter(Boolean);
@@ -91,12 +106,12 @@ function formatLocationObject(rawLocation) {
     return { location: '', locationMain: '', locationSub: '', locationClean: '' };
   }
 
-  const locationMain = lines[0];
-  const locationSub = lines.slice(1).join(', ');
   const locationClean = lines.join(', ');
+  const locationMain = lines.length > 1 ? lines.join(' • ') : lines[0];
+  const locationSub = lines.slice(1).join(', ');
 
   return {
-    location: cleaned,
+    location: combined,
     locationMain,
     locationSub,
     locationClean
@@ -124,7 +139,7 @@ function parseICS(icsText) {
         if (colonIdx !== -1) currentEvent.title = cleanIcalText(line.substring(colonIdx + 1));
       } else if (line.startsWith('LOCATION:') || line.startsWith('LOCATION;')) {
         const colonIdx = line.indexOf(':');
-        if (colonIdx !== -1) currentEvent.location = line.substring(colonIdx + 1);
+        if (colonIdx !== -1) currentEvent.location = cleanIcalText(line.substring(colonIdx + 1));
       } else if (line.startsWith('DESCRIPTION:') || line.startsWith('DESCRIPTION;')) {
         const colonIdx = line.indexOf(':');
         if (colonIdx !== -1) currentEvent.description = cleanIcalText(line.substring(colonIdx + 1));
@@ -163,7 +178,6 @@ function parseICS(icsText) {
   const cutoffMs = now.getTime() + 14 * 24 * 60 * 60 * 1000;
   const dayNameMap = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
 
-  // Collect all explicitly cancelled instance dates from VEVENT blocks with STATUS:CANCELLED or RECURRENCE-ID
   const cancelledEvents = [];
   for (const e of rawEvents) {
     if (e.status === 'CANCELLED' || e.status === 'CANCEL') {
@@ -177,7 +191,6 @@ function parseICS(icsText) {
     }
   }
 
-  // Collect all manual non-recurring (one-time) events to override any recurring instances on the same day
   const singleManualEvents = [];
   for (const e of rawEvents) {
     if (!e.rrule && e.status !== 'CANCELLED' && e.status !== 'CANCEL') {
@@ -191,9 +204,7 @@ function parseICS(icsText) {
     }
   }
 
-  // Filter out standalone CANCELLED event markers so they aren't rendered as active events
   const validRawEvents = rawEvents.filter((e) => e.status !== 'CANCELLED' && e.status !== 'CANCEL');
-
   const expandedRaw = [];
 
   for (const e of validRawEvents) {
@@ -204,7 +215,6 @@ function parseICS(icsText) {
       ? (parseICalDate(e.dtEndRaw)?.getTime() || baseStart.getTime() + 3600000) - baseStart.getTime()
       : 3600000;
 
-    // Non-recurring event
     if (!e.rrule) {
       const endMs = baseStart.getTime() + durationMs;
       if (endMs > now.getTime()) {
@@ -217,14 +227,11 @@ function parseICS(icsText) {
       continue;
     }
 
-    // Recurring event (RRULE expansion)
     const rrule = e.rrule.toUpperCase();
-
-    // 1. Skip if recurring series UNTIL date has passed
     const untilMatch = rrule.match(/UNTIL=([0-9T]+)/);
     const untilDate = untilMatch ? parseICalDate(untilMatch[1]) : null;
     if (untilDate && untilDate.getTime() < now.getTime()) {
-      continue; // Series ended in the past - do not generate any instances
+      continue;
     }
 
     const maxUntilMs = untilDate ? untilDate.getTime() : cutoffMs + 86400000;
@@ -241,7 +248,6 @@ function parseICS(icsText) {
 
     let current = new Date(baseStart);
 
-    // Fast-forward long-standing active recurring events close to now
     if (now.getTime() - current.getTime() > 14 * 86400000) {
       const daysDiff = Math.floor((now.getTime() - current.getTime()) / 86400000) - 7;
       if (freq === 'WEEKLY') {
@@ -266,9 +272,7 @@ function parseICS(icsText) {
         if (freq !== 'WEEKLY' || targetDays.includes(current.getDay())) {
           generatedCount++;
 
-          // Only add instance if it hasn't already ended in the past
           if (endMs > now.getTime()) {
-            // Check EXDATE comma-separated cancellations and STATUS:CANCELLED RECURRENCE-IDs
             const isExdated = e.exdates?.some((exStr) => {
               const exD = parseICalDate(exStr);
               return exD && (isSameDay(exD, current) || Math.abs(exD.getTime() - curMs) < 18 * 3600 * 1000);
@@ -281,7 +285,6 @@ function parseICS(icsText) {
               return (timeDiffHours < 24 || sameDay) && titleMatches;
             });
 
-            // Check if user manually created a single one-time event with same/similar title on this exact day
             const isOverriddenBySingleEvent = singleManualEvents.some((s) => {
               const sameDay = isSameDay(s.dateObj, current);
               const titleMatch = s.titleNorm === eventTitleNorm || (s.titleNorm.length > 4 && eventTitleNorm.length > 4 && (s.titleNorm.includes(eventTitleNorm) || eventTitleNorm.includes(s.titleNorm)));
@@ -336,7 +339,6 @@ function isSameDay(d1, d2) {
 function buildCalendarResponse(eventsList, sourceName) {
   const now = new Date();
 
-  // Filter out any events whose end time has passed (endDateObj < now)
   const activeAndFuture = (eventsList || []).filter((e) => {
     if (!e.startDateObj) return false;
     const startMs = new Date(e.startDateObj).getTime();
@@ -358,7 +360,6 @@ function buildCalendarResponse(eventsList, sourceName) {
   const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
   const cutoffMs = now.getTime() + sevenDaysMs;
 
-  // Sort and filter events up to 7 days out
   const sortedEvents = [...activeAndFuture]
     .filter((e) => {
       const startMs = e.startDateObj ? new Date(e.startDateObj).getTime() : 0;
@@ -377,9 +378,8 @@ function buildCalendarResponse(eventsList, sourceName) {
     return startMs <= now.getTime() && now.getTime() <= endMs;
   }
 
-  // 1. UP NEXT: The single next immediate or currently live event (for hero banner & map focus)
   const first = sortedEvents[0];
-  const firstLoc = formatLocationObject(first.location || '');
+  const firstLoc = formatLocationObject(first.location, first.description);
   const firstMeetingUrl = first.meetingUrl || extractMeetingUrlFromText(first.location, first.description);
   const firstIsLive = checkIsLive(first);
   const firstDate = first.startDateObj ? new Date(first.startDateObj) : now;
@@ -408,11 +408,9 @@ function buildCalendarResponse(eventsList, sourceName) {
     isUpNext: true
   };
 
-  // Include ALL events for the next 7 days in the event stream (do not slice out sortedEvents[0])
   const allStreamEvents = sortedEvents;
   const todayMonthDay = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
 
-  // 2. TODAY Events: All events occurring on today's calendar date
   const todayItems = allStreamEvents.filter((e) => {
     if (!e.startDateObj) return false;
     const d = new Date(e.startDateObj);
@@ -420,7 +418,7 @@ function buildCalendarResponse(eventsList, sourceName) {
   });
 
   const todayEvents = todayItems.map((it, idx) => {
-    const locObj = formatLocationObject(it.location || '');
+    const locObj = formatLocationObject(it.location, it.description);
     const meetingUrl = it.meetingUrl || extractMeetingUrlFromText(it.location, it.description);
     const isLive = checkIsLive(it);
     return {
@@ -440,7 +438,6 @@ function buildCalendarResponse(eventsList, sourceName) {
     };
   });
 
-  // 3. UPCOMING DAYS: Group all future events up to 7 days out by their target date
   const futureItems = allStreamEvents.filter((e) => {
     if (!e.startDateObj) return false;
     const d = new Date(e.startDateObj);

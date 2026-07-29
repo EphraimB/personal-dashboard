@@ -164,9 +164,9 @@ async function fetchTravelTimes(lat1, lon1, lat2, lon2, distMiles) {
 }
 
 const KNOWN_LOCAL_VENUES = {
-  'ohel regional family center': { lat: '40.6231', lon: '-73.9575', display_name: 'Ohel Regional Family Center, 1268 E 14th St, Brooklyn, NY 11230' },
-  'ohel family center': { lat: '40.6231', lon: '-73.9575', display_name: 'Ohel Regional Family Center, Brooklyn, NY' },
-  'ohel': { lat: '40.6231', lon: '-73.9575', display_name: 'Ohel Family Services, Brooklyn, NY' },
+  'ohel regional family center': { lat: '40.5973', lon: '-73.7441', display_name: 'Ohel Regional Family Center, 156 Beach 9th St & Seagirt Ave, Far Rockaway, NY 11691' },
+  'ohel family center': { lat: '40.5973', lon: '-73.7441', display_name: 'Ohel Regional Family Center, 156 Beach 9th St & Seagirt Ave, Far Rockaway, NY 11691' },
+  'ohel': { lat: '40.5973', lon: '-73.7441', display_name: 'Ohel Regional Family Center, 156 Beach 9th St & Seagirt Ave, Far Rockaway, NY 11691' },
   'temple avodah': { lat: '40.6385', lon: '-73.6521', display_name: 'Temple Avodah, 3050 Oceanside Rd, Oceanside, NY 11572' },
   'temple israel, lawrence': { lat: '40.6174', lon: '-73.7296', display_name: 'Temple Israel, 140 Central Ave, Lawrence, NY 11559' },
   'temple israel': { lat: '40.6174', lon: '-73.7296', display_name: 'Temple Israel, Lawrence, NY' },

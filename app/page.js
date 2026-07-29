@@ -791,7 +791,8 @@ export default function Home() {
             </div>
             <div className="map-viewport-container">
               <LocationMiniMap
-                location={calendarData?.upNext?.locationClean || 'Cedarhurst, NY'}
+                location={calendarData?.upNext?.locationClean || calendarData?.upNext?.location || calendarData?.upNext?.locationMain || ''}
+                meetingUrl={calendarData?.upNext?.meetingUrl || ''}
                 compact
               />
             </div>
