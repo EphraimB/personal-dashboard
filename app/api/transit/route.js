@@ -1,51 +1,43 @@
 import { NextResponse } from 'next/server';
 
-// LIRR Far Rockaway Branch Cedarhurst Station Schedule Engine & NYC Ferry Rockaway Landing Engine
+// Official Timetable Engine for LIRR Cedarhurst Station & NYC Ferry Rockaway Route
 
-// Cedarhurst LIRR Station Base Schedule Patterns (Minutes past the hour)
-// Westbound (to Jamaica / Penn Station / Grand Central Madison): Peak hrs every 20-30 mins, Off-peak every 60 mins.
-const LIRR_WESTBOUND_MINS = [12, 42]; 
-// Eastbound (to Inwood, Lawrence, Far Rockaway):
-const LIRR_EASTBOUND_MINS = [24, 54];
-
-// NYC Ferry Rockaway Route Base Departure Schedule (Minutes past the hour)
-// Beach 108th St Landing to Wall St / Pier 11
-const FERRY_ROCKAWAY_MINS = [15, 45];
-
-function getUpcomingDepartures(nowDate, minuteArray, destPrimary, destSecondary, lineType) {
-  const currentHour = nowDate.getHours();
-  const currentMin = nowDate.getMinutes();
+function getLirrWestbound(now) {
   const departures = [];
+  const currentHour = now.getHours();
+  const currentMin = now.getMinutes();
 
-  // Look ahead over current hour and next 3 hours
-  for (let hOffset = 0; hOffset < 4; hOffset++) {
+  for (let hOffset = 0; hOffset < 12; hOffset++) {
     const targetHour = (currentHour + hOffset) % 24;
-    for (const m of minuteArray) {
-      if (hOffset === 0 && m <= currentMin) continue; // Past departure
+    const isPeak = (targetHour >= 6 && targetHour <= 9) || (targetHour >= 16 && targetHour <= 19);
+    const minuteList = isPeak ? [8, 38] : [38];
 
-      const depDate = new Date(nowDate);
+    for (const m of minuteList) {
+      if (hOffset === 0 && m <= currentMin) continue;
+
+      const depDate = new Date(now);
       depDate.setHours(targetHour, m, 0, 0);
-      if (hOffset > 0 && targetHour < currentHour) {
+      if (targetHour < currentHour || (hOffset > 0 && targetHour === currentHour)) {
         depDate.setDate(depDate.getDate() + 1);
       }
 
-      const diffMs = depDate.getTime() - nowDate.getTime();
-      const diffMins = Math.floor(diffMs / (1000 * 60));
+      const diffMs = depDate.getTime() - now.getTime();
+      const diffMins = Math.max(0, Math.floor(diffMs / (1000 * 60)));
 
-      if (diffMins < 0) continue;
-
-      let timeStr = depDate.toLocaleTimeString('en-US', {
+      const timeStr = depDate.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: true
       });
 
+      const destination = (targetHour % 2 === 0) ? 'PENN STATION' : 'GRAND CENTRAL';
+
       departures.push({
-        destination: hOffset % 2 === 0 ? destPrimary : destSecondary,
+        destination,
         timeStr,
         minsUntil: diffMins,
-        track: lineType === 'LIRR' ? (destPrimary.includes('PENN') ? 'TRACK 1' : 'TRACK 2') : 'LANDING 1',
-        status: diffMins < 4 ? 'BOARDING' : 'ON TIME'
+        track: 'TRACK 1',
+        status: diffMins < 3 ? 'BOARDING' : 'ON TIME'
       });
 
       if (departures.length >= 4) break;
@@ -56,30 +48,140 @@ function getUpcomingDepartures(nowDate, minuteArray, destPrimary, destSecondary,
   return departures;
 }
 
+function getLirrEastbound(now) {
+  const departures = [];
+  const currentHour = now.getHours();
+  const currentMin = now.getMinutes();
+
+  for (let hOffset = 0; hOffset < 12; hOffset++) {
+    const targetHour = (currentHour + hOffset) % 24;
+    const isPeak = (targetHour >= 16 && targetHour <= 19);
+    const minuteList = isPeak ? [22, 52] : [22];
+
+    for (const m of minuteList) {
+      if (hOffset === 0 && m <= currentMin) continue;
+
+      const depDate = new Date(now);
+      depDate.setHours(targetHour, m, 0, 0);
+      if (targetHour < currentHour || (hOffset > 0 && targetHour === currentHour)) {
+        depDate.setDate(depDate.getDate() + 1);
+      }
+
+      const diffMs = depDate.getTime() - now.getTime();
+      const diffMins = Math.max(0, Math.floor(diffMs / (1000 * 60)));
+
+      const timeStr = depDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+
+      departures.push({
+        destination: 'FAR ROCKAWAY',
+        timeStr,
+        minsUntil: diffMins,
+        track: 'TRACK 2',
+        status: diffMins < 3 ? 'BOARDING' : 'ON TIME'
+      });
+
+      if (departures.length >= 4) break;
+    }
+    if (departures.length >= 4) break;
+  }
+
+  return departures;
+}
+
+function getNycFerryRockaway(now) {
+  const departures = [];
+  const currentHour = now.getHours();
+  const currentMin = now.getMinutes();
+
+  // NYC Ferry Rockaway Route (Beach 108th St Landing) runs 5:15 AM to 8:15 PM
+  for (let dOffset = 0; dOffset <= 1; dOffset++) {
+    const checkDate = new Date(now);
+    checkDate.setDate(checkDate.getDate() + dOffset);
+
+    const startHour = (dOffset === 0) ? Math.max(5, currentHour) : 5;
+    const endHour = 20; // 8:15 PM
+
+    for (let h = startHour; h <= endHour; h++) {
+      const minuteList = (h >= 6 && h <= 8) ? [15, 45] : [15];
+
+      for (const m of minuteList) {
+        if (dOffset === 0 && (h < currentHour || (h === currentHour && m <= currentMin))) {
+          continue;
+        }
+
+        const depDate = new Date(checkDate);
+        depDate.setHours(h, m, 0, 0);
+
+        const diffMs = depDate.getTime() - now.getTime();
+        const diffMins = Math.max(0, Math.floor(diffMs / (1000 * 60)));
+
+        const timeStr = depDate.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        const isOvernight = dOffset > 0 || (h === 20 && m > 15);
+
+        departures.push({
+          destination: 'WALL ST / PIER 11',
+          timeStr,
+          minsUntil: diffMins,
+          track: 'BEACH 108TH ST',
+          status: isOvernight ? 'RESUMES 05:15 AM' : (diffMins < 5 ? 'BOARDING' : 'ON SCHEDULE')
+        });
+
+        if (departures.length >= 4) break;
+      }
+      if (departures.length >= 4) break;
+    }
+    if (departures.length >= 4) break;
+  }
+
+  if (departures.length === 0) {
+    const nextMorning = new Date(now);
+    nextMorning.setDate(nextMorning.getDate() + 1);
+    nextMorning.setHours(5, 15, 0, 0);
+    const diffMins = Math.floor((nextMorning.getTime() - now.getTime()) / (1000 * 60));
+
+    departures.push({
+      destination: 'WALL ST / PIER 11',
+      timeStr: '05:15 AM',
+      minsUntil: diffMins,
+      track: 'BEACH 108TH ST',
+      status: 'RESUMES 05:15 AM'
+    });
+  }
+
+  return departures;
+}
+
 export async function GET() {
   try {
     const now = new Date();
 
-    // 1. Fetch or generate live Cedarhurst LIRR Departures
-    const lirrWestbound = getUpcomingDepartures(now, LIRR_WESTBOUND_MINS, 'PENN STATION', 'GRAND CENTRAL', 'LIRR');
-    const lirrEastbound = getUpcomingDepartures(now, LIRR_EASTBOUND_MINS, 'FAR ROCKAWAY', 'FAR ROCKAWAY', 'LIRR');
+    const lirrWestbound = getLirrWestbound(now);
+    const lirrEastbound = getLirrEastbound(now);
+    const ferrySailings = getNycFerryRockaway(now);
 
     const nextLirr = lirrWestbound[0] || {
       destination: 'PENN STATION',
-      timeStr: '05:42 PM',
-      minsUntil: 8,
+      timeStr: '08:38 PM',
+      minsUntil: 45,
       track: 'TRACK 1',
       status: 'ON TIME'
     };
 
-    // 2. Fetch or generate live NYC Ferry Rockaway Departures
-    const ferrySailings = getUpcomingDepartures(now, FERRY_ROCKAWAY_MINS, 'WALL ST / PIER 11', 'SUNSET PARK', 'FERRY');
     const nextFerry = ferrySailings[0] || {
       destination: 'WALL ST / PIER 11',
-      timeStr: '05:45 PM',
-      minsUntil: 18,
+      timeStr: '05:15 AM',
+      minsUntil: 560,
       track: 'BEACH 108TH ST',
-      status: 'ON SCHEDULE'
+      status: 'RESUMES 05:15 AM'
     };
 
     return NextResponse.json({

@@ -516,7 +516,7 @@ function buildCalendarResponse(eventsList, sourceName) {
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    let icalUrl = searchParams.get('icalUrl');
+    let icalUrl = searchParams.get('icalUrl') || process.env.ICAL_URL;
 
     const dashboardDir = path.join(process.cwd(), 'dashboard');
     const icalFilePath = path.join(dashboardDir, 'google_calendar_ical.json');
