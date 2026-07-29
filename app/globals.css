@@ -2637,15 +2637,17 @@ html, body {
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
-/* MAIN MATRIX GRID CONTAINER (87vh) */
+/* MAIN MATRIX GRID CONTAINER (Calculated flex fill to fit 100vh perfectly) */
 .matrix-main-grid {
-  height: 87vh;
+  flex: 1;
+  height: calc(100vh - 88px);
+  max-height: calc(100vh - 88px);
   width: 100%;
   max-width: 100vw;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: 12px;
-  padding: 10px 16px;
+  gap: 10px;
+  padding: 6px 16px;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -2719,13 +2721,15 @@ html, body {
 .quadrant-left-col {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   height: 100%;
+  min-height: 0;
 }
 
 /* 1A: ATMOSPHERIC TELEMETRY CARD */
 .card-weather-telemetry {
-  height: 50%;
+  height: 48%;
+  flex-shrink: 0;
 }
 
 .weather-hero-row {
@@ -3029,12 +3033,14 @@ html, body {
 .quadrant-right-col {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   height: 100%;
+  min-height: 0;
 }
 
 .card-tactical-agenda {
-  height: 52%;
+  height: 50%;
+  flex-shrink: 0;
 }
 
 .agenda-next-banner {

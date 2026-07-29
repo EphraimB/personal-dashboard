@@ -163,13 +163,37 @@ async function fetchTravelTimes(lat1, lon1, lat2, lon2, distMiles) {
   };
 }
 
+const KNOWN_LOCAL_VENUES = {
+  'ohel regional family center': { lat: '40.6231', lon: '-73.9575', display_name: 'Ohel Regional Family Center, 1268 E 14th St, Brooklyn, NY 11230' },
+  'ohel family center': { lat: '40.6231', lon: '-73.9575', display_name: 'Ohel Regional Family Center, Brooklyn, NY' },
+  'ohel': { lat: '40.6231', lon: '-73.9575', display_name: 'Ohel Family Services, Brooklyn, NY' },
+  'temple avodah': { lat: '40.6385', lon: '-73.6521', display_name: 'Temple Avodah, 3050 Oceanside Rd, Oceanside, NY 11572' },
+  'temple israel, lawrence': { lat: '40.6174', lon: '-73.7296', display_name: 'Temple Israel, 140 Central Ave, Lawrence, NY 11559' },
+  'temple israel': { lat: '40.6174', lon: '-73.7296', display_name: 'Temple Israel, Lawrence, NY' },
+  'chelsea piers field house': { lat: '40.7469', lon: '-74.0089', display_name: 'Chelsea Piers Field House, New York, NY 10011' },
+  'chelsea piers': { lat: '40.7469', lon: '-74.0089', display_name: 'Chelsea Piers, New York, NY' }
+};
+
 async function performMultiTierGeocode(cleanLoc) {
+  const locLower = cleanLoc.toLowerCase().trim();
+
+  // Check known NY local venue dictionary first
+  for (const [key, venue] of Object.entries(KNOWN_LOCAL_VENUES)) {
+    if (locLower === key || locLower.includes(key)) {
+      return venue;
+    }
+  }
+
   const queryCandidates = [];
   let baseLoc = cleanLoc;
   if (!baseLoc.toLowerCase().includes('ny') && !baseLoc.toLowerCase().includes('york') && !baseLoc.toLowerCase().includes('usa')) {
     baseLoc = `${cleanLoc}, NY`;
   }
   queryCandidates.push(baseLoc);
+
+  // Append city candidates
+  queryCandidates.push(`${cleanLoc}, Brooklyn, NY`);
+  queryCandidates.push(`${cleanLoc}, Cedarhurst, NY`);
 
   // Handle Queens-style hyphenated house numbers (e.g. '90-08 Rockaway Beach Blvd')
   if (/^\d+-\d+/.test(cleanLoc)) {

@@ -41,7 +41,10 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const [geoData, setGeoData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  // Default Home Base: 141 Grove Av, Cedarhurst, NY
+  const HOME_COORDS = { lat: 40.6253378, lon: -73.7206490 };
 
   useEffect(() => {
     let isMounted = true;
@@ -80,7 +83,7 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
   }, [location, meetingUrl]);
 
   useEffect(() => {
-    if (!geoData || geoData.isVirtual || !mapRef.current) return;
+    if (geoData && geoData.isVirtual) return;
 
     let mapInstance = null;
 
@@ -102,9 +105,11 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
         mapInstanceRef.current = null;
       }
 
-      const { origin, destination } = geoData;
+      const isRouteMap = geoData && geoData.valid && !geoData.isVirtual;
+      const origin = isRouteMap ? geoData.origin : HOME_COORDS;
+      const destination = isRouteMap ? geoData.destination : null;
 
-      // Create static read-only TV map (disable all drag, zoom, touch, and scroll wheel interactions)
+      // Create static read-only TV map
       mapInstance = L.map(mapRef.current, {
         zoomControl: false,
         attributionControl: false,
@@ -130,46 +135,56 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
         iconAnchor: [12, 12]
       });
 
-      // Custom Destination Icon (Cyan Neon)
-      const destIcon = L.divIcon({
-        className: 'hud-map-pin pin-dest',
-        html: `<div class="pin-marker dest-marker" title="${destination.label}">📍</div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 24]
-      });
-
-      // Add markers
       L.marker([origin.lat, origin.lon], { icon: homeIcon }).addTo(mapInstance);
-      L.marker([destination.lat, destination.lon], { icon: destIcon }).addTo(mapInstance);
 
-      // Add dashed connection line between Home and Destination
-      L.polyline(
-        [
+      if (isRouteMap && destination) {
+        // Custom Destination Icon (Cyan Neon)
+        const destIcon = L.divIcon({
+          className: 'hud-map-pin pin-dest',
+          html: `<div class="pin-marker dest-marker" title="${destination.label}">📍</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 24]
+        });
+
+        L.marker([destination.lat, destination.lon], { icon: destIcon }).addTo(mapInstance);
+
+        // Add dashed connection line
+        L.polyline(
+          [
+            [origin.lat, origin.lon],
+            [destination.lat, destination.lon]
+          ],
+          {
+            color: '#00f0ff',
+            weight: 3,
+            dashArray: '6, 6',
+            opacity: 0.85
+          }
+        ).addTo(mapInstance);
+
+        const bounds = L.latLngBounds([
           [origin.lat, origin.lon],
           [destination.lat, destination.lon]
-        ],
-        {
-          color: '#00f0ff',
-          weight: 3,
-          dashArray: '6, 6',
-          opacity: 0.85
-        }
-      ).addTo(mapInstance);
+        ]);
+        mapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
 
-      // Fit bounds to show both pins
-      const bounds = L.latLngBounds([
-        [origin.lat, origin.lon],
-        [destination.lat, destination.lon]
-      ]);
-      mapInstance.fitBounds(bounds, { padding: [35, 35], maxZoom: 15 });
+        setTimeout(() => {
+          if (mapInstance) {
+            mapInstance.invalidateSize();
+            mapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+          }
+        }, 150);
+      } else {
+        // Standby Mode: Center on Home (141 Grove Av, Cedarhurst)
+        mapInstance.setView([HOME_COORDS.lat, HOME_COORDS.lon], 14);
 
-      // Invalidate size to ensure Leaflet recalculates exact canvas dimensions and aligns markers
-      setTimeout(() => {
-        if (mapInstance) {
-          mapInstance.invalidateSize();
-          mapInstance.fitBounds(bounds, { padding: [35, 35], maxZoom: 15 });
-        }
-      }, 150);
+        setTimeout(() => {
+          if (mapInstance) {
+            mapInstance.invalidateSize();
+            mapInstance.setView([HOME_COORDS.lat, HOME_COORDS.lon], 14);
+          }
+        }, 150);
+      }
 
       mapInstanceRef.current = mapInstance;
     });
@@ -182,17 +197,8 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
     };
   }, [geoData]);
 
-  if (loading) {
-    return null; // Silent placeholder while loading
-  }
-
-  // Completely hide container for events without physical locations or virtual URLs
-  if (!geoData || !geoData.valid) {
-    return null;
-  }
-
   // Render Virtual Meeting HUD Card with Scan-to-Join QR Code for Online Events
-  if (geoData.isVirtual) {
+  if (geoData && geoData.isVirtual) {
     const meetingUrlData = geoData.meetingUrl || meetingUrl || 'https://zoom.us';
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=3&color=00f0ff&bgcolor=080c18&data=${encodeURIComponent(
       meetingUrlData
@@ -224,17 +230,21 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
     );
   }
 
-  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
-    '141 Grove Av, Cedarhurst, NY'
-  )}&destination=${encodeURIComponent(geoData.destination.label)}`;
+  const isRouteActive = geoData && geoData.valid && !geoData.isVirtual;
+  const isUnmapped = location && location.trim() && (!geoData || !geoData.valid);
+
+  const googleMapsUrl = isRouteActive
+    ? `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
+        '141 Grove Av, Cedarhurst, NY'
+      )}&destination=${encodeURIComponent(geoData.destination.label)}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location || '141 Grove Av, Cedarhurst, NY')}`;
 
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=3&color=00f0ff&bgcolor=080c18&data=${encodeURIComponent(
     googleMapsUrl
   )}`;
 
-  const travel = geoData.travelTimes || { walk: '18m', bike: '6m', transit: '14m', drive: '5m' };
+  const travel = (isRouteActive && geoData.travelTimes) || { walk: '18m', bike: '6m', transit: '14m', drive: '5m' };
 
-  // Construct modes array and sort ascending by duration minutes (fastest to slowest, left to right)
   const modes = [
     { key: 'walk', IconComponent: WalkIcon, label: 'Walk', value: travel.walk, mins: parseDurationToMins(travel.walk) },
     { key: 'bike', IconComponent: BikeIcon, label: 'Bike', value: travel.bike, mins: parseDurationToMins(travel.bike) },
@@ -247,40 +257,53 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
   return (
     <div className={`hud-mini-map-wrapper ${compact ? 'hud-mini-map-compact' : ''}`}>
       <div className="hud-mini-map-header">
-        <span className="hud-mini-map-title">📍 ROUTE RADAR</span>
-        <span className="hud-mini-map-badge">⚡ {geoData.formattedDistance}</span>
+        <span className="hud-mini-map-title">
+          {isRouteActive ? '📍 ROUTE RADAR' : isUnmapped ? '⚠️ UNMAPPED RADAR' : '🏠 HOME BASE RADAR'}
+        </span>
+        <span className={isUnmapped ? 'hud-mini-map-badge badge-warning' : 'hud-mini-map-badge'}>
+          {isRouteActive ? `⚡ ${geoData.formattedDistance}` : isUnmapped ? 'GEOCODE UNRESOLVED' : 'CEDARHURST, NY'}
+        </span>
       </div>
 
       <div className="hud-mini-map-canvas-container">
         <div ref={mapRef} className="hud-mini-map-canvas" />
 
+        {/* Visual Cue Banner for Unmapped / Unresolved Locations */}
+        {isUnmapped && (
+          <div className="hud-unmapped-banner">
+            ⚠️ UNABLE TO MAP ADDRESS: "{location}"
+          </div>
+        )}
+
         {/* Scan-to-Navigate QR Code Badge for TV display */}
-        <div className="hud-mini-map-qr-badge" title="Scan with Phone Camera for Google Maps Directions">
+        <div className="hud-mini-map-qr-badge" title="Scan with Phone Camera for Directions">
           <img src={qrImageUrl} alt="Scan QR Code for Directions" className="hud-qr-img" />
-          <span className="hud-qr-tag">SCAN NAV 📱</span>
+          <span className="hud-qr-tag">{isRouteActive ? 'SCAN NAV 📱' : 'MAP SEARCH 📱'}</span>
         </div>
       </div>
 
-      {/* Horizontal Multi-Modal Travel Time Bar (Sorted Fastest -> Slowest Left to Right) */}
-      <div className="hud-travel-mode-bar">
-        {modes.map((m, idx) => {
-          const IconComp = m.IconComponent;
-          return (
-            <React.Fragment key={m.key}>
-              {idx > 0 && <span className="travel-mode-sep">•</span>}
-              <div
-                className={`travel-mode-item ${idx === 0 ? 'travel-mode-fastest' : ''}`}
-                title={`${m.label} Duration`}
-              >
-                <span className="travel-mode-icon">
-                  <IconComp />
-                </span>
-                <span className="travel-mode-val">{m.value}</span>
-              </div>
-            </React.Fragment>
-          );
-        })}
-      </div>
+      {/* Horizontal Multi-Modal Travel Time Bar */}
+      {isRouteActive && (
+        <div className="hud-travel-mode-bar">
+          {modes.map((m, idx) => {
+            const IconComp = m.IconComponent;
+            return (
+              <React.Fragment key={m.key}>
+                {idx > 0 && <span className="travel-mode-sep">•</span>}
+                <div
+                  className={`travel-mode-item ${idx === 0 ? 'travel-mode-fastest' : ''}`}
+                  title={`${m.label} Duration`}
+                >
+                  <span className="travel-mode-icon">
+                    <IconComp />
+                  </span>
+                  <span className="travel-mode-val">{m.value}</span>
+                </div>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
