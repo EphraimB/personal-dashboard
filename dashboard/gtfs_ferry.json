@@ -1,0 +1,97 @@
+{
+  "route": "ROCKAWAY ROUTE",
+  "terminal": "BEACH 108TH ST LANDING",
+  "updatedAt": "2026-07-30T00:16:52.462Z",
+  "departures": [
+    {
+      "depTime": "05:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "06:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "06:45:00",
+      "destination": "WALL ST / PIER 11 (PEAK)",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "07:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "07:45:00",
+      "destination": "WALL ST / PIER 11 (PEAK)",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "08:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "09:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "10:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "11:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "12:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "13:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "14:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "15:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "16:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "17:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "18:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "19:15:00",
+      "destination": "WALL ST / PIER 11",
+      "terminal": "BEACH 108TH ST"
+    },
+    {
+      "depTime": "20:15:00",
+      "destination": "WALL ST / PIER 11 (FINAL)",
+      "terminal": "BEACH 108TH ST"
+    }
+  ]
+}

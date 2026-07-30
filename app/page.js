@@ -642,6 +642,40 @@ export default function Home() {
                 </>
               )}
             </div>
+
+            {/* NYC Ferry Section (Live Satellite Stream) */}
+            <div className="transit-terminal-block">
+              <div className="transit-header-row">
+                <span className="transit-line-title transit-ferry">
+                  ⛴️ NYC FERRY // {transitData?.ferry?.terminal || 'FERRY POINT PARK'}
+                </span>
+                <span className="transit-countdown-pill pill-cyan">
+                  {transitData?.ferry?.nextSailing
+                    ? `IN ${String(transitData.ferry.nextSailing.minsUntil).padStart(2, '0')} MINS`
+                    : 'NO LIVE SAILINGS'}
+                </span>
+              </div>
+
+              {transitData?.ferry?.nextSailing && (
+                <div className="transit-dest-main">
+                  <span>{transitData.ferry.nextSailing.destination}</span>
+                  <span className="transit-track-tag">
+                    {transitData.ferry.nextSailing.timeStr} • {transitData.ferry.nextSailing.status}
+                  </span>
+                </div>
+              )}
+
+              {transitData?.ferry?.upcomingSailings && transitData.ferry.upcomingSailings.length > 0 && (
+                <div className="transit-upcoming-list">
+                  {transitData.ferry.upcomingSailings.map((item, i) => (
+                    <div key={i} className="transit-upcoming-item">
+                      <span>{item.timeStr} ➔ {item.destination}</span>
+                      <span style={{ color: 'var(--color-cyan)' }}>{item.track}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
         </section>
