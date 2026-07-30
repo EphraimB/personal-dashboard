@@ -1,0 +1,314 @@
+{
+  "station": "CEDARHURST",
+  "stopId": "32",
+  "date": "20260729",
+  "totalRecords": 61,
+  "updatedAt": "2026-07-30T00:14:01.611Z",
+  "departures": [
+    {
+      "depTime": "00:45:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "01:15:00",
+      "headsign": "PENN STATION",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "01:27:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "03:10:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "03:10:00",
+      "headsign": "PENN STATION",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "05:10:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "05:32:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "05:36:00",
+      "headsign": "ATLANTIC TERMINAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "05:53:00",
+      "headsign": "ATLANTIC TERMINAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "06:13:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "06:34:00",
+      "headsign": "ATLANTIC TERMINAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "06:56:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "07:17:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "07:19:00",
+      "headsign": "PENN STATION",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "07:42:00",
+      "headsign": "ATLANTIC TERMINAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "07:59:00",
+      "headsign": "PENN STATION",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "08:16:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "08:19:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "08:44:00",
+      "headsign": "PENN STATION",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "09:02:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "09:11:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "09:15:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "09:59:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "10:11:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "10:59:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "11:02:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "11:59:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "12:02:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "12:59:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "13:02:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "13:59:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "14:05:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "14:33:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "15:02:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "15:33:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "15:45:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "16:10:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "16:15:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "16:45:00",
+      "headsign": "PENN STATION",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "17:05:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "17:28:00",
+      "headsign": "ATLANTIC TERMINAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "17:29:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "17:57:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "18:00:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "18:19:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "18:26:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "18:43:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "19:04:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "19:21:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "19:30:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "19:41:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "20:12:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "20:12:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "20:42:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "21:13:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "21:16:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "22:13:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "22:21:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "23:17:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "23:23:00",
+      "headsign": "GRAND CENTRAL",
+      "serviceId": "C6B9BD7E"
+    },
+    {
+      "depTime": "24:19:00",
+      "headsign": "FAR ROCKAWAY",
+      "serviceId": "C6B9BD7E"
+    }
+  ]
+}

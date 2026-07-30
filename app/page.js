@@ -554,52 +554,42 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 1B: COMMUTER TRANSIT HUB CARD (LIRR & NYC FERRY) */}
+          {/* 1B: COMMUTER TRANSIT HUB CARD (OFFICIAL MTA GTFS DATASET) */}
           <div className="matrix-card card-transit-hub">
             <div className="matrix-card-title-row">
               <span className="matrix-card-title">
                 🚉 COMMUTER TRANSIT HUB
               </span>
-              <span
-                className="matrix-card-tag"
-                style={
-                  transitData?.mtaApiKeySet
-                    ? { color: 'var(--color-green)' }
-                    : {
-                        color: 'var(--color-gold)',
-                        border: '1px solid rgba(255, 179, 0, 0.4)',
-                        background: 'rgba(255, 179, 0, 0.12)',
-                        padding: '2px 6px',
-                        borderRadius: '4px'
-                      }
-                }
-              >
-                {transitData?.mtaApiKeySet ? '● LIVE MTA FEED' : '⚠️ API KEY REQUIRED'}
+              <span className="matrix-card-tag" style={{ color: 'var(--color-cyan)' }}>
+                {transitData?.statusNotice || '● OFFICIAL MTA GTFS DATASET'}
               </span>
             </div>
 
-            {/* LIRR Cedarhurst Station Section */}
+            {/* LIRR Cedarhurst Westbound (To City) */}
             <div className="transit-terminal-block">
               <div className="transit-header-row">
                 <span className="transit-line-title transit-lirr">
-                  🚆 LIRR // CEDARHURST
+                  🚆 LIRR WESTBOUND // CEDARHURST
                 </span>
-                <span className={`transit-countdown-pill ${transitData?.mtaApiKeySet ? 'pill-amber' : ''}`} style={!transitData?.mtaApiKeySet ? { background: 'rgba(255,179,0,0.15)', color: 'var(--color-gold)', border: '1px solid var(--color-gold)' } : {}}>
-                  {transitData?.mtaApiKeySet && transitData?.lirr?.nextDeparture ? `IN ${String(transitData.lirr.nextDeparture.minsUntil).padStart(2, '0')} MINS` : 'OFFLINE'}
+                <span className="transit-countdown-pill pill-amber">
+                  {transitData?.lirr?.nextWestbound
+                    ? `IN ${String(transitData.lirr.nextWestbound.minsUntil).padStart(2, '0')} MINS`
+                    : 'NO TRAINS'}
                 </span>
               </div>
-              {!transitData?.mtaApiKeySet || !transitData?.lirr?.nextDeparture ? (
+
+              {!transitData?.lirr?.nextWestbound ? (
                 <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
-                  <span style={{ color: 'var(--color-gold)', fontSize: '0.68rem', fontWeight: '700' }}>
-                    ⚠️ NO LIVE DATA — CONFIGURE MTA_API_KEY IN .env.local
+                  <span style={{ color: 'var(--color-cyan)', fontSize: '0.68rem', fontWeight: '700' }}>
+                    // NO UPCOMING WESTBOUND DEPARTURES
                   </span>
                 </div>
               ) : (
                 <>
                   <div className="transit-dest-main">
-                    <span>{transitData.lirr.nextDeparture.destination}</span>
+                    <span>{transitData.lirr.nextWestbound.destination}</span>
                     <span className="transit-track-tag">
-                      {transitData.lirr.nextDeparture.track} • {transitData.lirr.nextDeparture.status}
+                      {transitData.lirr.nextWestbound.track} • {transitData.lirr.nextWestbound.status}
                     </span>
                   </div>
                   <div className="transit-upcoming-list">
@@ -614,32 +604,35 @@ export default function Home() {
               )}
             </div>
 
-            {/* NYC Ferry Rockaway Landing Section */}
+            {/* LIRR Cedarhurst Eastbound (To Far Rockaway) */}
             <div className="transit-terminal-block">
               <div className="transit-header-row">
-                <span className="transit-line-title transit-ferry">
-                  ⛴️ NYC FERRY // ROCKAWAY
+                <span className="transit-line-title transit-lirr" style={{ color: 'var(--color-magenta)' }}>
+                  🚆 LIRR EASTBOUND // CEDARHURST
                 </span>
-                <span className={`transit-countdown-pill ${transitData?.mtaApiKeySet ? 'pill-magenta' : ''}`} style={!transitData?.mtaApiKeySet ? { background: 'rgba(255,179,0,0.15)', color: 'var(--color-gold)', border: '1px solid var(--color-gold)' } : {}}>
-                  {transitData?.mtaApiKeySet && transitData?.ferry?.nextSailing ? `IN ${String(transitData.ferry.nextSailing.minsUntil).padStart(2, '0')} MINS` : 'OFFLINE'}
+                <span className="transit-countdown-pill pill-magenta">
+                  {transitData?.lirr?.nextEastbound
+                    ? `IN ${String(transitData.lirr.nextEastbound.minsUntil).padStart(2, '0')} MINS`
+                    : 'NO TRAINS'}
                 </span>
               </div>
-              {!transitData?.mtaApiKeySet || !transitData?.ferry?.nextSailing ? (
+
+              {!transitData?.lirr?.nextEastbound ? (
                 <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
-                  <span style={{ color: 'var(--color-gold)', fontSize: '0.68rem', fontWeight: '700' }}>
-                    ⚠️ NO LIVE DATA — CONFIGURE API KEY IN .env.local
+                  <span style={{ color: 'var(--color-cyan)', fontSize: '0.68rem', fontWeight: '700' }}>
+                    // NO UPCOMING EASTBOUND DEPARTURES
                   </span>
                 </div>
               ) : (
                 <>
                   <div className="transit-dest-main">
-                    <span>{transitData.ferry.nextSailing.destination}</span>
+                    <span>{transitData.lirr.nextEastbound.destination}</span>
                     <span className="transit-track-tag">
-                      {transitData.ferry.nextSailing.track} • {transitData.ferry.nextSailing.status}
+                      {transitData.lirr.nextEastbound.track} • {transitData.lirr.nextEastbound.status}
                     </span>
                   </div>
                   <div className="transit-upcoming-list">
-                    {transitData?.ferry?.upcomingSailings?.map((item, i) => (
+                    {transitData?.lirr?.upcomingEastbound?.map((item, i) => (
                       <div key={i} className="transit-upcoming-item">
                         <span>{item.timeStr} ➔ {item.destination}</span>
                         <span style={{ color: 'var(--color-cyan)' }}>{item.track}</span>
