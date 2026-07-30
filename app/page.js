@@ -627,11 +627,11 @@ export default function Home() {
               )}
             </div>
 
-            {/* NYC Ferry Section (Live Satellite Stream) */}
+            {/* NYC Ferry Section (Live Stream) */}
             <div className="transit-terminal-block">
               <div className="transit-header-row">
                 <span className="transit-line-title transit-ferry">
-                  ⛴️ NYC FERRY // {transitData?.ferry?.terminal || 'FERRY POINT PARK'}
+                  ⛴️ NYC FERRY // LIVE DEPARTURES
                 </span>
                 <span className="transit-countdown-pill pill-cyan">
                   {transitData?.ferry?.nextSailing
@@ -644,7 +644,7 @@ export default function Home() {
                 <div className="transit-dest-main">
                   <span>{transitData.ferry.nextSailing.destination}</span>
                   <span className="transit-track-tag">
-                    {transitData.ferry.nextSailing.timeStr} • {transitData.ferry.nextSailing.status}
+                    {transitData.ferry.nextSailing.track} • {transitData.ferry.nextSailing.status}
                   </span>
                 </div>
               )}

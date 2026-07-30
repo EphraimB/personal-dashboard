@@ -110,18 +110,16 @@ async function fetchLiveNycFerryGtfs() {
       }
     }
 
-    ferryPointPark.sort((a, b) => a.minsUntil - b.minsUntil);
-    rockaway.sort((a, b) => a.minsUntil - b.minsUntil);
+    const allSailings = [...ferryPointPark, ...rockaway];
+    allSailings.sort((a, b) => a.minsUntil - b.minsUntil);
 
-    const nextSailing = ferryPointPark[0] || rockaway[0] || null;
+    const nextSailing = allSailings[0] || null;
 
     return {
-      route: ferryPointPark.length > 0 ? 'SOUNDVIEW ROUTE' : 'ROCKAWAY ROUTE',
-      terminal: ferryPointPark.length > 0 ? 'FERRY POINT PARK' : 'ROCKAWAY LANDING',
+      route: 'NYC FERRY TELEMETRY',
+      terminal: nextSailing?.track || 'NYC FERRY',
       nextSailing,
-      ferryPointPark,
-      rockaway,
-      upcomingSailings: [...ferryPointPark.slice(1), ...rockaway.slice(1)].slice(0, 2),
+      upcomingSailings: allSailings.slice(1, 3),
       seaState: 'CALM (0.5 FT)'
     };
   } catch (e) {
