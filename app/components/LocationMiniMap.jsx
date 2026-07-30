@@ -207,32 +207,44 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
     };
   }, [geoData]);
 
-  // Render Virtual Meeting HUD Card with Scan-to-Join QR Code for Online Events
+  // Render Virtual Meeting HUD Card with Scan-to-Join QR Code for Online Events (Full-Card 100% Fill)
   if (geoData && geoData.isVirtual) {
     const meetingUrlData = geoData.meetingUrl || meetingUrl || 'https://zoom.us';
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=3&color=00f0ff&bgcolor=080c18&data=${encodeURIComponent(
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=2&color=000000&bgcolor=ffffff&data=${encodeURIComponent(
       meetingUrlData
     )}`;
 
     return (
       <div className={`hud-mini-map-wrapper hud-virtual-wrapper ${compact ? 'hud-mini-map-compact' : ''}`}>
         <div className="hud-mini-map-header hud-virtual-header">
-          <span className="hud-mini-map-title">
-            {geoData.platformIcon} {geoData.platformName}
+          <span className="hud-mini-map-title" style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--color-cyan)', display: 'flex', alignItems: 'center' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px' }}>
+              <polygon points="23 7 16 12 23 17 23 7" />
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+            </svg>
+            {geoData.platformName.toUpperCase()} // REMOTE HUD
           </span>
-          <span className="hud-virtual-status-badge">ONLINE</span>
+          <span className="hud-virtual-status-badge">● ONLINE MEETING</span>
         </div>
 
         <div className="hud-virtual-body">
           <div className="hud-virtual-qr-container">
             <img src={qrImageUrl} alt="Scan to Join Virtual Meeting" className="hud-virtual-qr-img" />
-            <span className="hud-virtual-qr-tag">SCAN TO JOIN 📱</span>
+            <span className="hud-virtual-qr-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h3v3h-3z" />
+              </svg>
+              SCAN TO JOIN MEETING
+            </span>
           </div>
 
           <div className="hud-virtual-info-stack">
-            <span className="hud-virtual-platform-tag">{geoData.platformName}</span>
+            <span className="hud-virtual-platform-tag">{geoData.platformName} LINK</span>
             <span className="hud-virtual-url-preview" title={meetingUrlData}>
-              {meetingUrlData.replace(/^https?:\/\//i, '')}
+              {meetingUrlData.replace(/^https?:\/\/(www\.)?/i, '')}
             </span>
           </div>
         </div>
