@@ -3,7 +3,19 @@ import fs from 'fs';
 import path from 'path';
 import GtfsRealtimeBindings from 'gtfs-realtime-bindings';
 
-// Official MTA GTFS & NYC Ferry Live GTFS-Realtime Engine
+// Helper to safely convert Protobuf 64-bit Long / Object timestamps to JavaScript numbers
+function parseProtobufTime(rawTime) {
+  if (!rawTime) return 0;
+  if (typeof rawTime === 'number') return rawTime;
+  if (typeof rawTime === 'string') return parseInt(rawTime, 10);
+  if (typeof rawTime === 'object' && rawTime !== null) {
+    if (typeof rawTime.toNumber === 'function') return rawTime.toNumber();
+    if ('low' in rawTime) return rawTime.low;
+  }
+  return Number(rawTime) || 0;
+}
+
+// Official MTA GTFS & NYC Ferry Dataset Engine
 
 function getLirrFromGtfs(now) {
   try {
@@ -65,65 +77,94 @@ function getLirrFromGtfs(now) {
   }
 }
 
-async function fetchLiveNycFerryGtfs() {
+async function getFerryDepartures(now) {
   try {
-    const url = 'http://nycferry.connexionz.net/rtt/public/utility/gtfsrealtime.aspx/tripupdate';
-    const res = await fetch(url, {
-      next: { revalidate: 10 } // 10-second live cache
-    });
+    const jsonPath = path.join(process.cwd(), 'dashboard', 'gtfs_rockaway_ferry.json');
+    if (!fs.existsSync(jsonPath)) return null;
 
-    if (!res.ok) return null;
+    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    const departures = data.departures || [];
 
-    const arrayBuffer = await res.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(buffer);
+    const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
-    const nowSec = Math.floor(Date.now() / 1000);
-    const ferryPointPark = [];
-    const rockaway = [];
+    // Fetch live real-time updates if available
+    let liveTripUpdates = new Map();
+    try {
+      const url = 'http://nycferry.connexionz.net/rtt/public/utility/gtfsrealtime.aspx/tripupdate';
+      const res = await fetch(url, { next: { revalidate: 10 } });
+      if (res.ok) {
+        const arrayBuffer = await res.arrayBuffer();
+        const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(Buffer.from(arrayBuffer));
+        const currentEpochSec = Math.floor(Date.now() / 1000);
 
-    for (const entity of feed.entity) {
-      if (!entity.tripUpdate || !entity.tripUpdate.stopTimeUpdate) continue;
-
-      for (const st of entity.tripUpdate.stopTimeUpdate) {
-        const depSec = st.departure?.time || st.arrival?.time;
-        if (!depSec || depSec < nowSec) continue;
-
-        const diffMins = Math.floor((depSec - nowSec) / 60);
-        const depDate = new Date(depSec * 1000);
-        const timeStr = depDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-        const departureObj = {
-          destination: st.stopId === '141' ? 'SOUNDVIEW / WALL ST' : 'WALL ST / PIER 11',
-          timeStr,
-          minsUntil: diffMins,
-          track: st.stopId === '141' ? 'FERRY POINT PARK' : 'ROCKAWAY LANDING',
-          status: diffMins < 5 ? 'BOARDING' : 'ON SCHEDULE'
-        };
-
-        if (st.stopId === '141') {
-          ferryPointPark.push(departureObj);
-        }
-        if (st.stopId === '88' || st.stopId === '16') {
-          rockaway.push(departureObj);
+        for (const entity of feed.entity) {
+          if (!entity.tripUpdate || !entity.tripUpdate.stopTimeUpdate) continue;
+          const tripId = entity.tripUpdate.trip?.tripId;
+          for (const st of entity.tripUpdate.stopTimeUpdate) {
+            if (st.stopId === '88') {
+              const rawTime = st.departure?.time || st.arrival?.time;
+              const depEpoch = parseProtobufTime(rawTime);
+              if (depEpoch && depEpoch > currentEpochSec) {
+                liveTripUpdates.set(tripId, depEpoch);
+              }
+            }
+          }
         }
       }
+    } catch (err) {
+      // Fallback silently to GTFS schedule
     }
 
-    const allSailings = [...ferryPointPark, ...rockaway];
-    allSailings.sort((a, b) => a.minsUntil - b.minsUntil);
+    const upcoming = [];
 
-    const nextSailing = allSailings[0] || null;
+    for (const d of departures) {
+      let [h, m, s] = d.depTime.split(':').map(Number);
+      let depSec = h * 3600 + m * 60 + s;
+
+      if (depSec <= nowSec) continue;
+
+      const diffSec = depSec - nowSec;
+      const diffMins = Math.floor(diffSec / 60);
+
+      const depDate = new Date(now);
+      depDate.setHours(h, m, s, 0);
+
+      const timeStr = depDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+
+      let status = 'ON SCHEDULE';
+      if (liveTripUpdates.has(d.tripId)) {
+        status = '● LIVE SATELLITE';
+      } else if (diffMins < 5) {
+        status = 'BOARDING';
+      }
+
+      upcoming.push({
+        destination: d.destination,
+        timeStr,
+        minsUntil: diffMins,
+        track: 'BEACH 108TH ST',
+        status
+      });
+    }
+
+    upcoming.sort((a, b) => a.minsUntil - b.minsUntil);
+
+    const nextSailing = upcoming[0] || null;
+    const upcomingSailings = upcoming.slice(0, 3);
 
     return {
-      route: 'NYC FERRY TELEMETRY',
-      terminal: nextSailing?.track || 'NYC FERRY',
+      route: 'ROCKAWAY ROUTE',
+      terminal: 'ROCKAWAY LANDING',
       nextSailing,
-      upcomingSailings: allSailings.slice(1, 3),
+      upcomingSailings,
       seaState: 'CALM (0.5 FT)'
     };
   } catch (e) {
-    console.error('Error fetching live NYC Ferry GTFS:', e);
+    console.error('Error fetching Ferry departures:', e);
     return null;
   }
 }
@@ -132,7 +173,7 @@ export async function GET() {
   try {
     const now = new Date();
     const lirrData = getLirrFromGtfs(now);
-    const liveFerryData = await fetchLiveNycFerryGtfs();
+    const ferryData = await getFerryDepartures(now);
 
     const lirrWestbound = lirrData?.westbound || [];
     const lirrEastbound = lirrData?.eastbound || [];
@@ -153,9 +194,9 @@ export async function GET() {
         upcomingWestbound: lirrWestbound.slice(0, 3),
         upcomingEastbound: lirrEastbound.slice(0, 3)
       },
-      ferry: liveFerryData || {
+      ferry: ferryData || {
         route: 'ROCKAWAY ROUTE',
-        terminal: 'BEACH 108TH ST LANDING',
+        terminal: 'ROCKAWAY LANDING',
         nextSailing: null,
         upcomingSailings: [],
         seaState: 'N/A'

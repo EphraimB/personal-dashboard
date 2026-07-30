@@ -627,34 +627,31 @@ export default function Home() {
               )}
             </div>
 
-            {/* NYC Ferry Section (Live Stream) */}
+            {/* NYC Ferry Section (Rockaway Landing) */}
             <div className="transit-terminal-block">
               <div className="transit-header-row">
                 <span className="transit-line-title transit-ferry">
-                  ⛴️ NYC FERRY // LIVE DEPARTURES
+                  ⛴️ NYC FERRY // ROCKAWAY LANDING
                 </span>
                 <span className="transit-countdown-pill pill-cyan">
                   {transitData?.ferry?.nextSailing
                     ? `IN ${String(transitData.ferry.nextSailing.minsUntil).padStart(2, '0')} MINS`
-                    : 'NO LIVE SAILINGS'}
+                    : 'NO SAILINGS'}
                 </span>
               </div>
 
-              {transitData?.ferry?.nextSailing && (
-                <div className="transit-dest-main">
-                  <span>{transitData.ferry.nextSailing.destination}</span>
-                  <span className="transit-track-tag">
-                    {transitData.ferry.nextSailing.track} • {transitData.ferry.nextSailing.status}
+              {!transitData?.ferry?.upcomingSailings || transitData.ferry.upcomingSailings.length === 0 ? (
+                <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
+                  <span style={{ color: 'var(--color-cyan)', fontSize: '0.68rem', fontWeight: '700' }}>
+                    // NO UPCOMING FERRY SAILINGS
                   </span>
                 </div>
-              )}
-
-              {transitData?.ferry?.upcomingSailings && transitData.ferry.upcomingSailings.length > 0 && (
-                <div className="transit-upcoming-list">
+              ) : (
+                <div className="transit-upcoming-list" style={{ marginTop: '6px' }}>
                   {transitData.ferry.upcomingSailings.map((item, i) => (
                     <div key={i} className="transit-upcoming-item">
                       <span>{item.timeStr} ➔ {item.destination}</span>
-                      <span style={{ color: 'var(--color-cyan)' }}>{item.track}</span>
+                      <span style={{ color: 'var(--color-cyan)' }}>{item.status}</span>
                     </div>
                   ))}
                 </div>
