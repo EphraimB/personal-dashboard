@@ -73,6 +73,54 @@ function WeatherSvg({ code = 0, className = 'wx-icon' }) {
   );
 }
 
+// Vector Transit Icons (Replacing Emojis)
+function TransitHubIcon({ className = 'transit-icon' }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+      <rect x="4" y="3" width="16" height="13" rx="2" />
+      <path d="M4 10h16" />
+      <path d="M12 3v7" />
+      <path d="M8 16l-2 4" />
+      <path d="M16 16l2 4" />
+      <circle cx="8" cy="13" r="1" fill="currentColor" />
+      <circle cx="16" cy="13" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function TrainIcon({ className = 'transit-icon' }) {
+  return (
+    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+      <rect x="5" y="3" width="14" height="13" rx="2" />
+      <path d="M5 9h14" />
+      <circle cx="9" cy="13" r="1" fill="currentColor" />
+      <circle cx="15" cy="13" r="1" fill="currentColor" />
+      <path d="M7 16l-2 5" />
+      <path d="M17 16l2 5" />
+    </svg>
+  );
+}
+
+function FerryIcon({ className = 'transit-icon' }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+      <path d="M4 18c2 0 3-1 5-1s3 1 5 1 3-1 5-1" />
+      <path d="M2 21c2 0 3-1 5-1s3 1 5 1 3-1 5-1" />
+      <path d="M4 14l2-6h12l2 6" />
+      <path d="M9 8V4h6v4" />
+    </svg>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', margin: '0 6px', verticalAlign: 'middle', opacity: 0.8 }}>
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </svg>
+  );
+}
+
 function getWeatherDescription(code) {
   switch (code) {
     case 0: return 'SUNNY / CLEAR';
@@ -557,8 +605,8 @@ export default function Home() {
           {/* 1B: COMMUTER TRANSIT HUB CARD (OFFICIAL MTA GTFS DATASET) */}
           <div className="matrix-card card-transit-hub">
             <div className="matrix-card-title-row">
-              <span className="matrix-card-title">
-                🚉 COMMUTER TRANSIT HUB
+              <span className="matrix-card-title" style={{ display: 'flex', alignItems: 'center' }}>
+                <TransitHubIcon /> COMMUTER TRANSIT HUB
               </span>
               <span className="matrix-card-tag" style={{ color: 'var(--color-cyan)' }}>
                 {transitData?.statusNotice || '● OFFICIAL MTA GTFS DATASET'}
@@ -568,8 +616,8 @@ export default function Home() {
             {/* LIRR Cedarhurst Westbound (To City) */}
             <div className="transit-terminal-block">
               <div className="transit-header-row">
-                <span className="transit-line-title transit-lirr">
-                  🚆 LIRR WESTBOUND // CEDARHURST
+                <span className="transit-line-title transit-lirr" style={{ display: 'flex', alignItems: 'center' }}>
+                  <TrainIcon /> LIRR WESTBOUND // CEDARHURST
                 </span>
                 <span className="transit-countdown-pill pill-amber">
                   {transitData?.lirr?.nextWestbound
@@ -588,7 +636,7 @@ export default function Home() {
                 <div className="transit-upcoming-list" style={{ marginTop: '6px' }}>
                   {transitData.lirr.upcomingWestbound.map((item, i) => (
                     <div key={i} className="transit-upcoming-item">
-                      <span>{item.timeStr} ➔ {item.destination}</span>
+                      <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
                       <span style={{ color: 'var(--color-cyan)' }}>{item.track} • {item.status}</span>
                     </div>
                   ))}
@@ -599,8 +647,8 @@ export default function Home() {
             {/* LIRR Cedarhurst Eastbound (To Far Rockaway) */}
             <div className="transit-terminal-block">
               <div className="transit-header-row">
-                <span className="transit-line-title transit-lirr" style={{ color: 'var(--color-magenta)' }}>
-                  🚆 LIRR EASTBOUND // CEDARHURST
+                <span className="transit-line-title transit-lirr" style={{ color: 'var(--color-magenta)', display: 'flex', alignItems: 'center' }}>
+                  <TrainIcon /> LIRR EASTBOUND // CEDARHURST
                 </span>
                 <span className="transit-countdown-pill pill-magenta">
                   {transitData?.lirr?.nextEastbound
@@ -619,7 +667,7 @@ export default function Home() {
                 <div className="transit-upcoming-list" style={{ marginTop: '6px' }}>
                   {transitData.lirr.upcomingEastbound.map((item, i) => (
                     <div key={i} className="transit-upcoming-item">
-                      <span>{item.timeStr} ➔ {item.destination}</span>
+                      <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
                       <span style={{ color: 'var(--color-cyan)' }}>{item.track} • {item.status}</span>
                     </div>
                   ))}
@@ -630,8 +678,8 @@ export default function Home() {
             {/* NYC Ferry Section (Rockaway Landing) */}
             <div className="transit-terminal-block">
               <div className="transit-header-row">
-                <span className="transit-line-title transit-ferry">
-                  ⛴️ NYC FERRY // ROCKAWAY LANDING
+                <span className="transit-line-title transit-ferry" style={{ display: 'flex', alignItems: 'center' }}>
+                  <FerryIcon /> NYC FERRY // ROCKAWAY LANDING
                 </span>
                 <span className="transit-countdown-pill pill-cyan">
                   {transitData?.ferry?.nextSailing
@@ -650,7 +698,7 @@ export default function Home() {
                 <div className="transit-upcoming-list" style={{ marginTop: '6px' }}>
                   {transitData.ferry.upcomingSailings.map((item, i) => (
                     <div key={i} className="transit-upcoming-item">
-                      <span>{item.timeStr} ➔ {item.destination}</span>
+                      <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
                       <span style={{ color: 'var(--color-cyan)' }}>{item.status}</span>
                     </div>
                   ))}
