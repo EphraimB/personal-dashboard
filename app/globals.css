@@ -2248,38 +2248,42 @@ html, body {
   box-shadow: 0 0 8px #ff5722;
 }
 
-/* TV QR Code Overlay Badge */
+/* TV QR Code Overlay Badge (180px High-Contrast Optical Matrix) */
 .hud-mini-map-qr-badge {
   position: absolute;
   top: 8px;
   right: 8px;
   z-index: 500;
-  background: rgba(8, 12, 24, 0.95);
-  border: 1.5px solid rgba(0, 240, 255, 0.7);
-  border-radius: 8px;
-  padding: 6px;
+  background: rgba(8, 12, 24, 0.98);
+  border: 2px solid var(--color-cyan);
+  border-radius: 10px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.3), 0 8px 30px rgba(0, 0, 0, 0.8);
+  gap: 6px;
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.4), 0 8px 30px rgba(0, 0, 0, 0.9);
   pointer-events: auto;
 }
 
 .hud-qr-img {
-  width: 150px;
-  height: 150px;
+  width: 180px;
+  height: 180px;
   border-radius: 6px;
   display: block;
+  background: #ffffff;
+  padding: 4px;
 }
 
 .hud-qr-tag {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 900;
   color: var(--color-cyan);
   letter-spacing: 1px;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
 }
 
 /* Horizontal Multi-Modal Travel Mode Bar */

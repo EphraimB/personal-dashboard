@@ -285,10 +285,18 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
           </div>
         )}
 
-        {/* Scan-to-Navigate QR Code Badge for TV display */}
+        {/* Scan-to-Navigate 180px QR Code Badge for 8-10ft TV Kiosk Phone Camera Scanning */}
         <div className="hud-mini-map-qr-badge" title="Scan with Phone Camera for Directions">
           <img src={qrImageUrl} alt="Scan QR Code for Directions" className="hud-qr-img" />
-          <span className="hud-qr-tag">{isRouteActive ? 'SCAN NAV 📱' : 'MAP SEARCH 📱'}</span>
+          <span className="hud-qr-tag">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h3v3h-3z" />
+            </svg>
+            {isRouteActive ? 'SCAN NAV' : 'GPS NAV // 141 GROVE'}
+          </span>
         </div>
       </div>
 
