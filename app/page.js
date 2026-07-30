@@ -613,13 +613,13 @@ export default function Home() {
               </span>
             </div>
 
-            {/* LIRR Cedarhurst Westbound (To City) */}
+            {/* LIRR Cedarhurst Westbound (City Terminal Zone - Grey) */}
             <div className="transit-terminal-block">
               <div className="transit-header-row">
                 <span className="transit-line-title transit-lirr-westbound" style={{ display: 'flex', alignItems: 'center' }}>
                   <TrainIcon /> LIRR WESTBOUND // CEDARHURST
                 </span>
-                <span className="transit-countdown-pill pill-amber">
+                <span className="transit-countdown-pill pill-grey">
                   {transitData?.lirr?.nextWestbound
                     ? `IN ${String(transitData.lirr.nextWestbound.minsUntil).padStart(2, '0')} MINS`
                     : 'NO TRAINS'}
@@ -628,7 +628,7 @@ export default function Home() {
 
               {!transitData?.lirr?.upcomingWestbound || transitData.lirr.upcomingWestbound.length === 0 ? (
                 <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
-                  <span style={{ color: 'var(--color-gold)', fontSize: '0.68rem', fontWeight: '700' }}>
+                  <span style={{ color: '#C0C0C0', fontSize: '0.68rem', fontWeight: '700' }}>
                     // NO UPCOMING WESTBOUND DEPARTURES
                   </span>
                 </div>
@@ -637,20 +637,20 @@ export default function Home() {
                   {transitData.lirr.upcomingWestbound.map((item, i) => (
                     <div key={i} className="transit-upcoming-item">
                       <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
-                      <span style={{ color: 'var(--color-gold)' }}>{item.track} • {item.status}</span>
+                      <span style={{ color: '#C0C0C0' }}>{item.track} • {item.status}</span>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* LIRR Cedarhurst Eastbound (To Far Rockaway) */}
+            {/* LIRR Cedarhurst Eastbound (Far Rockaway Branch - Brown) */}
             <div className="transit-terminal-block">
               <div className="transit-header-row">
                 <span className="transit-line-title transit-lirr-eastbound" style={{ display: 'flex', alignItems: 'center' }}>
                   <TrainIcon /> LIRR EASTBOUND // CEDARHURST
                 </span>
-                <span className="transit-countdown-pill pill-magenta">
+                <span className="transit-countdown-pill pill-brown">
                   {transitData?.lirr?.nextEastbound
                     ? `IN ${String(transitData.lirr.nextEastbound.minsUntil).padStart(2, '0')} MINS`
                     : 'NO TRAINS'}
@@ -659,7 +659,7 @@ export default function Home() {
 
               {!transitData?.lirr?.upcomingEastbound || transitData.lirr.upcomingEastbound.length === 0 ? (
                 <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
-                  <span style={{ color: 'var(--color-cyber-pink)', fontSize: '0.68rem', fontWeight: '700' }}>
+                  <span style={{ color: '#E67E22', fontSize: '0.68rem', fontWeight: '700' }}>
                     // NO UPCOMING EASTBOUND DEPARTURES
                   </span>
                 </div>
@@ -668,20 +668,20 @@ export default function Home() {
                   {transitData.lirr.upcomingEastbound.map((item, i) => (
                     <div key={i} className="transit-upcoming-item">
                       <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
-                      <span style={{ color: 'var(--color-cyber-pink)' }}>{item.track} • {item.status}</span>
+                      <span style={{ color: '#E67E22' }}>{item.track} • {item.status}</span>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* NYC Ferry Section (Rockaway Landing) */}
+            {/* NYC Ferry Section (Rockaway Route - Purple) */}
             <div className="transit-terminal-block">
               <div className="transit-header-row">
                 <span className="transit-line-title transit-ferry" style={{ display: 'flex', alignItems: 'center' }}>
                   <FerryIcon /> NYC FERRY // ROCKAWAY LANDING
                 </span>
-                <span className="transit-countdown-pill pill-cyan">
+                <span className="transit-countdown-pill pill-purple">
                   {transitData?.ferry?.nextSailing
                     ? `IN ${String(transitData.ferry.nextSailing.minsUntil).padStart(2, '0')} MINS`
                     : 'NO SAILINGS'}
@@ -690,7 +690,7 @@ export default function Home() {
 
               {!transitData?.ferry?.upcomingSailings || transitData.ferry.upcomingSailings.length === 0 ? (
                 <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
-                  <span style={{ color: 'var(--color-cyan)', fontSize: '0.68rem', fontWeight: '700' }}>
+                  <span style={{ color: '#B15EFF', fontSize: '0.68rem', fontWeight: '700' }}>
                     // NO UPCOMING FERRY SAILINGS
                   </span>
                 </div>
@@ -699,7 +699,7 @@ export default function Home() {
                   {transitData.ferry.upcomingSailings.map((item, i) => (
                     <div key={i} className="transit-upcoming-item">
                       <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
-                      <span style={{ color: 'var(--color-cyan)' }}>{item.status}</span>
+                      <span style={{ color: '#B15EFF' }}>{item.status}</span>
                     </div>
                   ))}
                 </div>
