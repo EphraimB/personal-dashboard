@@ -86,21 +86,22 @@ async function getFerryDepartures(now) {
     const departures = data.departures || [];
 
     const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const currentEpochSec = Math.floor(now.getTime() / 1000);
 
-    // Fetch live real-time updates if available
+    // Fetch live GTFS-Realtime satellite trip updates dynamically
     let liveTripUpdates = new Map();
     try {
       const url = 'http://nycferry.connexionz.net/rtt/public/utility/gtfsrealtime.aspx/tripupdate';
-      const res = await fetch(url, { next: { revalidate: 10 } });
+      const res = await fetch(url, { cache: 'no-store' });
       if (res.ok) {
         const arrayBuffer = await res.arrayBuffer();
         const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(Buffer.from(arrayBuffer));
-        const currentEpochSec = Math.floor(Date.now() / 1000);
 
         for (const entity of feed.entity) {
           if (!entity.tripUpdate || !entity.tripUpdate.stopTimeUpdate) continue;
           const tripId = entity.tripUpdate.trip?.tripId;
           for (const st of entity.tripUpdate.stopTimeUpdate) {
+            // Stop ID 88 is Rockaway Landing Dock
             if (st.stopId === '88') {
               const rawTime = st.departure?.time || st.arrival?.time;
               const depEpoch = parseProtobufTime(rawTime);
@@ -112,7 +113,7 @@ async function getFerryDepartures(now) {
         }
       }
     } catch (err) {
-      // Fallback silently to GTFS schedule
+      console.error('Error fetching live NYC Ferry GTFS-RT:', err);
     }
 
     const upcoming = [];
@@ -120,13 +121,33 @@ async function getFerryDepartures(now) {
     for (const d of departures) {
       let [h, m, s] = d.depTime.split(':').map(Number);
       let depSec = h * 3600 + m * 60 + s;
+      let status = 'ON SCHEDULE';
+      let depDate = new Date(now);
+
+      if (liveTripUpdates.has(d.tripId)) {
+        const liveEpoch = liveTripUpdates.get(d.tripId);
+        depDate = new Date(liveEpoch * 1000);
+        const liveDiffSec = liveEpoch - currentEpochSec;
+        if (liveDiffSec <= 0) continue;
+
+        const diffMins = Math.floor(liveDiffSec / 60);
+        const timeStr = depDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+        upcoming.push({
+          destination: d.destination,
+          timeStr,
+          minsUntil: diffMins,
+          track: 'BEACH 108TH ST',
+          status: '● LIVE SATELLITE'
+        });
+        continue;
+      }
 
       if (depSec <= nowSec) continue;
 
       const diffSec = depSec - nowSec;
       const diffMins = Math.floor(diffSec / 60);
 
-      const depDate = new Date(now);
       depDate.setHours(h, m, s, 0);
 
       const timeStr = depDate.toLocaleTimeString('en-US', {
@@ -135,10 +156,7 @@ async function getFerryDepartures(now) {
         hour12: true
       });
 
-      let status = 'ON SCHEDULE';
-      if (liveTripUpdates.has(d.tripId)) {
-        status = '● LIVE SATELLITE';
-      } else if (diffMins < 5) {
+      if (diffMins < 5) {
         status = 'BOARDING';
       }
 
