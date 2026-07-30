@@ -2874,8 +2874,9 @@ html, body {
   gap: 6px;
 }
 
-.transit-lirr { color: var(--color-gold); }
-.transit-ferry { color: var(--color-cyber-pink); }
+.transit-lirr-westbound { color: var(--color-gold); }
+.transit-lirr-eastbound { color: var(--color-cyber-pink); }
+.transit-ferry { color: var(--color-cyan); }
 
 .transit-countdown-pill {
   padding: 4px 10px;
