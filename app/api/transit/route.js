@@ -152,8 +152,8 @@ export async function GET() {
         nextDeparture: nextWestbound || nextEastbound,
         nextWestbound,
         nextEastbound,
-        upcomingWestbound: lirrWestbound.slice(1, 3),
-        upcomingEastbound: lirrEastbound.slice(1, 3)
+        upcomingWestbound: lirrWestbound.slice(0, 3),
+        upcomingEastbound: lirrEastbound.slice(0, 3)
       },
       ferry: liveFerryData || {
         route: 'ROCKAWAY ROUTE',

@@ -578,29 +578,21 @@ export default function Home() {
                 </span>
               </div>
 
-              {!transitData?.lirr?.nextWestbound ? (
+              {!transitData?.lirr?.upcomingWestbound || transitData.lirr.upcomingWestbound.length === 0 ? (
                 <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
                   <span style={{ color: 'var(--color-cyan)', fontSize: '0.68rem', fontWeight: '700' }}>
                     // NO UPCOMING WESTBOUND DEPARTURES
                   </span>
                 </div>
               ) : (
-                <>
-                  <div className="transit-dest-main">
-                    <span>{transitData.lirr.nextWestbound.destination}</span>
-                    <span className="transit-track-tag">
-                      {transitData.lirr.nextWestbound.track} • {transitData.lirr.nextWestbound.status}
-                    </span>
-                  </div>
-                  <div className="transit-upcoming-list">
-                    {transitData?.lirr?.upcomingWestbound?.map((item, i) => (
-                      <div key={i} className="transit-upcoming-item">
-                        <span>{item.timeStr} ➔ {item.destination}</span>
-                        <span style={{ color: 'var(--color-cyan)' }}>{item.track}</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
+                <div className="transit-upcoming-list" style={{ marginTop: '6px' }}>
+                  {transitData.lirr.upcomingWestbound.map((item, i) => (
+                    <div key={i} className="transit-upcoming-item">
+                      <span>{item.timeStr} ➔ {item.destination}</span>
+                      <span style={{ color: 'var(--color-cyan)' }}>{item.track} • {item.status}</span>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -617,29 +609,21 @@ export default function Home() {
                 </span>
               </div>
 
-              {!transitData?.lirr?.nextEastbound ? (
+              {!transitData?.lirr?.upcomingEastbound || transitData.lirr.upcomingEastbound.length === 0 ? (
                 <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
                   <span style={{ color: 'var(--color-cyan)', fontSize: '0.68rem', fontWeight: '700' }}>
                     // NO UPCOMING EASTBOUND DEPARTURES
                   </span>
                 </div>
               ) : (
-                <>
-                  <div className="transit-dest-main">
-                    <span>{transitData.lirr.nextEastbound.destination}</span>
-                    <span className="transit-track-tag">
-                      {transitData.lirr.nextEastbound.track} • {transitData.lirr.nextEastbound.status}
-                    </span>
-                  </div>
-                  <div className="transit-upcoming-list">
-                    {transitData?.lirr?.upcomingEastbound?.map((item, i) => (
-                      <div key={i} className="transit-upcoming-item">
-                        <span>{item.timeStr} ➔ {item.destination}</span>
-                        <span style={{ color: 'var(--color-cyan)' }}>{item.track}</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
+                <div className="transit-upcoming-list" style={{ marginTop: '6px' }}>
+                  {transitData.lirr.upcomingEastbound.map((item, i) => (
+                    <div key={i} className="transit-upcoming-item">
+                      <span>{item.timeStr} ➔ {item.destination}</span>
+                      <span style={{ color: 'var(--color-cyan)' }}>{item.track} • {item.status}</span>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
