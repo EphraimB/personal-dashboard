@@ -9,28 +9,23 @@ function parseICalDate(icalStr) {
   if (!icalStr) return null;
 
   try {
-    const cleanStr = icalStr.replace(/[^0-9T]/g, '');
+    const isUtc = String(icalStr).trim().endsWith('Z');
+    const cleanStr = String(icalStr).replace(/[^0-9T]/g, '');
+    const match = cleanStr.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?)?/);
 
-    if (cleanStr.length === 8) {
-      const year = parseInt(cleanStr.substring(0, 4), 10);
-      const month = parseInt(cleanStr.substring(4, 6), 10) - 1;
-      const day = parseInt(cleanStr.substring(6, 8), 10);
-      return new Date(year, month, day, 9, 0, 0);
+    if (!match) return null;
+
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    const hour = match[4] ? parseInt(match[4], 10) : 9;
+    const minute = match[5] ? parseInt(match[5], 10) : 0;
+    const second = match[6] ? parseInt(match[6], 10) : 0;
+
+    if (isUtc) {
+      return new Date(Date.UTC(year, month, day, hour, minute, second));
     }
-
-    if (cleanStr.length >= 15) {
-      const year = parseInt(cleanStr.substring(0, 4), 10);
-      const month = parseInt(cleanStr.substring(4, 6), 10) - 1;
-      const day = parseInt(cleanStr.substring(6, 8), 10);
-      const hour = parseInt(cleanStr.substring(9, 11), 10);
-      const minute = parseInt(cleanStr.substring(11, 13), 10);
-      const second = parseInt(cleanStr.substring(13, 15), 10);
-
-      if (icalStr.endsWith('Z')) {
-        return new Date(Date.UTC(year, month, day, hour, minute, second));
-      }
-      return new Date(year, month, day, hour, minute, second);
-    }
+    return new Date(year, month, day, hour, minute, second);
   } catch (e) {
     console.error('Failed parsing iCal date:', icalStr, e);
   }
@@ -81,13 +76,28 @@ function extractMeetingUrlFromText(...sources) {
   return '';
 }
 
-function formatLocationObject(rawLocation) {
-  if (!rawLocation) {
+function formatLocationObject(rawLocation, rawDescription = '') {
+  const locCleaned = cleanIcalText(rawLocation || '');
+  const descCleaned = cleanIcalText(rawDescription || '');
+
+  let combined = locCleaned;
+
+  // Extract street address from description if location doesn't contain a house/street number
+  if (descCleaned && !/\d+\s+[A-Za-z]/.test(locCleaned)) {
+    const addressMatch = descCleaned.match(/(?:\b\d+\s+[A-Za-z0-9\s.,'-]+(?:St|Street|Ave|Avenue|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Pl|Place|Pkwy|Parkway|Ct|Court|Bldg|Building|Suite|Ste|Floor|Fl)\b[^\n]*)/i);
+    if (addressMatch) {
+      const matchText = addressMatch[0].trim();
+      if (!locCleaned.toLowerCase().includes(matchText.toLowerCase())) {
+        combined = locCleaned ? `${locCleaned}, ${matchText}` : matchText;
+      }
+    }
+  }
+
+  if (!combined) {
     return { location: '', locationMain: '', locationSub: '', locationClean: '' };
   }
 
-  const cleaned = cleanIcalText(rawLocation);
-  const lines = cleaned
+  const lines = combined
     .split(/\r?\n/)
     .map((line) => line.trim().replace(/^[,;\s]+|[,;\s]+$/g, ''))
     .filter(Boolean);
@@ -96,12 +106,12 @@ function formatLocationObject(rawLocation) {
     return { location: '', locationMain: '', locationSub: '', locationClean: '' };
   }
 
-  const locationMain = lines[0];
-  const locationSub = lines.slice(1).join(', ');
   const locationClean = lines.join(', ');
+  const locationMain = lines.length > 1 ? lines.join(' • ') : lines[0];
+  const locationSub = lines.slice(1).join(', ');
 
   return {
-    location: cleaned,
+    location: combined,
     locationMain,
     locationSub,
     locationClean
@@ -124,47 +134,194 @@ function parseICS(icsText) {
       }
       currentEvent = null;
     } else if (currentEvent) {
-      if (line.startsWith('SUMMARY:')) {
-        currentEvent.title = cleanIcalText(line.substring(8));
-      } else if (line.startsWith('LOCATION:')) {
-        currentEvent.location = line.substring(9);
-      } else if (line.startsWith('DESCRIPTION:')) {
-        currentEvent.description = cleanIcalText(line.substring(12));
-      } else if (line.startsWith('URL:')) {
-        currentEvent.url = line.substring(4).trim();
-      } else if (line.startsWith('DTSTART:')) {
-        currentEvent.dtStartRaw = line.substring(8);
-      } else if (line.startsWith('DTSTART;')) {
-        const parts = line.split(':');
-        if (parts.length > 1) currentEvent.dtStartRaw = parts[1];
-      } else if (line.startsWith('DTEND:')) {
-        currentEvent.dtEndRaw = line.substring(6);
-      } else if (line.startsWith('DTEND;')) {
-        const parts = line.split(':');
-        if (parts.length > 1) currentEvent.dtEndRaw = parts[1];
+      if (line.startsWith('SUMMARY:') || line.startsWith('SUMMARY;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.title = cleanIcalText(line.substring(colonIdx + 1));
+      } else if (line.startsWith('LOCATION:') || line.startsWith('LOCATION;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.location = cleanIcalText(line.substring(colonIdx + 1));
+      } else if (line.startsWith('DESCRIPTION:') || line.startsWith('DESCRIPTION;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.description = cleanIcalText(line.substring(colonIdx + 1));
+      } else if (line.startsWith('URL:') || line.startsWith('URL;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.url = line.substring(colonIdx + 1).trim();
+      } else if (line.startsWith('DTSTART:') || line.startsWith('DTSTART;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.dtStartRaw = line.substring(colonIdx + 1).trim();
+      } else if (line.startsWith('DTEND:') || line.startsWith('DTEND;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.dtEndRaw = line.substring(colonIdx + 1).trim();
+      } else if (line.startsWith('RRULE:') || line.startsWith('RRULE;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.rrule = line.substring(colonIdx + 1).trim();
+      } else if (line.startsWith('EXDATE:') || line.startsWith('EXDATE;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) {
+          if (!currentEvent.exdates) currentEvent.exdates = [];
+          const val = line.substring(colonIdx + 1).trim();
+          val.split(',').forEach((dStr) => {
+            if (dStr.trim()) currentEvent.exdates.push(dStr.trim());
+          });
+        }
+      } else if (line.startsWith('STATUS:') || line.startsWith('STATUS;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.status = line.substring(colonIdx + 1).trim().toUpperCase();
+      } else if (line.startsWith('RECURRENCE-ID:') || line.startsWith('RECURRENCE-ID;')) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) currentEvent.recurrenceIdRaw = line.substring(colonIdx + 1).trim();
       }
     }
   }
 
   const now = new Date();
+  const cutoffMs = now.getTime() + 14 * 24 * 60 * 60 * 1000;
+  const dayNameMap = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
 
-  const futureEvents = rawEvents
+  const cancelledEvents = [];
+  for (const e of rawEvents) {
+    if (e.status === 'CANCELLED' || e.status === 'CANCEL') {
+      const recDate = parseICalDate(e.recurrenceIdRaw || e.dtStartRaw);
+      if (recDate) {
+        cancelledEvents.push({
+          title: cleanIcalText(e.title || '').toLowerCase(),
+          dateMs: recDate.getTime()
+        });
+      }
+    }
+  }
+
+  const singleManualEvents = [];
+  for (const e of rawEvents) {
+    if (!e.rrule && e.status !== 'CANCELLED' && e.status !== 'CANCEL') {
+      const sDate = parseICalDate(e.dtStartRaw);
+      if (sDate) {
+        singleManualEvents.push({
+          titleNorm: cleanIcalText(e.title || '').toLowerCase().replace(/[^a-z0-9]/g, ''),
+          dateObj: sDate
+        });
+      }
+    }
+  }
+
+  const validRawEvents = rawEvents.filter((e) => e.status !== 'CANCELLED' && e.status !== 'CANCEL');
+  const expandedRaw = [];
+
+  for (const e of validRawEvents) {
+    const baseStart = parseICalDate(e.dtStartRaw);
+    if (!baseStart) continue;
+
+    const durationMs = e.dtEndRaw
+      ? (parseICalDate(e.dtEndRaw)?.getTime() || baseStart.getTime() + 3600000) - baseStart.getTime()
+      : 3600000;
+
+    if (!e.rrule) {
+      const endMs = baseStart.getTime() + durationMs;
+      if (endMs > now.getTime()) {
+        expandedRaw.push({
+          ...e,
+          startDateObj: baseStart,
+          endDateObj: new Date(endMs)
+        });
+      }
+      continue;
+    }
+
+    const rrule = e.rrule.toUpperCase();
+    const untilMatch = rrule.match(/UNTIL=([0-9T]+)/);
+    const untilDate = untilMatch ? parseICalDate(untilMatch[1]) : null;
+    if (untilDate && untilDate.getTime() < now.getTime()) {
+      continue;
+    }
+
+    const maxUntilMs = untilDate ? untilDate.getTime() : cutoffMs + 86400000;
+    const freqMatch = rrule.match(/FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)/);
+    const freq = freqMatch ? freqMatch[1] : 'WEEKLY';
+
+    const bydayMatch = rrule.match(/BYDAY=([A-Z,]+)/);
+    const targetDays = bydayMatch
+      ? bydayMatch[1].split(',').map((d) => dayNameMap[d]).filter((d) => d !== undefined)
+      : [baseStart.getDay()];
+
+    const countMatch = rrule.match(/COUNT=([0-9]+)/);
+    const maxCount = countMatch ? parseInt(countMatch[1], 10) : 1000;
+
+    let current = new Date(baseStart);
+
+    if (now.getTime() - current.getTime() > 14 * 86400000) {
+      const daysDiff = Math.floor((now.getTime() - current.getTime()) / 86400000) - 7;
+      if (freq === 'WEEKLY') {
+        const weeksDiff = Math.floor(daysDiff / 7);
+        current.setDate(current.getDate() + weeksDiff * 7);
+      } else if (freq === 'DAILY') {
+        current.setDate(current.getDate() + daysDiff);
+      }
+    }
+
+    let iterations = 0;
+    let generatedCount = 0;
+    const eventTitleLower = cleanIcalText(e.title || '').toLowerCase();
+    const eventTitleNorm = eventTitleLower.replace(/[^a-z0-9]/g, '');
+
+    while (current.getTime() <= Math.min(cutoffMs, maxUntilMs) && iterations < 500 && generatedCount < maxCount) {
+      iterations++;
+      const curMs = current.getTime();
+      const endMs = curMs + durationMs;
+
+      if (curMs <= cutoffMs) {
+        if (freq !== 'WEEKLY' || targetDays.includes(current.getDay())) {
+          generatedCount++;
+
+          if (endMs > now.getTime()) {
+            const isExdated = e.exdates?.some((exStr) => {
+              const exD = parseICalDate(exStr);
+              return exD && (isSameDay(exD, current) || Math.abs(exD.getTime() - curMs) < 18 * 3600 * 1000);
+            });
+
+            const isCancelledRecurrence = cancelledEvents.some((c) => {
+              const timeDiffHours = Math.abs(c.dateMs - curMs) / (3600 * 1000);
+              const sameDay = isSameDay(new Date(c.dateMs), current);
+              const titleMatches = !c.title || !eventTitleLower || c.title.includes(eventTitleLower) || eventTitleLower.includes(c.title);
+              return (timeDiffHours < 24 || sameDay) && titleMatches;
+            });
+
+            const isOverriddenBySingleEvent = singleManualEvents.some((s) => {
+              const sameDay = isSameDay(s.dateObj, current);
+              const titleMatch = s.titleNorm === eventTitleNorm || (s.titleNorm.length > 4 && eventTitleNorm.length > 4 && (s.titleNorm.includes(eventTitleNorm) || eventTitleNorm.includes(s.titleNorm)));
+              return sameDay && titleMatch;
+            });
+
+            if (!isExdated && !isCancelledRecurrence && !isOverriddenBySingleEvent) {
+              expandedRaw.push({
+                ...e,
+                startDateObj: new Date(curMs),
+                endDateObj: new Date(endMs)
+              });
+            }
+          }
+        }
+      }
+
+      if (freq === 'DAILY') {
+        current.setDate(current.getDate() + 1);
+      } else if (freq === 'WEEKLY') {
+        current.setDate(current.getDate() + 1);
+      } else if (freq === 'MONTHLY') {
+        current.setMonth(current.getMonth() + 1);
+      } else {
+        current.setDate(current.getDate() + 7);
+      }
+    }
+  }
+
+  const futureEvents = expandedRaw
     .map((e) => {
-      const parsedDate = parseICalDate(e.dtStartRaw);
-      const parsedEndDate = e.dtEndRaw ? parseICalDate(e.dtEndRaw) : (parsedDate ? new Date(parsedDate.getTime() + 3600000) : null);
       const meetingUrl = extractMeetingUrlFromText(e.url, e.location, e.description);
       return {
         ...e,
         meetingUrl,
-        startDateObj: parsedDate,
-        endDateObj: parsedEndDate,
-        startTime: parsedDate ? formatTimeString(parsedDate) : 'Today'
+        startTime: e.startDateObj ? formatTimeString(e.startDateObj) : 'Today'
       };
-    })
-    .filter((e) => {
-      if (!e.startDateObj) return false;
-      const endMs = e.endDateObj ? e.endDateObj.getTime() : e.startDateObj.getTime() + 3600000;
-      return endMs > now.getTime(); // Hide events whose end time has passed
     })
     .sort((a, b) => (a.startDateObj?.getTime() || 0) - (b.startDateObj?.getTime() || 0));
 
@@ -182,7 +339,6 @@ function isSameDay(d1, d2) {
 function buildCalendarResponse(eventsList, sourceName) {
   const now = new Date();
 
-  // Filter out any events whose end time has passed (endDateObj < now)
   const activeAndFuture = (eventsList || []).filter((e) => {
     if (!e.startDateObj) return false;
     const startMs = new Date(e.startDateObj).getTime();
@@ -201,12 +357,19 @@ function buildCalendarResponse(eventsList, sourceName) {
     };
   }
 
-  // Sort remaining events by startDateObj ascending
-  const sortedEvents = [...activeAndFuture].sort((a, b) => {
-    const tA = a.startDateObj ? new Date(a.startDateObj).getTime() : 0;
-    const tB = b.startDateObj ? new Date(b.startDateObj).getTime() : 0;
-    return tA - tB;
-  });
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  const cutoffMs = now.getTime() + sevenDaysMs;
+
+  const sortedEvents = [...activeAndFuture]
+    .filter((e) => {
+      const startMs = e.startDateObj ? new Date(e.startDateObj).getTime() : 0;
+      return startMs <= cutoffMs;
+    })
+    .sort((a, b) => {
+      const tA = a.startDateObj ? new Date(a.startDateObj).getTime() : 0;
+      const tB = b.startDateObj ? new Date(b.startDateObj).getTime() : 0;
+      return tA - tB;
+    });
 
   function checkIsLive(e) {
     if (!e || !e.startDateObj) return false;
@@ -215,17 +378,25 @@ function buildCalendarResponse(eventsList, sourceName) {
     return startMs <= now.getTime() && now.getTime() <= endMs;
   }
 
-  // 1. UP NEXT: The single next immediate or currently live event
   const first = sortedEvents[0];
-  const firstLoc = formatLocationObject(first.location || '');
+  const firstLoc = formatLocationObject(first.location, first.description);
   const firstMeetingUrl = first.meetingUrl || extractMeetingUrlFromText(first.location, first.description);
   const firstIsLive = checkIsLive(first);
+  const firstDate = first.startDateObj ? new Date(first.startDateObj) : now;
+  const isFirstToday = isSameDay(firstDate, now);
+  const tmrObj = new Date(now);
+  tmrObj.setDate(tmrObj.getDate() + 1);
+  const isFirstTomorrow = isSameDay(firstDate, tmrObj);
+  const monthDayStr = firstDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+  const fullDayStr = firstDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+  const upNextDateStr = isFirstToday ? `TODAY, ${monthDayStr}` : isFirstTomorrow ? `TOMORROW, ${monthDayStr}` : fullDayStr;
 
   const upNext = {
     id: first.id || 'evt-next-1',
     title: cleanIcalText(first.title) || 'Untitled Event',
     startTime: first.startTime || 'Upcoming',
     endTime: first.endTime || '',
+    dateStr: upNextDateStr,
     location: firstLoc.location,
     locationMain: firstLoc.locationMain,
     locationSub: firstLoc.locationSub,
@@ -237,17 +408,17 @@ function buildCalendarResponse(eventsList, sourceName) {
     isUpNext: true
   };
 
-  const remainingEvents = sortedEvents.slice(1);
+  const allStreamEvents = sortedEvents;
+  const todayMonthDay = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
 
-  // 2. TODAY Events: All events occurring on today's calendar date
-  const todayItems = remainingEvents.filter((e) => {
+  const todayItems = allStreamEvents.filter((e) => {
     if (!e.startDateObj) return false;
     const d = new Date(e.startDateObj);
     return isSameDay(d, now);
   });
 
   const todayEvents = todayItems.map((it, idx) => {
-    const locObj = formatLocationObject(it.location || '');
+    const locObj = formatLocationObject(it.location, it.description);
     const meetingUrl = it.meetingUrl || extractMeetingUrlFromText(it.location, it.description);
     const isLive = checkIsLive(it);
     return {
@@ -255,6 +426,7 @@ function buildCalendarResponse(eventsList, sourceName) {
       title: cleanIcalText(it.title) || 'Calendar Event',
       startTime: it.startTime || 'Scheduled',
       endTime: it.endTime || '',
+      dateStr: `TODAY, ${todayMonthDay}`,
       location: locObj.location,
       locationMain: locObj.locationMain,
       locationSub: locObj.locationSub,
@@ -266,8 +438,7 @@ function buildCalendarResponse(eventsList, sourceName) {
     };
   });
 
-  // 3. UPCOMING DAYS: Group remaining future events by their actual target date
-  const futureItems = remainingEvents.filter((e) => {
+  const futureItems = allStreamEvents.filter((e) => {
     if (!e.startDateObj) return false;
     const d = new Date(e.startDateObj);
     return !isSameDay(d, now) && d.getTime() > now.getTime();
@@ -289,10 +460,13 @@ function buildCalendarResponse(eventsList, sourceName) {
     const locObj = formatLocationObject(e.location || '');
     const meetingUrl = e.meetingUrl || extractMeetingUrlFromText(e.location, e.description);
     const isLive = checkIsLive(e);
+    const eventDateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+
     dayMap.get(dateKey).events.push({
       id: e.id || `evt-${dateKey}-${dayMap.get(dateKey).events.length}`,
       title: cleanIcalText(e.title) || 'Calendar Event',
-      time: e.startTime || '10:00 AM',
+      startTime: e.startTime || '10:00 AM',
+      dateStr: eventDateStr,
       location: locObj.location,
       locationMain: locObj.locationMain,
       locationSub: locObj.locationSub,
@@ -309,11 +483,23 @@ function buildCalendarResponse(eventsList, sourceName) {
 
   for (const [dateKey, entry] of dayMap.entries()) {
     const d = entry.dObj;
+    const dayName = dayNames[d.getDay()];
+    const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+    const fullDateStr = `${dayName}, ${formattedDate}`;
+
+    const formattedEvents = entry.events.map((e) => ({
+      ...e,
+      startTime: e.startTime || e.time || 'Scheduled',
+      time: e.startTime || e.time || 'Scheduled',
+      dateStr: e.dateStr || fullDateStr
+    }));
+
     weekDays.push({
       dateStr: dateKey,
-      dayName: dayNames[d.getDay()],
-      formattedDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      events: entry.events
+      dayName,
+      formattedDate,
+      shortDate: formattedDate,
+      events: formattedEvents
     });
   }
 
@@ -330,7 +516,7 @@ function buildCalendarResponse(eventsList, sourceName) {
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    let icalUrl = searchParams.get('icalUrl');
+    let icalUrl = searchParams.get('icalUrl') || process.env.ICAL_URL;
 
     const dashboardDir = path.join(process.cwd(), 'dashboard');
     const icalFilePath = path.join(dashboardDir, 'google_calendar_ical.json');
@@ -373,7 +559,7 @@ export async function GET(request) {
           const gRes = await fetch(
             `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(
               nowIso
-            )}&singleEvents=true&orderBy=startTime&maxResults=15`,
+            )}&singleEvents=true&orderBy=startTime&maxResults=100`,
             {
               headers: { Authorization: `Bearer ${tokens.access_token}` },
               cache: 'no-store'

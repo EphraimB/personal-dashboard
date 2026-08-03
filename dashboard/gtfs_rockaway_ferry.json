@@ -1,0 +1,102 @@
+{
+  "terminal": "ROCKAWAY LANDING",
+  "route": "ROCKAWAY-SOUNDVIEW",
+  "totalRecords": 19,
+  "departures": [
+    {
+      "tripId": "556",
+      "depTime": "05:05:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "557",
+      "depTime": "05:49:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "558",
+      "depTime": "06:33:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "559",
+      "depTime": "07:15:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "560",
+      "depTime": "07:59:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "561",
+      "depTime": "08:43:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "562",
+      "depTime": "09:52:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "563",
+      "depTime": "11:02:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "564",
+      "depTime": "12:08:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "565",
+      "depTime": "13:14:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "566",
+      "depTime": "14:18:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "567",
+      "depTime": "15:28:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "568",
+      "depTime": "16:12:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "569",
+      "depTime": "16:56:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "570",
+      "depTime": "17:40:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "571",
+      "depTime": "18:21:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "572",
+      "depTime": "19:05:00",
+      "destination": "FERRY POINT PARK"
+    },
+    {
+      "tripId": "573",
+      "depTime": "19:51:00",
+      "destination": "WALL ST / PIER 11"
+    },
+    {
+      "tripId": "574",
+      "depTime": "20:35:00",
+      "destination": "WALL ST / PIER 11"
+    }
+  ]
+}
