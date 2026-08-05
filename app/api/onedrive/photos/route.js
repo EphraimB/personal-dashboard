@@ -78,7 +78,7 @@ function getStoredTokens() {
 
 async function refreshAccessToken(refreshToken, clientId, tenant) {
   try {
-    const cId = clientId || 'd3590ed6-52b3-4102-aeff-aad2292ab01c';
+    const cId = clientId || '14d82eec-204b-4c2f-b7e8-296a70dab67e';
     const t = tenant || 'consumers';
     const params = new URLSearchParams();
     params.append('client_id', cId);
@@ -111,7 +111,7 @@ export async function GET(request) {
   let tokens = getStoredTokens();
   let accessToken = customToken || (tokens ? tokens.access_token : '');
   let refreshToken = tokens ? tokens.refresh_token : '';
-  let clientId = tokens ? tokens.client_id : 'd3590ed6-52b3-4102-aeff-aad2292ab01c';
+  let clientId = tokens ? tokens.client_id : '14d82eec-204b-4c2f-b7e8-296a70dab67e';
   let tenant = tokens ? tokens.tenant : 'consumers';
 
   if (!accessToken && !refreshToken) {
