@@ -392,12 +392,27 @@ export default function Home() {
     fetchPhotos();
   }, [config.folderPath, config.searchQuery, config.accessToken, config.filterScreenshots]);
 
+  // Preload upcoming photos into browser cache for zero-lag crossfade transitions
+  useEffect(() => {
+    if (!photoList || photoList.length === 0) return;
+
+    for (let i = 1; i <= 3; i++) {
+      const nextIndex = (currentIndex + i) % photoList.length;
+      const targetPhoto = photoList[nextIndex];
+      if (targetPhoto && targetPhoto.url) {
+        const img = new Image();
+        img.src = targetPhoto.url;
+      }
+    }
+  }, [currentIndex, photoList]);
+
   // Double-buffered Crossfade Transition Engine
   useEffect(() => {
     if (photoList.length === 0) return;
 
     const currentPhoto = photoList[currentIndex];
-    const newUrl = currentPhoto.url;
+    const newUrl = currentPhoto ? currentPhoto.url : '';
+    if (!newUrl) return;
 
     if (activeLayer === 1) {
       setLayer2Url(newUrl);
@@ -408,28 +423,33 @@ export default function Home() {
     }
   }, [currentIndex, photoList]);
 
-  // Automatic Slideshow Progression Timer & Smooth Progress Bar
+  // Automatic Slideshow Progression Timer & CSS Progress Bar Engine
   useEffect(() => {
     if (isPaused || photoList.length === 0) {
       setProgressWidth(0);
       return;
     }
 
-    const duration = config.slideDuration * 1000;
-    const intervalTime = 100;
-    let elapsed = 0;
+    // Reset progress width for current slide
+    setProgressWidth(0);
 
-    const timer = setInterval(() => {
-      elapsed += intervalTime;
-      setProgressWidth((elapsed / duration) * 100);
+    const slideDuration = config.slideDuration || 10;
+    const durationMs = slideDuration * 1000;
 
-      if (elapsed >= duration) {
-        setCurrentIndex((prev) => (prev + 1) % photoList.length);
-        elapsed = 0;
-      }
-    }, intervalTime);
+    // Trigger smooth CSS progress bar transition
+    const animFrame = setTimeout(() => {
+      setProgressWidth(100);
+    }, 50);
 
-    return () => clearInterval(timer);
+    // Advance slide when duration completes
+    const slideTimer = setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % photoList.length);
+    }, durationMs);
+
+    return () => {
+      clearTimeout(animFrame);
+      clearTimeout(slideTimer);
+    };
   }, [currentIndex, isPaused, photoList, config.slideDuration]);
 
   const toggleFullscreen = () => {
@@ -750,7 +770,13 @@ export default function Home() {
               </h2>
 
               <div className="photo-hero-progress-track">
-                <div className="photo-hero-progress-bar" style={{ width: `${progressWidth || 45}%` }} />
+                <div
+                  className="photo-hero-progress-bar"
+                  style={{
+                    width: `${progressWidth}%`,
+                    transition: isPaused || progressWidth === 0 ? 'none' : `width ${config.slideDuration || 10}s linear`
+                  }}
+                />
               </div>
             </div>
           </div>

@@ -94,8 +94,12 @@ html, body {
   background-position: center center;
   background-repeat: no-repeat;
   opacity: 0;
-  transition: opacity var(--transition-fade);
+  transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  image-rendering: high-quality;
 }
 
 .photo-layer.fit-contain {
@@ -117,13 +121,13 @@ html, body {
 }
 
 @keyframes kenburnsZoomIn {
-  0% { transform: scale(1) translate(0%, 0%); }
-  100% { transform: scale(1.12) translate(-1.5%, -1%); }
+  0% { transform: scale(1) translate3d(0%, 0%, 0); }
+  100% { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
 }
 
 @keyframes kenburnsZoomOut {
-  0% { transform: scale(1.12) translate(1%, 1.5%); }
-  100% { transform: scale(1) translate(0%, 0%); }
+  0% { transform: scale(1.12) translate3d(1%, 1.5%, 0); }
+  100% { transform: scale(1) translate3d(0%, 0%, 0); }
 }
 
 .photo-overlay-vignette {
@@ -3067,6 +3071,8 @@ html, body {
   height: 100%;
   background: linear-gradient(90deg, var(--color-cyan), var(--color-green));
   box-shadow: 0 0 8px var(--color-cyan);
+  transition: width 0.3s linear;
+  will-change: width;
 }
 
 /* QUADRANT 3: RIGHT COLUMN (AGENDA & MAP) */
