@@ -2263,12 +2263,13 @@ html, body {
 }
 
 .hud-mini-map-compact .hud-mini-map-qr-badge {
-  top: 4px;
-  right: 4px;
-  padding: 4px;
-  gap: 2px;
-  border-width: 1px;
-  border-radius: 6px;
+  top: 6px;
+  right: 6px;
+  padding: 6px;
+  gap: 4px;
+  border-width: 2px;
+  border-radius: 8px;
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.5), 0 8px 30px rgba(0, 0, 0, 0.95);
 }
 
 .hud-qr-img {
@@ -2281,10 +2282,10 @@ html, body {
 }
 
 .hud-mini-map-compact .hud-qr-img {
-  width: clamp(70px, 5vw, 95px);
-  height: clamp(70px, 5vw, 95px);
-  padding: 2px;
-  border-radius: 4px;
+  width: 180px;
+  height: 180px;
+  padding: 4px;
+  border-radius: 6px;
 }
 
 .hud-qr-tag {
@@ -2297,8 +2298,8 @@ html, body {
 }
 
 .hud-mini-map-compact .hud-qr-tag {
-  font-size: 0.52rem;
-  letter-spacing: 0.5px;
+  font-size: 0.65rem;
+  letter-spacing: 0.8px;
 }
 
 /* Horizontal Multi-Modal Travel Mode Bar */
@@ -2597,7 +2598,7 @@ html, body {
 
 .matrix-clock-digits {
   font-family: var(--font-title);
-  font-size: clamp(1.8rem, 2.5vw, 2.8rem);
+  font-size: clamp(2.2rem, 3.2vw, 3.5rem);
   font-weight: 900;
   color: var(--color-cyan);
   text-shadow: 0 0 20px rgba(0, 240, 255, 0.6), 0 0 40px rgba(0, 240, 255, 0.3);
@@ -2731,7 +2732,7 @@ html, body {
 
 .matrix-card-title {
   font-family: var(--font-title);
-  font-size: clamp(0.95rem, 1.1vw, 1.3rem);
+  font-size: clamp(1.15rem, 1.35vw, 1.55rem);
   font-weight: 900;
   color: var(--color-cyan);
   letter-spacing: 1.5px;
@@ -2745,8 +2746,8 @@ html, body {
 }
 
 .matrix-card-tag {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 800;
   color: var(--color-text-dim);
   letter-spacing: 0.8px;
   white-space: nowrap;
@@ -3225,20 +3226,20 @@ html, body {
 }
 
 .agenda-event-time {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: var(--color-gold);
   margin-bottom: 2px;
 }
 
 .agenda-event-name {
-  font-size: 1.1rem;
-  font-weight: 800;
+  font-size: 1.25rem;
+  font-weight: 900;
   color: #ffffff;
 }
 
 .agenda-event-loc {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--color-text-sub);
   margin-top: 2px;

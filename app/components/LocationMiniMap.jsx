@@ -261,7 +261,7 @@ export default function LocationMiniMap({ location, meetingUrl = '', compact = f
       )}&destination=${encodeURIComponent(geoData.destination.label)}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location || '141 Grove Av, Cedarhurst, NY')}`;
 
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&margin=2&color=00f0ff&bgcolor=080c18&data=${encodeURIComponent(
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=450x450&margin=2&color=00f0ff&bgcolor=080c18&data=${encodeURIComponent(
     googleMapsUrl
   )}`;
 
