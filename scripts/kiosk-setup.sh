@@ -26,7 +26,7 @@ cat <<EOF > "$DESKTOP_FILE"
 Type=Application
 Name=Ares City TV Dashboard Kiosk
 Comment=Autostart Chromium in Fullscreen Kiosk Mode on Boot
-Exec=chromium --enable-features=UseOzonePlatform --ozone-platform=wayland --password-store=basic --noerrdialogs --disable-infobar --kiosk $DASHBOARD_URL
+Exec=chromium --enable-features=UseOzonePlatform --ozone-platform=wayland --enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist --password-store=basic --noerrdialogs --disable-infobar --kiosk $DASHBOARD_URL
 X-GNOME-Autostart-enabled=true
 EOF
 chmod +x "$DESKTOP_FILE"
@@ -51,7 +51,7 @@ if [ -d "$(dirname "$LXDE_AUTOSTART")" ]; then
     echo "@xset -dpms" >> "$LXDE_AUTOSTART"
     echo "@xset s noblank" >> "$LXDE_AUTOSTART"
     echo "@unclutter -idle 0.5 -root" >> "$LXDE_AUTOSTART"
-    echo "@chromium --enable-features=UseOzonePlatform --ozone-platform=wayland --password-store=basic --noerrdialogs --disable-infobar --kiosk $DASHBOARD_URL" >> "$LXDE_AUTOSTART"
+    echo "@chromium --enable-features=UseOzonePlatform --ozone-platform=wayland --enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist --password-store=basic --noerrdialogs --disable-infobar --kiosk $DASHBOARD_URL" >> "$LXDE_AUTOSTART"
   fi
 fi
 
@@ -64,7 +64,7 @@ if [ -f "$WAYFIRE_CONFIG" ]; then
 
 [autostart]
 unclutter = unclutter -idle 0.5 -root
-kiosk = chromium --enable-features=UseOzonePlatform --ozone-platform=wayland --password-store=basic --noerrdialogs --disable-infobar --kiosk $DASHBOARD_URL
+kiosk = chromium --enable-features=UseOzonePlatform --ozone-platform=wayland --enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist --password-store=basic --noerrdialogs --disable-infobar --kiosk $DASHBOARD_URL
 EOF
   fi
 fi

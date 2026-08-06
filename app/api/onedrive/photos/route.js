@@ -78,7 +78,7 @@ function getStoredTokens() {
 
 async function refreshAccessToken(refreshToken, clientId, tenant) {
   try {
-    const cId = clientId || 'd3590ed6-52b3-4102-aeff-aad2292ab01c';
+    const cId = clientId || '14d82eec-204b-4c2f-b7e8-296a70dab67e';
     const t = tenant || 'consumers';
     const params = new URLSearchParams();
     params.append('client_id', cId);
@@ -111,7 +111,7 @@ export async function GET(request) {
   let tokens = getStoredTokens();
   let accessToken = customToken || (tokens ? tokens.access_token : '');
   let refreshToken = tokens ? tokens.refresh_token : '';
-  let clientId = tokens ? tokens.client_id : 'd3590ed6-52b3-4102-aeff-aad2292ab01c';
+  let clientId = tokens ? tokens.client_id : '14d82eec-204b-4c2f-b7e8-296a70dab67e';
   let tenant = tokens ? tokens.tenant : 'consumers';
 
   if (!accessToken && !refreshToken) {
@@ -155,11 +155,10 @@ async function fetchGraphPhotos(token, folder, query, filterScreenshots) {
     } else if (query.trim()) {
       queue.push(`https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(query.trim())}')?$expand=thumbnails&$top=500`);
     } else {
-      // https://onedrive.live.com/photos target: Fetch Camera Roll, Pictures, and Photos special folders
-      queue.push('https://graph.microsoft.com/v1.0/me/drive/special/cameraroll/children?$expand=thumbnails&$top=500');
-      queue.push('https://graph.microsoft.com/v1.0/me/drive/special/photos/children?$expand=thumbnails&$top=500');
-      queue.push('https://graph.microsoft.com/v1.0/me/drive/root:/Pictures/Camera Roll:/children?$expand=thumbnails&$top=500');
+      // Primary target: My Files/Pictures folder and special photos endpoint
       queue.push('https://graph.microsoft.com/v1.0/me/drive/root:/Pictures:/children?$expand=thumbnails&$top=500');
+      queue.push('https://graph.microsoft.com/v1.0/me/drive/special/photos/children?$expand=thumbnails&$top=500');
+      queue.push('https://graph.microsoft.com/v1.0/me/drive/root/children?$expand=thumbnails&$top=500');
     }
 
     let rawItems = [];
@@ -313,18 +312,21 @@ async function transformOneDriveItem(item) {
 
   let photoUrl = '';
 
-  // Extract Microsoft Graph API converted JPEG thumbnail for HEIC/HEIF browser rendering
+  // Smart high-resolution selection:
+  // For HEIC: Must use converted Microsoft Graph API high-res thumbnail (c2048x2048 / c1920x1080 / large / source).
+  // For standard formats: Prefer high-res crisp thumbnail or direct download URL for maximum 4K sharpness.
   if (item.thumbnails && item.thumbnails.length > 0) {
     const thumb = item.thumbnails[0];
     photoUrl = (thumb.c2048x2048 && thumb.c2048x2048.url) || 
+               (thumb.c1920x1080 && thumb.c1920x1080.url) || 
+               (thumb.source && thumb.source.url) || 
                (thumb.large && thumb.large.url) || 
-               (thumb.medium && thumb.medium.url) || 
-               (thumb.source && thumb.source.url) || '';
+               (thumb.medium && thumb.medium.url) || '';
   }
 
-  // Use direct download URL for standard JPEGs, or fallback to converted thumbnail for HEIC
+  // If standard photo format (JPEG/PNG/WEBP), prioritize direct full-res download URL or crisp 4K/2K thumbnail
   if (!isHeic && item['@microsoft.graph.downloadUrl']) {
-    photoUrl = item['@microsoft.graph.downloadUrl'];
+    photoUrl = item['@microsoft.graph.downloadUrl'] || photoUrl;
   } else if (!photoUrl) {
     photoUrl = item['@microsoft.graph.downloadUrl'] || '';
   }
