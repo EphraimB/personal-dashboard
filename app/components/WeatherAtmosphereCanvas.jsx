@@ -11,16 +11,16 @@ export default function WeatherAtmosphereCanvas({ code = 0 }) {
     const ctx = canvas.getContext('2d');
     let animationFrameId = null;
 
-    let dpr = window.devicePixelRatio || 1;
+    // Force 1:1 pixel ratio on TV to prevent 4K super-sampling memory bandwidth exhaustion
+    const dpr = 1;
     let width = window.innerWidth;
     let height = window.innerHeight;
 
     const setupCanvasSize = () => {
-      dpr = window.devicePixelRatio || 1;
       width = window.innerWidth;
       height = window.innerHeight;
-      canvas.width = Math.floor(width * dpr);
-      canvas.height = Math.floor(height * dpr);
+      canvas.width = width;
+      canvas.height = height;
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
     };
@@ -40,13 +40,27 @@ export default function WeatherAtmosphereCanvas({ code = 0 }) {
     const isFog = code === 45 || code === 48;
     const isSun = code === 0 || code === 1;
 
+    // Render Sun Flares statically once to save GPU/CPU cycles
+    if (isSun) {
+      ctx.clearRect(0, 0, width, height);
+      const sunGrad = ctx.createRadialGradient(width * 0.8, height * 0.2, 0, width * 0.8, height * 0.2, 350);
+      sunGrad.addColorStop(0, 'rgba(255, 179, 0, 0.12)');
+      sunGrad.addColorStop(0.5, 'rgba(255, 87, 34, 0.05)');
+      sunGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = sunGrad;
+      ctx.fillRect(0, 0, width, height);
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+
     // Create particle systems with velocities calibrated in pixels per second
     const rainDrops = [];
     const snowFlakes = [];
     const fogClouds = [];
 
     if (isRain || isThunder) {
-      const dropCount = isThunder ? 180 : 100;
+      const dropCount = isThunder ? 120 : 70;
       for (let i = 0; i < dropCount; i++) {
         rainDrops.push({
           x: Math.random() * width,
@@ -59,7 +73,7 @@ export default function WeatherAtmosphereCanvas({ code = 0 }) {
     }
 
     if (isSnow) {
-      for (let i = 0; i < 90; i++) {
+      for (let i = 0; i < 60; i++) {
         snowFlakes.push({
           x: Math.random() * width,
           y: Math.random() * height,
@@ -72,7 +86,7 @@ export default function WeatherAtmosphereCanvas({ code = 0 }) {
     }
 
     if (isFog) {
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 5; i++) {
         fogClouds.push({
           x: Math.random() * width,
           y: Math.random() * height,
@@ -89,11 +103,15 @@ export default function WeatherAtmosphereCanvas({ code = 0 }) {
     const render = (now) => {
       if (!lastTime) lastTime = now;
       const rawDt = (now - lastTime) / 1000;
+      
+      // Throttle render loop to ~30 FPS to match 30Hz TV refresh rate perfectly
+      if (rawDt < 0.032) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
       lastTime = now;
-      // Cap dt to 100ms to prevent huge physics jumps on frame drops or tab switches
       const dt = Math.min(rawDt, 0.1);
 
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, height);
 
       // Render Thunderstorm Flashes
