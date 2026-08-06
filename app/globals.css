@@ -2262,6 +2262,15 @@ html, body {
   pointer-events: auto;
 }
 
+.hud-mini-map-compact .hud-mini-map-qr-badge {
+  top: 4px;
+  right: 4px;
+  padding: 4px;
+  gap: 2px;
+  border-width: 1px;
+  border-radius: 6px;
+}
+
 .hud-qr-img {
   width: 180px;
   height: 180px;
@@ -2271,6 +2280,13 @@ html, body {
   padding: 4px;
 }
 
+.hud-mini-map-compact .hud-qr-img {
+  width: clamp(70px, 5vw, 95px);
+  height: clamp(70px, 5vw, 95px);
+  padding: 2px;
+  border-radius: 4px;
+}
+
 .hud-qr-tag {
   font-family: var(--font-mono);
   font-size: 0.75rem;
@@ -2278,8 +2294,11 @@ html, body {
   color: var(--color-cyan);
   letter-spacing: 1px;
   white-space: nowrap;
-  display: flex;
-  align-items: center;
+}
+
+.hud-mini-map-compact .hud-qr-tag {
+  font-size: 0.52rem;
+  letter-spacing: 0.5px;
 }
 
 /* Horizontal Multi-Modal Travel Mode Bar */
@@ -2517,15 +2536,14 @@ html, body {
 
 /* TOP HUD HEADER (8vh) */
 .matrix-header-hud {
-  height: 8vh;
-  min-height: 56px;
-  max-height: 70px;
+  height: clamp(48px, 6.5vh, 65px);
+  min-height: 48px;
   width: 100%;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 clamp(10px, 1.2vw, 20px);
   background: linear-gradient(180deg, rgba(8, 14, 26, 0.95) 0%, rgba(5, 8, 17, 0.8) 100%);
   border-bottom: 1px solid rgba(0, 240, 255, 0.3);
   box-shadow: 0 4px 20px rgba(0, 240, 255, 0.1);
@@ -2579,7 +2597,7 @@ html, body {
 
 .matrix-clock-digits {
   font-family: var(--font-title);
-  font-size: 2.5rem;
+  font-size: clamp(1.8rem, 2.5vw, 2.8rem);
   font-weight: 900;
   color: var(--color-cyan);
   text-shadow: 0 0 20px rgba(0, 240, 255, 0.6), 0 0 40px rgba(0, 240, 255, 0.3);
@@ -2658,17 +2676,15 @@ html, body {
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
-/* MAIN MATRIX GRID CONTAINER (Calculated flex fill to fit 100vh perfectly) */
 .matrix-main-grid {
   flex: 1;
-  height: calc(100vh - 88px);
-  max-height: calc(100vh - 88px);
+  min-height: 0;
   width: 100%;
   max-width: 100vw;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: 10px;
-  padding: 6px 16px;
+  gap: clamp(6px, 0.8vw, 12px);
+  padding: clamp(4px, 0.6vh, 8px) clamp(8px, 1vw, 16px);
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -2715,7 +2731,7 @@ html, body {
 
 .matrix-card-title {
   font-family: var(--font-title);
-  font-size: 1.25rem;
+  font-size: clamp(0.95rem, 1.1vw, 1.3rem);
   font-weight: 900;
   color: var(--color-cyan);
   letter-spacing: 1.5px;
@@ -2867,12 +2883,16 @@ html, body {
 
 /* 1B: COMMUTER TRANSIT HUB CARD */
 .card-transit-hub {
-  height: 50%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 .transit-terminal-block {
-  margin-bottom: 12px;
-  padding-bottom: 10px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
   border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
 }
 
@@ -2886,12 +2906,12 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .transit-line-title {
   font-family: var(--font-title);
-  font-size: 1.15rem;
+  font-size: clamp(0.85rem, 0.95vw, 1.05rem);
   font-weight: 800;
   letter-spacing: 1.2px;
   display: flex;
@@ -2904,11 +2924,11 @@ html, body {
 .transit-ferry { color: #B15EFF; }
 
 .transit-countdown-pill {
-  padding: 5px 12px;
-  border-radius: 20px;
+  padding: 2px 8px;
+  border-radius: 12px;
   font-weight: 900;
-  font-size: 1.05rem;
-  letter-spacing: 1px;
+  font-size: 0.85rem;
+  letter-spacing: 0.8px;
 }
 
 .pill-grey {
@@ -3223,7 +3243,8 @@ html, body {
 }
 
 .card-location-map {
-  height: 48%;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -3288,6 +3309,51 @@ html, body {
 .footer-sync-info {
   font-size: 0.65rem;
   color: var(--color-text-dim);
+}
+
+/* Fluid Resolution Scaling Engine for 1080p, 720p, and TV Viewports */
+@media (max-width: 1920px), (max-height: 1080px) {
+  .matrix-header-hud {
+    height: 52px;
+    padding: 0 14px;
+  }
+  .matrix-brand-title {
+    font-size: 0.85rem;
+  }
+  .matrix-clock-digits {
+    font-size: 2.1rem;
+  }
+  .matrix-clock-ampm {
+    font-size: 0.95rem;
+  }
+  .matrix-clock-date {
+    font-size: 0.85rem;
+  }
+  .matrix-main-grid {
+    gap: 8px;
+    padding: 4px 10px;
+  }
+  .matrix-card {
+    padding: 10px 12px;
+  }
+  .matrix-card-title {
+    font-size: 1.1rem;
+  }
+  .matrix-card-tag {
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-height: 800px) {
+  .matrix-header-hud {
+    height: 44px;
+  }
+  .matrix-clock-digits {
+    font-size: 1.6rem;
+  }
+  .matrix-card {
+    padding: 6px 8px;
+  }
 }
 
 

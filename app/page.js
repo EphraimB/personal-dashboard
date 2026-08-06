@@ -707,8 +707,8 @@ export default function Home() {
                   </span>
                 </div>
               ) : (
-                <div className="transit-upcoming-list" style={{ marginTop: '6px' }}>
-                  {transitData.lirr.upcomingWestbound.map((item, i) => (
+                <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
+                  {transitData.lirr.upcomingWestbound.slice(0, 2).map((item, i) => (
                     <div key={i} className="transit-upcoming-item">
                       <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
                       <span style={{ color: '#C0C0C0' }}>{item.track} • {item.status}</span>
@@ -732,14 +732,14 @@ export default function Home() {
               </div>
 
               {!transitData?.lirr?.upcomingEastbound || transitData.lirr.upcomingEastbound.length === 0 ? (
-                <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
+                <div className="agenda-empty-banner" style={{ margin: '6px 0', padding: '8px 6px' }}>
                   <span style={{ color: '#E67E22', fontSize: '0.68rem', fontWeight: '700' }}>
                     // NO UPCOMING EASTBOUND DEPARTURES
                   </span>
                 </div>
               ) : (
-                <div className="transit-upcoming-list" style={{ marginTop: '6px' }}>
-                  {transitData.lirr.upcomingEastbound.map((item, i) => (
+                <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
+                  {transitData.lirr.upcomingEastbound.slice(0, 2).map((item, i) => (
                     <div key={i} className="transit-upcoming-item">
                       <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
                       <span style={{ color: '#E67E22' }}>{item.track} • {item.status}</span>
@@ -763,14 +763,14 @@ export default function Home() {
               </div>
 
               {!transitData?.ferry?.upcomingSailings || transitData.ferry.upcomingSailings.length === 0 ? (
-                <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
+                <div className="agenda-empty-banner" style={{ margin: '6px 0', padding: '8px 6px' }}>
                   <span style={{ color: '#B15EFF', fontSize: '0.68rem', fontWeight: '700' }}>
                     // NO UPCOMING FERRY SAILINGS
                   </span>
                 </div>
               ) : (
-                <div className="transit-upcoming-list" style={{ marginTop: '6px' }}>
-                  {transitData.ferry.upcomingSailings.map((item, i) => (
+                <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
+                  {transitData.ferry.upcomingSailings.slice(0, 2).map((item, i) => (
                     <div key={i} className="transit-upcoming-item">
                       <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
                       <span style={{ color: '#B15EFF' }}>{item.status}</span>
