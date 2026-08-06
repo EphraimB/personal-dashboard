@@ -159,12 +159,65 @@ function formatHourLabel(isoString, idx) {
   return `${hrs} ${ampm}`;
 }
 
+const DEFAULT_DEMO_PHOTOS = [
+  {
+    id: 'demo-1',
+    title: 'Ares Habitat Surface Survey',
+    description: 'High-resolution atmospheric survey captured by Rover Optical Unit 4 over the eastern flank of Ares Crater.',
+    date: '2026-07-21 18:45',
+    location: 'Ares Crater, Mars System',
+    camera: 'Ares Rover Optical Cam 4K',
+    exif: '24mm • f/4.0 • 1/1000s • ISO 100',
+    url: 'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?q=80&w=2000&auto=format&fit=crop'
+  },
+  {
+    id: 'demo-2',
+    title: 'Nebula Horizon Over City',
+    description: 'Long exposure nocturnal panoramic of the metropolis baseline.',
+    date: '2026-06-15 22:10',
+    location: 'Citizen Suite Penthouse',
+    camera: 'Sony Alpha A7 IV',
+    exif: '35mm • f/1.8 • 1/60s • ISO 800',
+    url: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=2000&auto=format&fit=crop'
+  },
+  {
+    id: 'demo-3',
+    title: 'Pressurized Mountain Pass',
+    description: 'Crisp alpine morning vista captured along Sector 02 high-altitude transit corridor.',
+    date: '2026-05-04 11:30',
+    location: 'Sector 02 Alpine Loop',
+    camera: 'Fujifilm X-T5',
+    exif: '16mm • f/8.0 • 1/250s • ISO 200',
+    url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2000&auto=format&fit=crop'
+  },
+  {
+    id: 'demo-4',
+    title: 'Cosmic Reflection Lake',
+    description: 'Serene sunrise framing the bio-dome reflection pools in the Northern Colony Sanctuary.',
+    date: '2026-04-12 05:20',
+    location: 'Northern Colony Sanctuary',
+    camera: 'Canon EOS R5',
+    exif: '50mm • f/1.4 • 1/4000s • ISO 100',
+    url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2000&auto=format&fit=crop'
+  },
+  {
+    id: 'demo-5',
+    title: 'Deep Space Orbital Aurora',
+    description: 'Orbital spectrograph tracking magnetic field oscillations in upper thermosphere.',
+    date: '2026-03-29 02:15',
+    location: 'Ares City Orbital Platform',
+    camera: 'Orbital Tele-Array Mark III',
+    exif: '85mm • f/1.2 • 1/30s • ISO 1600',
+    url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=2000&auto=format&fit=crop'
+  }
+];
+
 export default function Home() {
-  const [photoList, setPhotoList] = useState([]);
+  const [photoList, setPhotoList] = useState(DEFAULT_DEMO_PHOTOS);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [progressWidth, setProgressWidth] = useState(0);
-  const [layer1Url, setLayer1Url] = useState('');
+  const [layer1Url, setLayer1Url] = useState(DEFAULT_DEMO_PHOTOS[0].url);
   const [layer2Url, setLayer2Url] = useState('');
   const [activeLayer, setActiveLayer] = useState(1); // 1 or 2
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -377,15 +430,16 @@ export default function Home() {
       const res = await fetch(`/api/onedrive/photos?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        if (data.photos && data.photos.length > 0) {
-          setPhotoList(data.photos);
-          setCurrentIndex(0);
-          return;
-        }
+        const incomingPhotos = (data.photos && data.photos.length > 0)
+          ? data.photos
+          : (data.demoPhotos && data.demoPhotos.length > 0 ? data.demoPhotos : DEFAULT_DEMO_PHOTOS);
+        setPhotoList(incomingPhotos);
+        return;
       }
     } catch (e) {
       console.error('Error fetching OneDrive photos:', e);
     }
+    setPhotoList(DEFAULT_DEMO_PHOTOS);
   };
 
   useEffect(() => {
