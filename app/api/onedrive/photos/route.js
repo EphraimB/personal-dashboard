@@ -155,11 +155,10 @@ async function fetchGraphPhotos(token, folder, query, filterScreenshots) {
     } else if (query.trim()) {
       queue.push(`https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(query.trim())}')?$expand=thumbnails&$top=500`);
     } else {
-      // https://onedrive.live.com/photos target: Fetch Camera Roll, Pictures, and Photos special folders
-      queue.push('https://graph.microsoft.com/v1.0/me/drive/special/cameraroll/children?$expand=thumbnails&$top=500');
-      queue.push('https://graph.microsoft.com/v1.0/me/drive/special/photos/children?$expand=thumbnails&$top=500');
-      queue.push('https://graph.microsoft.com/v1.0/me/drive/root:/Pictures/Camera Roll:/children?$expand=thumbnails&$top=500');
+      // Primary target: My Files/Pictures folder and special photos endpoint
       queue.push('https://graph.microsoft.com/v1.0/me/drive/root:/Pictures:/children?$expand=thumbnails&$top=500');
+      queue.push('https://graph.microsoft.com/v1.0/me/drive/special/photos/children?$expand=thumbnails&$top=500');
+      queue.push('https://graph.microsoft.com/v1.0/me/drive/root/children?$expand=thumbnails&$top=500');
     }
 
     let rawItems = [];

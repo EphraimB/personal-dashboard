@@ -240,7 +240,7 @@ export default function Home() {
 
   // Dashboard Configuration Settings
   const [config, setConfig] = useState({
-    folderPath: '',
+    folderPath: 'Pictures',
     searchQuery: '',
     accessToken: '',
     slideDuration: 15,
