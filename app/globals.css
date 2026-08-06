@@ -3081,10 +3081,19 @@ html, body {
 
 .photo-hero-progress-bar {
   height: 100%;
+  width: 0%;
   background: linear-gradient(90deg, var(--color-cyan), var(--color-green));
   box-shadow: 0 0 8px var(--color-cyan);
-  transition: width 0.3s linear;
+}
+
+.photo-hero-progress-bar.animating {
+  animation: progressBarFill var(--slide-duration, 15s) linear forwards;
   will-change: width;
+}
+
+@keyframes progressBarFill {
+  0% { width: 0%; }
+  100% { width: 100%; }
 }
 
 /* QUADRANT 3: RIGHT COLUMN (AGENDA & MAP) */

@@ -477,33 +477,19 @@ export default function Home() {
     }
   }, [currentIndex, photoList]);
 
-  // Automatic Slideshow Progression Timer & CSS Progress Bar Engine
+  // Automatic Slideshow Progression Timer Engine
   useEffect(() => {
-    if (isPaused || photoList.length === 0) {
-      setProgressWidth(0);
-      return;
-    }
+    if (isPaused || photoList.length === 0) return;
 
-    // Reset progress width for current slide
-    setProgressWidth(0);
-
-    const slideDuration = config.slideDuration || 10;
+    const slideDuration = config.slideDuration || 15;
     const durationMs = slideDuration * 1000;
-
-    // Trigger smooth CSS progress bar transition
-    const animFrame = setTimeout(() => {
-      setProgressWidth(100);
-    }, 50);
 
     // Advance slide when duration completes
     const slideTimer = setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % photoList.length);
     }, durationMs);
 
-    return () => {
-      clearTimeout(animFrame);
-      clearTimeout(slideTimer);
-    };
+    return () => clearTimeout(slideTimer);
   }, [currentIndex, isPaused, photoList, config.slideDuration]);
 
   const toggleFullscreen = () => {
@@ -825,11 +811,9 @@ export default function Home() {
 
               <div className="photo-hero-progress-track">
                 <div
-                  className="photo-hero-progress-bar"
-                  style={{
-                    width: `${progressWidth}%`,
-                    transition: isPaused || progressWidth === 0 ? 'none' : `width ${config.slideDuration || 10}s linear`
-                  }}
+                  key={`${currentIndex}-${isPaused}`}
+                  className={`photo-hero-progress-bar ${!isPaused ? 'animating' : ''}`}
+                  style={{ '--slide-duration': `${config.slideDuration || 15}s` }}
                 />
               </div>
             </div>
