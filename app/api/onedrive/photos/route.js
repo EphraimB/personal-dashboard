@@ -310,6 +310,8 @@ async function transformOneDriveItem(item) {
   const mime = (item.file && item.file.mimeType ? item.file.mimeType : '').toLowerCase();
   const isHeic = name.endsWith('.heic') || name.endsWith('.heif') || mime.includes('heic') || mime.includes('heif');
 
+  let photoUrl = '';
+
   // Smart high-resolution selection:
   // For HEIC: Must use converted Microsoft Graph API high-res thumbnail (c2048x2048 / c1920x1080 / large / source).
   // For standard formats: Prefer high-res crisp thumbnail or direct download URL for maximum 4K sharpness.
