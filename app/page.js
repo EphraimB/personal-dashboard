@@ -616,14 +616,12 @@ export default function Home() {
   const hourlyTimes = (weatherData?.hourly?.time || ['', '', '', '', '', '']).slice(hourlyStartIdx, hourlyStartIdx + 6);
 
   return (
-    <div className={`tactical-matrix-viewport ${showControls ? 'user-active' : 'user-idle'}`}>
+    <div className={`ares-tv-app tactical-matrix-viewport ${showControls ? 'user-active' : 'user-idle'}`}>
       {/* Dynamic Background Atmospheric Weather Canvas */}
       <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
 
-      <div className="hud-viewport-stage">
-        <div className="hud-canvas-scaler" style={isMobileViewport ? {} : { transform: `scale(${canvasScale})` }}>
-          {/* TOP HUD HEADER BAR (10vh) */}
-          <header className="matrix-header-hud">
+      {/* TOP HUD HEADER BAR */}
+      <header className="matrix-header-hud">
             <div className="matrix-header-left">
               <div className="matrix-brand-badge">
                 <span className="matrix-brand-tag">// ARES OS</span>
@@ -1030,8 +1028,6 @@ export default function Home() {
           <span style={{ color: 'var(--color-cyan)' }}>CYBERPUNK ENGINE v2.0</span>
         </div>
       </footer>
-        </div>
-      </div>
 
       {/* Overlays */}
       <div className="city-matrix-underlay" />

@@ -10,7 +10,7 @@
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 
   /* Color System */
-  --color-bg-dark: #04060c;
+  --color-bg-dark: #000000;
   --color-hud-bg: rgba(4, 6, 12, 0.78);
   --color-hud-border: rgba(255, 87, 34, 0.35);
   --color-hud-border-cyan: rgba(0, 240, 255, 0.35);
@@ -153,14 +153,11 @@ html, body {
 .ares-tv-app {
   position: relative;
   width: 100vw;
-  min-height: 100vh;
-  overflow-y: auto;
-  overflow-x: auto;
-  background-image: url('/location-background.jpeg');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #000000 !important;
 }
 
 .weather-atmosphere-canvas {
@@ -2656,44 +2653,16 @@ html, body {
 }
 
 /* ==============================================================================
-   100% VECTOR CANVAS SCALING STAGE ENGINE (1920x1080 BASE)
+   100vw x 100vh FULL-WIDTH EDGE-TO-EDGE FLUID DASHBOARD MATRIX
    ============================================================================== */
-.hud-viewport-stage {
-  position: absolute;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  z-index: 2;
-  pointer-events: auto;
-}
-
-.hud-canvas-scaler {
-  width: 1920px;
-  height: 1080px;
-  transform-origin: center center;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  position: relative;
-  overflow: hidden;
-  background: transparent;
-  box-shadow: 0 0 60px rgba(0, 0, 0, 0.85);
-}
-
 .matrix-main-grid {
   flex: 1;
   min-height: 0;
-  height: 972px;
-  width: 1920px;
+  width: 100vw;
   display: grid;
-  grid-template-columns: 485px 890px 485px;
-  gap: 16px;
-  padding: 12px 22px;
+  grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.4fr) minmax(320px, 1fr);
+  gap: 10px;
+  padding: 6px 12px;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -2704,7 +2673,7 @@ html, body {
   background: var(--color-card-bg);
   border: 1px solid var(--color-card-border);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 20px var(--color-card-glow);
-  padding: 14px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2728,38 +2697,39 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-  padding-top: 4px;
-  padding-bottom: 6px;
+  flex-wrap: wrap;
+  row-gap: 4px;
+  column-gap: 8px;
+  margin-bottom: 6px;
+  padding-top: 2px;
+  padding-bottom: 4px;
   border-bottom: 1px solid rgba(0, 240, 255, 0.15);
   min-width: 0;
 }
 
 .matrix-card-title {
   font-family: var(--font-title);
-  font-size: clamp(1.15rem, 1.35vw, 1.55rem);
+  font-size: clamp(0.85rem, 1.1vw, 1.3rem);
   font-weight: 900;
   color: var(--color-cyan);
-  letter-spacing: 1.5px;
-  line-height: 1.3;
+  letter-spacing: 1.2px;
+  line-height: 1.2;
   display: flex;
   align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-  overflow: visible;
-  flex-shrink: 1;
+  gap: 6px;
+  white-space: normal;
+  word-break: break-word;
+  flex: 1 1 auto;
 }
 
 .matrix-card-tag {
-  font-size: 0.95rem;
+  font-size: clamp(0.7rem, 0.8vw, 0.85rem);
   font-weight: 800;
   color: var(--color-text-dim);
   letter-spacing: 0.8px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  flex: 0 1 auto;
 }
 
 /* QUADRANT 1: LEFT COLUMN (WEATHER & TRANSIT) */
@@ -2773,7 +2743,7 @@ html, body {
 
 /* 1A: ATMOSPHERIC TELEMETRY CARD */
 .card-weather-telemetry {
-  flex: 1.15;
+  flex: 0.9;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -2894,7 +2864,7 @@ html, body {
 
 /* 1B: COMMUTER TRANSIT HUB CARD */
 .card-transit-hub {
-  flex: 1;
+  flex: 1.1;
   min-height: 0;
   display: flex;
   flex-direction: column;
