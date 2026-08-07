@@ -248,11 +248,12 @@ export default function Home() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Real-time clock states (Local NY & Ares Solar Clock)
+  // Real-time clock states (Local NY & Ares Solar Clock & Last Sync)
   const [clockTime, setClockTime] = useState('');
   const [clockAmPm, setClockAmPm] = useState('');
   const [clockDate, setClockDate] = useState('');
   const [aresSolarClock, setAresSolarClock] = useState('');
+  const [lastSyncTime, setLastSyncTime] = useState(() => new Date().toLocaleTimeString('en-US', { hour12: true }));
 
   // Cedarhurst Open-Meteo Live Weather & Forecast Data
   const [weatherData, setWeatherData] = useState(null);
@@ -388,6 +389,14 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  const updateSyncTime = () => {
+    const now = new Date();
+    const hrs = String(now.getHours()).padStart(2, '0');
+    const mins = String(now.getMinutes()).padStart(2, '0');
+    const secs = String(now.getSeconds()).padStart(2, '0');
+    setLastSyncTime(`${hrs}:${mins}:${secs}`);
+  };
+
   // Cedarhurst, NY Live Open-Meteo Weather Polling (40.6226 N, -73.7275 W)
   useEffect(() => {
     const fetchWeather = async () => {
@@ -398,6 +407,7 @@ export default function Home() {
         if (res.ok) {
           const data = await res.json();
           setWeatherData(data);
+          updateSyncTime();
         }
       } catch (e) {
         console.error('Weather fetch error:', e);
@@ -418,6 +428,7 @@ export default function Home() {
         if (res.ok) {
           const data = await res.json();
           setCalendarData(data);
+          updateSyncTime();
         }
       } catch (e) {
         console.error('Calendar stream fetch error:', e);
@@ -437,6 +448,7 @@ export default function Home() {
         if (res.ok) {
           const data = await res.json();
           setTransitData(data);
+          updateSyncTime();
         }
       } catch (e) {
         console.error('Transit fetch error:', e);
@@ -1029,9 +1041,7 @@ export default function Home() {
           <span className="hotkey-item"><span className="hotkey-key">[M]</span> CONFIG</span>
         </div>
         <div className="footer-sync-info">
-          <span>LAST SYNC: 17:06:42</span>
-          <span style={{ margin: '0 8px' }}>•</span>
-          <span style={{ color: 'var(--color-cyan)' }}>CYBERPUNK ENGINE v2.0</span>
+          <span>LAST SYNC: {lastSyncTime}</span>
         </div>
       </footer>
 
