@@ -32,8 +32,11 @@ function cleanAddressForGeocode(rawLoc) {
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Extract address starting at house number if present (e.g. 'Temple Israel • 140 Central Ave...')
-  const addrMatch = cleaned.match(/(?:\b\d+[-\d]*\s+[A-Za-z0-9\s.,'-]+(?:St|Street|Ave|Avenue|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Pl|Place|Pkwy|Parkway|Ct|Court)\b[^\n]*)/i);
+  // Handle Queens hyphenated street numbers (e.g., '1-56 Beach 9th St' -> '156 Beach 9th St') for geocoder compatibility
+  const normalizedQueens = cleaned.replace(/(\b\d+)-(\d+)\s+([A-Za-z])/g, '$1$2 $3');
+
+  // Extract address starting at house number if present
+  const addrMatch = normalizedQueens.match(/(?:\b\d+[-\d]*\s+[A-Za-z0-9\s.,'-]+(?:St|Street|Ave|Avenue|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Pl|Place|Pkwy|Parkway|Ct|Court)\b[^\n]*)/i);
   if (addrMatch) {
     let extracted = addrMatch[0].trim();
     if (!/\b(ny|new york|nj|ct)\b/i.test(extracted)) {
@@ -41,7 +44,7 @@ function cleanAddressForGeocode(rawLoc) {
     }
     return extracted;
   }
-  return cleaned;
+  return normalizedQueens;
 }
 
 function extractVirtualEventData(locStr, meetingUrlParam) {
@@ -174,9 +177,12 @@ async function fetchTravelTimes(lat1, lon1, lat2, lon2, distMiles) {
 }
 
 const LOCAL_VENUE_FALLBACKS = {
-  'ohel regional family center': { lat: 40.59695, lon: -73.74360, display_name: 'Ohel Regional Family Center, 1-56 Beach 9th St, Far Rockaway, NY 11691' },
-  'ohel family center': { lat: 40.59695, lon: -73.74360, display_name: 'Ohel Regional Family Center, 1-56 Beach 9th St, Far Rockaway, NY 11691' },
-  'ohel': { lat: 40.59695, lon: -73.74360, display_name: 'Ohel Regional Family Center, 1-56 Beach 9th St, Far Rockaway, NY 11691' },
+  'ohel regional family center': { lat: 40.5954478, lon: -73.7437604, display_name: 'Ohel Regional Family Center, 156 Beach 9th St, Far Rockaway, NY 11691' },
+  'ohel family center': { lat: 40.5954478, lon: -73.7437604, display_name: 'Ohel Regional Family Center, 156 Beach 9th St, Far Rockaway, NY 11691' },
+  'ohel rebbe': { lat: 40.6896, lon: -73.7381, display_name: 'The Ohel of the Lubavitcher Rebbe, 226-20 Francis Lewis Blvd, Cambria Heights, NY 11411' },
+  'ohel chabad': { lat: 40.6896, lon: -73.7381, display_name: 'The Ohel of the Lubavitcher Rebbe, 226-20 Francis Lewis Blvd, Cambria Heights, NY 11411' },
+  'the ohel': { lat: 40.6896, lon: -73.7381, display_name: 'The Ohel of the Lubavitcher Rebbe, 226-20 Francis Lewis Blvd, Cambria Heights, NY 11411' },
+  'ohel': { lat: 40.6896, lon: -73.7381, display_name: 'The Ohel of the Lubavitcher Rebbe, 226-20 Francis Lewis Blvd, Cambria Heights, NY 11411' },
   'temple avodah': { lat: 40.6385, lon: -73.6521, display_name: 'Temple Avodah, 3050 Oceanside Rd, Oceanside, NY 11572' },
   'temple israel, lawrence': { lat: 40.6174, lon: -73.7296, display_name: 'Temple Israel, 140 Central Ave, Lawrence, NY 11559' },
   'temple israel': { lat: 40.6174, lon: -73.7296, display_name: 'Temple Israel, Lawrence, NY' },
@@ -187,7 +193,7 @@ const LOCAL_VENUE_FALLBACKS = {
 async function geocodeUSCensus(addressStr) {
   if (!addressStr || !/\d+/.test(addressStr)) return null;
   try {
-    const cleanQuery = addressStr.replace(/,?\s*(?:USA|United States)$/i, '').trim();
+    const cleanQuery = addressStr.replace(/#\w+/g, '').replace(/,?\s*(?:USA|United States)$/i, '').trim();
     const censusUrl = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(cleanQuery)}&benchmark=Public_AR_Current&format=json`;
     const res = await fetch(censusUrl, {
       headers: { 'User-Agent': 'PersonalDashboard/2.0 (personal-dashboard-app)' },
