@@ -367,14 +367,20 @@ export default function Home() {
       const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
       setClockDate(now.toLocaleDateString('en-US', options).toUpperCase());
 
-      const startOfYear = new Date(now.getFullYear(), 0, 0);
-      const diff = now - startOfYear;
-      const oneDay = 1000 * 60 * 60 * 24;
-      const dayOfYear = Math.floor(diff / oneDay);
-      const millisToday = (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()) * 1000 + now.getMilliseconds();
-      const solarSubIndex = Math.floor((millisToday / (24 * 3600 * 1000)) * 10000);
+      // Authentic Clancy Martian Year 38 (MY38) Planetary Solar Time Engine
+      // Epoch Start: November 12, 2024, 00:00:00 UTC (1 Sol = 88775.244 seconds)
+      const MY38_EPOCH_UTC = new Date('2024-11-12T00:00:00Z').getTime();
+      const currentUTC = now.getTime();
+      const diffSeconds = (currentUTC - MY38_EPOCH_UTC) / 1000;
+      const SOL_IN_SECONDS = 88775.244;
 
-      setAresSolarClock(`//${dayOfYear} / 600 / ${solarSubIndex}`);
+      const totalSols = diffSeconds / SOL_IN_SECONDS;
+      const marsYear = 38;
+      const currentSol = Math.floor(totalSols);
+      const solFractionDecimal = totalSols - currentSol;
+      const solFraction4Digit = String(Math.floor(solFractionDecimal * 10000)).padStart(4, '0');
+
+      setAresSolarClock(`// ${marsYear} / ${currentSol} / ${solFraction4Digit}`);
     };
 
     updateClocks();
