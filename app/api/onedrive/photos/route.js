@@ -151,14 +151,14 @@ async function fetchGraphPhotos(token, folder, query, filterScreenshots) {
 
     if (folder.trim()) {
       const cleanPath = folder.trim().replace(/^\/+|\/+$/g, '');
-      queue.push(`https://graph.microsoft.com/v1.0/me/drive/root:/${encodeURIComponent(cleanPath)}:/children?$expand=thumbnails&$top=500`);
+      queue.push(`https://graph.microsoft.com/v1.0/me/drive/root:/${encodeURIComponent(cleanPath)}:/children?$expand=thumbnails($select=c2048x2048,c1920x1080,large,medium,small)&$top=500`);
     } else if (query.trim()) {
-      queue.push(`https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(query.trim())}')?$expand=thumbnails&$top=500`);
+      queue.push(`https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(query.trim())}')?$expand=thumbnails($select=c2048x2048,c1920x1080,large,medium,small)&$top=500`);
     } else {
       // Primary target: My Files/Pictures folder and special photos endpoint
-      queue.push('https://graph.microsoft.com/v1.0/me/drive/root:/Pictures:/children?$expand=thumbnails&$top=500');
-      queue.push('https://graph.microsoft.com/v1.0/me/drive/special/photos/children?$expand=thumbnails&$top=500');
-      queue.push('https://graph.microsoft.com/v1.0/me/drive/root/children?$expand=thumbnails&$top=500');
+      queue.push('https://graph.microsoft.com/v1.0/me/drive/root:/Pictures:/children?$expand=thumbnails($select=c2048x2048,c1920x1080,large,medium,small)&$top=500');
+      queue.push('https://graph.microsoft.com/v1.0/me/drive/special/photos/children?$expand=thumbnails($select=c2048x2048,c1920x1080,large,medium,small)&$top=500');
+      queue.push('https://graph.microsoft.com/v1.0/me/drive/root/children?$expand=thumbnails($select=c2048x2048,c1920x1080,large,medium,small)&$top=500');
     }
 
     let rawItems = [];
@@ -201,7 +201,7 @@ async function fetchGraphPhotos(token, folder, query, filterScreenshots) {
         // Discover subfolders and add their children to queue
         for (const item of pageItems) {
           if (item.folder && item.folder.childCount > 0 && item.id) {
-            const subfolderEndpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${item.id}/children?$expand=thumbnails&$top=500`;
+            const subfolderEndpoint = `https://graph.microsoft.com/v1.0/me/drive/items/${item.id}/children?$expand=thumbnails($select=c2048x2048,c1920x1080,large,medium,small)&$top=500`;
             if (!visitedEndpoints.has(subfolderEndpoint) && queue.length < 15) {
               queue.push(subfolderEndpoint);
             }
@@ -305,30 +305,25 @@ function cleanTitle(rawName) {
   return cleaned || 'Captured Moment';
 }
 
+function cleanThumbnailUrl(url) {
+  if (!url) return '';
+  return url
+    .replace(/%26version%3DPublished/gi, '&version=Published')
+    .replace(/%26([a-zA-Z0-9_]+)=/gi, '&$1=')
+    .replace(/%26([a-zA-Z0-9_]+)%3D/gi, '&$1=');
+}
+
 async function transformOneDriveItem(item) {
   const name = (item.name || '').toLowerCase();
   const mime = (item.file && item.file.mimeType ? item.file.mimeType : '').toLowerCase();
-  const isHeic = name.endsWith('.heic') || name.endsWith('.heif') || mime.includes('heic') || mime.includes('heif');
 
+  // For OneDrive items, route through permanent server-side proxy endpoint so URLs never expire.
+  // Fall back to external demo URLs if item is a demo photo.
   let photoUrl = '';
-
-  // Smart high-resolution selection:
-  // For HEIC: Must use converted Microsoft Graph API high-res thumbnail (c2048x2048 / c1920x1080 / large / source).
-  // For standard formats: Prefer high-res crisp thumbnail or direct download URL for maximum 4K sharpness.
-  if (item.thumbnails && item.thumbnails.length > 0) {
-    const thumb = item.thumbnails[0];
-    photoUrl = (thumb.c2048x2048 && thumb.c2048x2048.url) || 
-               (thumb.c1920x1080 && thumb.c1920x1080.url) || 
-               (thumb.source && thumb.source.url) || 
-               (thumb.large && thumb.large.url) || 
-               (thumb.medium && thumb.medium.url) || '';
-  }
-
-  // If standard photo format (JPEG/PNG/WEBP), prioritize direct full-res download URL or crisp 4K/2K thumbnail
-  if (!isHeic && item['@microsoft.graph.downloadUrl']) {
-    photoUrl = item['@microsoft.graph.downloadUrl'] || photoUrl;
-  } else if (!photoUrl) {
-    photoUrl = item['@microsoft.graph.downloadUrl'] || '';
+  if (item.id && !item.id.startsWith('demo-')) {
+    photoUrl = `/api/onedrive/image?id=${encodeURIComponent(item.id)}`;
+  } else {
+    photoUrl = item.url || '';
   }
 
   const photoMeta = item.photo || {};
