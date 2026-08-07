@@ -22,21 +22,40 @@ function sanitizeLocationString(locStr) {
     .join(', ');
 }
 
+function cleanAddressForGeocode(rawLoc) {
+  if (!rawLoc) return '';
+  let cleaned = rawLoc
+    .replace(/\\n/gi, ' ')
+    .replace(/\\,/g, ',')
+    .replace(/\\;/g, ';')
+    .replace(/[•|]/g, ',')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Extract address starting at house number if present (e.g. 'Temple Israel • 140 Central Ave...')
+  const addrMatch = cleaned.match(/(?:\b\d+[-\d]*\s+[A-Za-z0-9\s.,'-]+(?:St|Street|Ave|Avenue|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Pl|Place|Pkwy|Parkway|Ct|Court)\b[^\n]*)/i);
+  if (addrMatch) {
+    let extracted = addrMatch[0].trim();
+    if (!/\b(ny|new york|nj|ct)\b/i.test(extracted)) {
+      extracted = `${extracted}, NY`;
+    }
+    return extracted;
+  }
+  return cleaned;
+}
+
 function extractVirtualEventData(locStr, meetingUrlParam) {
   const raw = (locStr || '').trim();
   const lower = raw.toLowerCase();
 
-  // STRICT RULE: If location is generic text like "Virtual", "Online", "TBD", "N/A" without an explicit URL in the location line, DO NOT generate a false link or QR code!
   const genericTerms = ['virtual', 'online', 'virtual event', 'online event', 'tbd', 'n/a', 'google calendar', 'phone call', 'remote'];
   if (genericTerms.includes(lower)) {
     return null;
   }
 
-  // Extract HTTP or HTTPS URL from location string
   const urlMatchFromLoc = raw.match(/(https?:\/\/[^\s,;<>"']+)/i);
   let meetingUrl = urlMatchFromLoc ? urlMatchFromLoc[1] : (meetingUrlParam && meetingUrlParam.startsWith('http') ? meetingUrlParam : '');
 
-  // REQUIRE a full URL starting with http:// or https:// before generating a QR code!
   if (!meetingUrl || (!meetingUrl.startsWith('http://') && !meetingUrl.startsWith('https://'))) {
     return null;
   }
@@ -112,26 +131,17 @@ function formatDurationMinutes(totalMinutes) {
 }
 
 async function fetchTravelTimes(lat1, lon1, lat2, lon2, distMiles) {
-  // Direct pedestrian sidewalk walking speed: ~3.4 mph (17.6 mins/mile)
   let walkMins = (distMiles * 1.1 / 3.4) * 60;
-  
-  // Bicycle speed: ~12 mph (5 mins/mile)
   let bikeMins = (distMiles * 1.15 / 12) * 60;
-  
-  // Driving speed in local Cedarhurst / Five Towns: ~22 mph + 1m parking
   let driveMins = (distMiles * 1.25 / 22) * 60 + 1;
 
-  // Realistic Transit Calculation:
-  // For short neighborhood walks (< 0.75 mi), public transit is N/A (walking is faster than taking a train/bus)
   let transitMins = null;
   if (distMiles >= 0.75 && distMiles < 2.5) {
     transitMins = Math.min(walkMins * 0.9, 16 + (distMiles / 12) * 60);
   } else if (distMiles >= 2.5 && distMiles < 12.0) {
-    // LIRR trip: 8m walk to Cedarhurst station + 8m wait + LIRR ride (38 mph) + 5m destination walk
     const railTime = (distMiles / 38) * 60;
     transitMins = 8 + 8 + railTime + 5;
   } else if (distMiles >= 12.0) {
-    // NYC / Regional LIRR trip: 8m station walk + 8m wait + LIRR express (42 mph) + 8m subway transfer
     const railTime = (distMiles / 42) * 60;
     transitMins = 8 + 8 + railTime + 8;
   }
@@ -148,7 +158,7 @@ async function fetchTravelTimes(lat1, lon1, lat2, lon2, distMiles) {
       const data = await res.json();
       if (data.routes && data.routes.length > 0) {
         const routeSecs = data.routes[0].duration;
-        driveMins = (routeSecs / 60) + 1; // Real driving route duration + 1m parking buffer
+        driveMins = (routeSecs / 60) + 1;
       }
     }
   } catch (e) {
@@ -164,24 +174,59 @@ async function fetchTravelTimes(lat1, lon1, lat2, lon2, distMiles) {
 }
 
 const LOCAL_VENUE_FALLBACKS = {
-  'ohel regional family center': { lat: '40.59695', lon: '-73.74360', display_name: 'Ohel Regional Family Center, 1-56 Beach 9th St, Far Rockaway, NY 11691' },
-  'ohel family center': { lat: '40.59695', lon: '-73.74360', display_name: 'Ohel Regional Family Center, 1-56 Beach 9th St, Far Rockaway, NY 11691' },
-  'ohel': { lat: '40.59695', lon: '-73.74360', display_name: 'Ohel Regional Family Center, 1-56 Beach 9th St, Far Rockaway, NY 11691' },
-  'temple avodah': { lat: '40.6385', lon: '-73.6521', display_name: 'Temple Avodah, 3050 Oceanside Rd, Oceanside, NY 11572' },
-  'temple israel, lawrence': { lat: '40.6174', lon: '-73.7296', display_name: 'Temple Israel, 140 Central Ave, Lawrence, NY 11559' },
-  'temple israel': { lat: '40.6174', lon: '-73.7296', display_name: 'Temple Israel, Lawrence, NY' },
-  'chelsea piers field house': { lat: '40.7469', lon: '-74.0089', display_name: 'Chelsea Piers Field House, New York, NY 10011' },
-  'chelsea piers': { lat: '40.7469', lon: '-74.0089', display_name: 'Chelsea Piers, New York, NY' }
+  'ohel regional family center': { lat: 40.59695, lon: -73.74360, display_name: 'Ohel Regional Family Center, 1-56 Beach 9th St, Far Rockaway, NY 11691' },
+  'ohel family center': { lat: 40.59695, lon: -73.74360, display_name: 'Ohel Regional Family Center, 1-56 Beach 9th St, Far Rockaway, NY 11691' },
+  'ohel': { lat: 40.59695, lon: -73.74360, display_name: 'Ohel Regional Family Center, 1-56 Beach 9th St, Far Rockaway, NY 11691' },
+  'temple avodah': { lat: 40.6385, lon: -73.6521, display_name: 'Temple Avodah, 3050 Oceanside Rd, Oceanside, NY 11572' },
+  'temple israel, lawrence': { lat: 40.6174, lon: -73.7296, display_name: 'Temple Israel, 140 Central Ave, Lawrence, NY 11559' },
+  'temple israel': { lat: 40.6174, lon: -73.7296, display_name: 'Temple Israel, Lawrence, NY' },
+  'chelsea piers field house': { lat: 40.7469, lon: -74.0089, display_name: 'Chelsea Piers Field House, New York, NY 10011' },
+  'chelsea piers': { lat: 40.7469, lon: -74.0089, display_name: 'Chelsea Piers, New York, NY' }
 };
 
-async function performMultiTierGeocode(cleanLoc) {
-  const queryCandidates = [];
-  
-  // 1. Raw location string
-  queryCandidates.push(cleanLoc);
+async function geocodeUSCensus(addressStr) {
+  if (!addressStr || !/\d+/.test(addressStr)) return null;
+  try {
+    const cleanQuery = addressStr.replace(/,?\s*(?:USA|United States)$/i, '').trim();
+    const censusUrl = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(cleanQuery)}&benchmark=Public_AR_Current&format=json`;
+    const res = await fetch(censusUrl, {
+      headers: { 'User-Agent': 'PersonalDashboard/2.0 (personal-dashboard-app)' },
+      next: { revalidate: 86400 }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const matches = data?.result?.addressMatches || [];
+      if (matches.length > 0) {
+        const m = matches[0];
+        const coords = m.coordinates;
+        return {
+          lat: coords.y,
+          lon: coords.x,
+          display_name: m.matchedAddress
+        };
+      }
+    }
+  } catch (e) {
+    // Continue to next tier
+  }
+  return null;
+}
 
-  // Normalize ordinal words to numbers (e.g. 'Ninth' -> '9th') and strip unit details (e.g. ', Unit 2')
-  let normalizedText = cleanLoc;
+async function performMultiTierGeocode(cleanLoc) {
+  const targetAddress = cleanAddressForGeocode(cleanLoc);
+
+  // TIER 1: US Census Bureau Official Geocoder API (Instant, High-Capacity, High-Precision for US Street Addresses)
+  const censusMatch = await geocodeUSCensus(targetAddress || cleanLoc);
+  if (censusMatch) {
+    return censusMatch;
+  }
+
+  // TIER 2: OpenStreetMap Nominatim Search (Fallback for Venue Names / Custom Descriptors)
+  const queryCandidates = [];
+  queryCandidates.push(cleanLoc);
+  if (targetAddress && targetAddress !== cleanLoc) queryCandidates.push(targetAddress);
+
+  let normalizedText = targetAddress || cleanLoc;
   const ordinals = {
     first: '1st', second: '2nd', third: '3rd', fourth: '4th', fifth: '5th',
     sixth: '6th', seventh: '7th', eighth: '8th', ninth: '9th', tenth: '10th'
@@ -192,64 +237,52 @@ async function performMultiTierGeocode(cleanLoc) {
   }
   normalizedText = normalizedText.replace(/,?\s*(?:Unit|Ste|Suite|Apt|Apartment|Fl|Floor)\s*#?\s*\w+/gi, '').trim();
 
-  if (normalizedText !== cleanLoc) {
-    queryCandidates.push(normalizedText);
+  const lowerLoc = normalizedText.toLowerCase();
+  const hasStateOrCountry = /\b(ny|new york|nj|new jersey|ct|connecticut|usa|united states)\b/i.test(lowerLoc);
+
+  if (!hasStateOrCountry) {
+    queryCandidates.push(`${normalizedText}, NY`);
+    queryCandidates.push(`${normalizedText}, Nassau County, NY`);
+    queryCandidates.push(`${normalizedText}, Long Island, NY`);
   }
 
-  // 2. Extract address starting at house number (e.g. '156 Beach 9th St, Far Rockaway, NY') even if no comma precedes it
-  const addressMatch = normalizedText.match(/(?:\b\d+[-\d]*\s+[A-Za-z0-9\s.,'-]+(?:St|Street|Ave|Avenue|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Pl|Place|Pkwy|Parkway|Ct|Court)\b[^\n]*)/i);
-  if (addressMatch) {
-    let extracted = addressMatch[0].trim();
-    if (!extracted.toLowerCase().includes('ny') && !extracted.toLowerCase().includes('york')) {
-      extracted = `${extracted}, NY`;
-    }
-    queryCandidates.push(extracted);
-  }
-
-  // 3. Split by comma and extract address segment
-  const parts = normalizedText.split(/\s*,\s*/).filter(Boolean);
-  if (parts.length > 1) {
-    const addressStartIndex = parts.findIndex((p) => /^\d+/.test(p));
-    if (addressStartIndex !== -1) {
-      queryCandidates.push(parts.slice(addressStartIndex).join(', '));
-    } else {
-      queryCandidates.push(parts.slice(1).join(', '));
-    }
-  }
-
-  // 4. Fallback base location + NY
-  let baseLoc = normalizedText;
-  if (!baseLoc.toLowerCase().includes('ny') && !baseLoc.toLowerCase().includes('york') && !baseLoc.toLowerCase().includes('usa')) {
-    baseLoc = `${normalizedText}, NY`;
-  }
-  queryCandidates.push(baseLoc);
-
-  // Deduplicate query candidates while preserving attempt order
   const uniqueCandidates = Array.from(new Set(queryCandidates.filter(Boolean)));
+  const allCandidateResults = [];
 
-  // 1. Try dynamic OpenStreetMap Nominatim queries first
   for (const q of uniqueCandidates) {
     try {
-      const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
+      const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=us&viewbox=-74.5,40.4,-73.2,41.2&limit=5`;
       const res = await fetch(nominatimUrl, {
         headers: { 'User-Agent': 'PersonalDashboard/2.0 (personal-dashboard-app)' },
         next: { revalidate: 86400 }
       });
       if (res.ok) {
-        const data = await res.json();
-        if (data && data.length > 0) {
-          return data[0];
+        const results = await res.json();
+        if (results && results.length > 0) {
+          for (const item of results) {
+            const dist = calculateHaversineDistance(HOME_LOCATION.lat, HOME_LOCATION.lon, parseFloat(item.lat), parseFloat(item.lon));
+            allCandidateResults.push({ ...item, dist });
+          }
         }
       }
     } catch (e) {
-      // Try next query candidate
+      // Continue candidate loop
     }
   }
 
-  // 2. If dynamic OpenStreetMap returned 0 results (e.g. venue name without street number), check local venue fallbacks
-  const locLower = cleanLoc.toLowerCase().trim();
+  if (allCandidateResults.length > 0) {
+    const localMatches = allCandidateResults.filter(r => r.dist <= 60);
+    if (localMatches.length > 0) {
+      localMatches.sort((a, b) => a.dist - b.dist);
+      return localMatches[0];
+    }
+    allCandidateResults.sort((a, b) => a.dist - b.dist);
+    return allCandidateResults[0];
+  }
+
+  // TIER 3: Local Venue Fallbacks
   for (const [key, venue] of Object.entries(LOCAL_VENUE_FALLBACKS)) {
-    if (locLower === key || locLower.includes(key)) {
+    if (lowerLoc === key || lowerLoc.includes(key)) {
       return venue;
     }
   }
@@ -297,7 +330,7 @@ export async function GET(request) {
     const match = await performMultiTierGeocode(cleanLoc);
     if (!match) {
       const result = { valid: false, reason: 'not_found' };
-      geocodeCache.set(cacheKey, result);
+      // DO NOT permanently cache negative results to allow retries if transient error occurs
       return NextResponse.json(result);
     }
 
