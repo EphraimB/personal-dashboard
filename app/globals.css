@@ -2743,15 +2743,18 @@ html, body {
 
 /* 1A: ATMOSPHERIC TELEMETRY CARD */
 .card-weather-telemetry {
-  height: 48%;
-  flex-shrink: 0;
+  flex: 1.15;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .weather-hero-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: clamp(4px, 0.8vh, 10px);
 }
 
 .weather-hero-temp-group {
@@ -2762,7 +2765,7 @@ html, body {
 
 .weather-hero-temp {
   font-family: var(--font-title);
-  font-size: 4.8rem;
+  font-size: clamp(2.2rem, 5.2vh, 4.8rem);
   font-weight: 900;
   color: #ffffff;
   text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
@@ -2770,37 +2773,37 @@ html, body {
 }
 
 .weather-hero-unit {
-  font-size: 2.2rem;
+  font-size: clamp(1.2rem, 2.5vh, 2.2rem);
   color: var(--color-cyan);
   font-weight: 800;
 }
 
 .weather-hero-icon {
-  width: 72px;
-  height: 72px;
+  width: clamp(36px, 5.2vh, 72px);
+  height: clamp(36px, 5.2vh, 72px);
   filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.6));
 }
 
 .weather-cond-badge {
   font-family: var(--font-title);
-  font-size: 1.15rem;
+  font-size: clamp(0.8rem, 1.5vh, 1.15rem);
   font-weight: 800;
   color: var(--color-cyan);
   letter-spacing: 1.5px;
-  margin-bottom: 8px;
+  margin-bottom: clamp(3px, 0.7vh, 8px);
 }
 
 .weather-sub-metrics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: clamp(4px, 0.6vh, 8px);
+  margin-bottom: clamp(4px, 0.8vh, 12px);
 }
 
 .metric-pill {
   background: rgba(0, 240, 255, 0.05);
   border: 1px solid rgba(0, 240, 255, 0.15);
-  padding: 6px 10px;
+  padding: clamp(3px, 0.5vh, 6px) clamp(6px, 0.8vw, 10px);
   border-radius: 6px;
   display: flex;
   justify-content: space-between;
@@ -2808,14 +2811,14 @@ html, body {
 }
 
 .metric-pill-label {
-  font-size: 0.8rem;
+  font-size: clamp(0.6rem, 0.9vh, 0.8rem);
   font-weight: 700;
   color: var(--color-text-dim);
   letter-spacing: 1px;
 }
 
 .metric-pill-val {
-  font-size: 1.05rem;
+  font-size: clamp(0.75rem, 1.2vh, 1.05rem);
   font-weight: 800;
   color: #ffffff;
 }
@@ -2826,34 +2829,35 @@ html, body {
   justify-content: space-between;
   gap: 4px;
   background: rgba(0, 0, 0, 0.4);
-  padding: 8px;
+  padding: clamp(4px, 0.6vh, 8px);
   border-radius: 6px;
   border: 1px solid rgba(0, 240, 255, 0.1);
   margin-top: auto;
+  flex-shrink: 0;
 }
 
 .hourly-mini-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: clamp(1px, 0.2vh, 2px);
   flex: 1;
 }
 
 .hourly-mini-time {
-  font-size: 0.8rem;
+  font-size: clamp(0.6rem, 0.9vh, 0.8rem);
   font-weight: 700;
   color: var(--color-text-dim);
 }
 
 .hourly-mini-temp {
-  font-size: 1.0rem;
+  font-size: clamp(0.75rem, 1.2vh, 1.0rem);
   font-weight: 800;
   color: #ffffff;
 }
 
 .hourly-mini-pop {
-  font-size: 0.75rem;
+  font-size: clamp(0.6rem, 0.85vh, 0.75rem);
   font-weight: 700;
   color: var(--color-cyan);
 }
@@ -3079,8 +3083,11 @@ html, body {
 }
 
 .card-tactical-agenda {
-  height: 50%;
-  flex-shrink: 0;
+  flex: 1.15;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .agenda-next-banner {
