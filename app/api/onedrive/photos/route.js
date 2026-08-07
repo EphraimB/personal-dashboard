@@ -316,37 +316,14 @@ function cleanThumbnailUrl(url) {
 async function transformOneDriveItem(item) {
   const name = (item.name || '').toLowerCase();
   const mime = (item.file && item.file.mimeType ? item.file.mimeType : '').toLowerCase();
-  const isHeic = name.endsWith('.heic') || name.endsWith('.heif') || mime.includes('heic') || mime.includes('heif');
 
+  // For OneDrive items, route through permanent server-side proxy endpoint so URLs never expire.
+  // Fall back to external demo URLs if item is a demo photo.
   let photoUrl = '';
-
-  // Smart high-resolution selection:
-  // For HEIC: Must use converted Microsoft Graph API high-res thumbnail (c2048x2048 / c1920x1080 / large / source) or full-res converter proxy.
-  // For standard formats: Prefer direct full-res download URL or high-res crisp thumbnail.
-  if (item.thumbnails && item.thumbnails.length > 0) {
-    const thumb = item.thumbnails[0];
-    photoUrl = (thumb.c2048x2048 && thumb.c2048x2048.url) || 
-               (thumb.c1920x1080 && thumb.c1920x1080.url) || 
-               (thumb.source && thumb.source.url) || 
-               (thumb.large && thumb.large.url) || 
-               (thumb.medium && thumb.medium.url) || '';
-  }
-
-  // Clean double-encoded parameter delimiters in Graph API thumbnail URL
-  if (photoUrl) {
-    photoUrl = cleanThumbnailUrl(photoUrl);
-  }
-
-  if (isHeic) {
-    // For HEIC photos: Always route through full-resolution server-side JPEG converter endpoint
+  if (item.id && !item.id.startsWith('demo-')) {
     photoUrl = `/api/onedrive/image?id=${encodeURIComponent(item.id)}`;
   } else {
-    // If standard photo format (JPEG/PNG/WEBP), prioritize direct full-res download URL or crisp 4K/2K thumbnail
-    if (item['@microsoft.graph.downloadUrl']) {
-      photoUrl = item['@microsoft.graph.downloadUrl'];
-    } else if (!photoUrl) {
-      photoUrl = item['@microsoft.graph.downloadUrl'] || '';
-    }
+    photoUrl = item.url || '';
   }
 
   const photoMeta = item.photo || {};

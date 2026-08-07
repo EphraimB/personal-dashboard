@@ -442,8 +442,17 @@ export default function Home() {
     setPhotoList(DEFAULT_DEMO_PHOTOS);
   };
 
+  const [failedUrls, setFailedUrls] = useState(new Set());
+
   useEffect(() => {
     fetchPhotos();
+
+    // Background photo list refresh every 15 minutes for 24/7 TV displays
+    const refreshInterval = setInterval(() => {
+      fetchPhotos();
+    }, 15 * 60 * 1000);
+
+    return () => clearInterval(refreshInterval);
   }, [config.folderPath, config.searchQuery, config.accessToken, config.filterScreenshots]);
 
   // Preload upcoming photos into browser cache for zero-lag crossfade transitions
@@ -453,14 +462,14 @@ export default function Home() {
     for (let i = 1; i <= 3; i++) {
       const nextIndex = (currentIndex + i) % photoList.length;
       const targetPhoto = photoList[nextIndex];
-      if (targetPhoto && targetPhoto.url) {
+      if (targetPhoto && targetPhoto.url && !failedUrls.has(targetPhoto.url)) {
         const img = new Image();
         img.src = targetPhoto.url;
       }
     }
-  }, [currentIndex, photoList]);
+  }, [currentIndex, photoList, failedUrls]);
 
-  // Double-buffered Crossfade Transition Engine
+  // Fail-Safe Double-Buffered Crossfade Transition Engine
   useEffect(() => {
     if (photoList.length === 0) return;
 
@@ -468,14 +477,42 @@ export default function Home() {
     const newUrl = currentPhoto ? currentPhoto.url : '';
     if (!newUrl) return;
 
-    if (activeLayer === 1) {
-      setLayer2Url(newUrl);
-      setActiveLayer(2);
-    } else {
-      setLayer1Url(newUrl);
-      setActiveLayer(1);
+    // If photo URL previously failed, automatically skip to next slide
+    if (failedUrls.has(newUrl)) {
+      const timer = setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % photoList.length);
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [currentIndex, photoList]);
+
+    let isMounted = true;
+    const img = new Image();
+
+    img.onload = () => {
+      if (!isMounted) return;
+      // Image is 100% verified and loaded in memory — transition layer safely
+      if (activeLayer === 1) {
+        setLayer2Url(newUrl);
+        setActiveLayer(2);
+      } else {
+        setLayer1Url(newUrl);
+        setActiveLayer(1);
+      }
+    };
+
+    img.onerror = () => {
+      if (!isMounted) return;
+      console.warn(`[Photo Slideshow] Photo failed to load (${newUrl}). Skipping slide.`);
+      setFailedUrls((prev) => new Set([...prev, newUrl]));
+      setCurrentIndex((prev) => (prev + 1) % photoList.length);
+    };
+
+    img.src = newUrl;
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentIndex, photoList, failedUrls]);
 
   // Automatic Slideshow Progression Timer Engine
   useEffect(() => {
