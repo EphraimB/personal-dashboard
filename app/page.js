@@ -223,6 +223,31 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [testResult, setTestResult] = useState('');
 
+  // 100% Vector Fit-to-Viewport Canvas Scaler State
+  const [canvasScale, setCanvasScale] = useState(1);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+
+  useEffect(() => {
+    function handleResize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (w <= 768) {
+        setIsMobileViewport(true);
+        setCanvasScale(1);
+      } else {
+        setIsMobileViewport(false);
+        const scaleX = w / 1920;
+        const scaleY = h / 1080;
+        const scale = Math.min(scaleX, scaleY);
+        setCanvasScale(scale);
+      }
+    }
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Real-time clock states (Local NY & Ares Solar Clock)
   const [clockTime, setClockTime] = useState('');
   const [clockAmPm, setClockAmPm] = useState('');
@@ -595,267 +620,269 @@ export default function Home() {
       {/* Dynamic Background Atmospheric Weather Canvas */}
       <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
 
-      {/* TOP HUD HEADER BAR (10vh) */}
-      <header className="matrix-header-hud">
-        <div className="matrix-header-left">
-          <div className="matrix-brand-badge">
-            <span className="matrix-brand-tag">// ARES OS</span>
-            <span className="matrix-brand-title">50" TV COMMAND HUD</span>
-          </div>
-        </div>
-
-        {/* Center Clock Focal Display */}
-        <div className="matrix-clock-center">
-          <span className="matrix-clock-digits">{clockTime || '05:01:37'}</span>
-          <span className="matrix-clock-ampm">{clockAmPm || 'PM'}</span>
-          <span className="matrix-clock-date">{clockDate || 'WED, JUL 29, 2026'}</span>
-        </div>
-
-        <div className="matrix-header-right">
-          <div className="matrix-sol-clock">
-            <span className="sol-clock-label">ARES SOLAR TIME</span>
-            <span className="sol-clock-val">{aresSolarClock || 'SOL 1420 // 14:32'}</span>
-          </div>
-          <div className="matrix-status-pill">
-            <span className="status-pulse-dot" />
-            <span>SYS: ONLINE (100%)</span>
-          </div>
-          <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)}>
-            [ ⚙ CONFIG ]
-          </button>
-        </div>
-      </header>
-
-      {/* MAIN 3-COLUMN TACTICAL MATRIX GRID (85vh) */}
-      <main className="matrix-main-grid">
-        
-        {/* QUADRANT 1: LEFT COLUMN (WEATHER & COMMUTER TRANSIT HUB) */}
-        <section className="quadrant-left-col">
-          
-          {/* 1A: ATMOSPHERIC TELEMETRY CARD */}
-          <div className="matrix-card card-weather-telemetry">
-            <div className="matrix-card-title-row">
-              <span className="matrix-card-title">
-                ⚡ ATMOSPHERIC TELEMETRY
-              </span>
-              <span className="matrix-card-tag">CEDARHURST, NY</span>
-            </div>
-
-            <div className="weather-hero-row">
-              <div className="weather-hero-temp-group">
-                <span className="weather-hero-temp">
-                  {weatherData?.current?.temperature_2m !== undefined
-                    ? Math.round(weatherData.current.temperature_2m)
-                    : '74'}
-                </span>
-                <span className="weather-hero-unit">°{config.tempUnit || 'F'}</span>
-              </div>
-              <WeatherSvg code={weatherData?.current?.weather_code ?? 0} className="weather-hero-icon" />
-            </div>
-
-            <div className="weather-cond-badge">
-              {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
-            </div>
-
-            <div className="weather-sub-metrics-grid">
-              <div className="metric-pill">
-                <span className="metric-pill-label">HUMIDITY</span>
-                <span className="metric-pill-val">{weatherData?.current?.relative_humidity_2m ?? '64'}%</span>
-              </div>
-              <div className="metric-pill">
-                <span className="metric-pill-label">WIND</span>
-                <span className="metric-pill-val">{weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '12'} MPH</span>
-              </div>
-              <div className="metric-pill">
-                <span className="metric-pill-label">TEMP HI/LO</span>
-                <span className="metric-pill-val">
-                  ▲{weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '82'}° / ▼{weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '68'}°
-                </span>
-              </div>
-              <div className="metric-pill">
-                <span className="metric-pill-label">BAROMETER</span>
-                <span className="metric-pill-val">30.12 inHg</span>
+      <div className="hud-viewport-stage">
+        <div className="hud-canvas-scaler" style={isMobileViewport ? {} : { transform: `scale(${canvasScale})` }}>
+          {/* TOP HUD HEADER BAR (10vh) */}
+          <header className="matrix-header-hud">
+            <div className="matrix-header-left">
+              <div className="matrix-brand-badge">
+                <span className="matrix-brand-tag">// ARES OS</span>
+                <span className="matrix-brand-title">50" TV COMMAND HUD</span>
               </div>
             </div>
 
-            {/* 6-Hour Mini-Forecast Strip */}
-            <div className="hourly-strip-container">
-              {hourlyTimes.map((timeStr, idx) => {
-                const globalIdx = hourlyStartIdx + idx;
-                const code = weatherData?.hourly?.weather_code?.[globalIdx] ?? 0;
-                const temp = weatherData?.hourly?.temperature_2m?.[globalIdx];
-                const pop = weatherData?.hourly?.precipitation_probability?.[globalIdx] ?? 0;
-                const label = formatHourLabel(timeStr, idx);
-
-                return (
-                  <div key={idx} className="hourly-mini-item">
-                    <span className="hourly-mini-time">{label}</span>
-                    <WeatherSvg code={code} className="wx-hr-icon" />
-                    <span className="hourly-mini-temp">{temp !== undefined ? Math.round(temp) : '74'}°</span>
-                    <span className="hourly-mini-pop">{pop}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 1B: COMMUTER TRANSIT HUB CARD (OFFICIAL MTA GTFS DATASET) */}
-          <div className="matrix-card card-transit-hub">
-            <div className="matrix-card-title-row">
-              <span className="matrix-card-title" style={{ display: 'flex', alignItems: 'center' }}>
-                <TransitHubIcon /> COMMUTER TRANSIT HUB
-              </span>
-              <span className="matrix-card-tag" style={{ color: 'var(--color-cyan)' }}>
-                {transitData?.statusNotice || '● OFFICIAL MTA GTFS DATASET'}
-              </span>
+            {/* Center Clock Focal Display */}
+            <div className="matrix-clock-center">
+              <span className="matrix-clock-digits">{clockTime || '05:01:37'}</span>
+              <span className="matrix-clock-ampm">{clockAmPm || 'PM'}</span>
+              <span className="matrix-clock-date">{clockDate || 'WED, JUL 29, 2026'}</span>
             </div>
 
-            {/* LIRR Cedarhurst Westbound (City Terminal Zone - Grey) */}
-            <div className="transit-terminal-block">
-              <div className="transit-header-row">
-                <span className="transit-line-title transit-lirr-westbound" style={{ display: 'flex', alignItems: 'center' }}>
-                  <TrainIcon /> LIRR WESTBOUND // CEDARHURST
-                </span>
-                <span className="transit-countdown-pill pill-grey">
-                  {transitData?.lirr?.nextWestbound
-                    ? `IN ${String(transitData.lirr.nextWestbound.minsUntil).padStart(2, '0')} MINS`
-                    : 'NO TRAINS'}
-                </span>
+            <div className="matrix-header-right">
+              <div className="matrix-sol-clock">
+                <span className="sol-clock-label">ARES SOLAR TIME</span>
+                <span className="sol-clock-val">{aresSolarClock || 'SOL 1420 // 14:32'}</span>
               </div>
-
-              {!transitData?.lirr?.upcomingWestbound || transitData.lirr.upcomingWestbound.length === 0 ? (
-                <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
-                  <span style={{ color: '#C0C0C0', fontSize: '0.68rem', fontWeight: '700' }}>
-                    // NO UPCOMING WESTBOUND DEPARTURES
-                  </span>
-                </div>
-              ) : (
-                <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
-                  {transitData.lirr.upcomingWestbound.slice(0, 2).map((item, i) => (
-                    <div key={i} className="transit-upcoming-item">
-                      <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
-                      <span style={{ color: '#C0C0C0' }}>{item.track} • {item.status}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* LIRR Cedarhurst Eastbound (Far Rockaway Branch - Brown) */}
-            <div className="transit-terminal-block">
-              <div className="transit-header-row">
-                <span className="transit-line-title transit-lirr-eastbound" style={{ display: 'flex', alignItems: 'center' }}>
-                  <TrainIcon /> LIRR EASTBOUND // CEDARHURST
-                </span>
-                <span className="transit-countdown-pill pill-brown">
-                  {transitData?.lirr?.nextEastbound
-                    ? `IN ${String(transitData.lirr.nextEastbound.minsUntil).padStart(2, '0')} MINS`
-                    : 'NO TRAINS'}
-                </span>
+              <div className="matrix-status-pill">
+                <span className="status-pulse-dot" />
+                <span>SYS: ONLINE (100%)</span>
               </div>
-
-              {!transitData?.lirr?.upcomingEastbound || transitData.lirr.upcomingEastbound.length === 0 ? (
-                <div className="agenda-empty-banner" style={{ margin: '6px 0', padding: '8px 6px' }}>
-                  <span style={{ color: '#E67E22', fontSize: '0.68rem', fontWeight: '700' }}>
-                    // NO UPCOMING EASTBOUND DEPARTURES
-                  </span>
-                </div>
-              ) : (
-                <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
-                  {transitData.lirr.upcomingEastbound.slice(0, 2).map((item, i) => (
-                    <div key={i} className="transit-upcoming-item">
-                      <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
-                      <span style={{ color: '#E67E22' }}>{item.track} • {item.status}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)}>
+                [ ⚙ CONFIG ]
+              </button>
             </div>
+          </header>
 
-            {/* NYC Ferry Section (Rockaway Route - Purple) */}
-            <div className="transit-terminal-block">
-              <div className="transit-header-row">
-                <span className="transit-line-title transit-ferry" style={{ display: 'flex', alignItems: 'center' }}>
-                  <FerryIcon /> NYC FERRY // ROCKAWAY LANDING
-                </span>
-                <span className="transit-countdown-pill pill-purple">
-                  {transitData?.ferry?.nextSailing
-                    ? `IN ${String(transitData.ferry.nextSailing.minsUntil).padStart(2, '0')} MINS`
-                    : 'NO SAILINGS'}
-                </span>
-              </div>
-
-              {!transitData?.ferry?.upcomingSailings || transitData.ferry.upcomingSailings.length === 0 ? (
-                <div className="agenda-empty-banner" style={{ margin: '6px 0', padding: '8px 6px' }}>
-                  <span style={{ color: '#B15EFF', fontSize: '0.68rem', fontWeight: '700' }}>
-                    // NO UPCOMING FERRY SAILINGS
-                  </span>
-                </div>
-              ) : (
-                <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
-                  {transitData.ferry.upcomingSailings.slice(0, 2).map((item, i) => (
-                    <div key={i} className="transit-upcoming-item">
-                      <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
-                      <span style={{ color: '#B15EFF' }}>{item.status}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-        </section>
-
-        {/* QUADRANT 2: CENTER HERO COLUMN (RECON VISUAL FRAME / PHOTO SLIDESHOW) */}
-        <section className="quadrant-center-col">
-          <div className="matrix-card card-photo-hero">
+          {/* MAIN 3-COLUMN TACTICAL MATRIX GRID */}
+          <main className="matrix-main-grid">
             
-            {/* Top Glass Floating Badges */}
-            <div className="photo-hero-top-badges">
-              <div className="hud-glass-badge">
-                <span className="hud-glass-badge-label">FRAME / SLIDE</span>
-                <span className="hud-glass-badge-val">
-                  {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length || 14).padStart(2, '0')}
-                </span>
+            {/* QUADRANT 1: LEFT COLUMN (WEATHER & COMMUTER TRANSIT HUB) */}
+            <section className="quadrant-left-col">
+              
+              {/* 1A: ATMOSPHERIC TELEMETRY CARD */}
+              <div className="matrix-card card-weather-telemetry">
+                <div className="matrix-card-title-row">
+                  <span className="matrix-card-title">
+                    ⚡ ATMOSPHERIC TELEMETRY
+                  </span>
+                  <span className="matrix-card-tag">CEDARHURST, NY</span>
+                </div>
+
+                <div className="weather-hero-row">
+                  <div className="weather-hero-temp-group">
+                    <span className="weather-hero-temp">
+                      {weatherData?.current?.temperature_2m !== undefined
+                        ? Math.round(weatherData.current.temperature_2m)
+                        : '74'}
+                    </span>
+                    <span className="weather-hero-unit">°{config.tempUnit || 'F'}</span>
+                  </div>
+                  <WeatherSvg code={weatherData?.current?.weather_code ?? 0} className="weather-hero-icon" />
+                </div>
+
+                <div className="weather-cond-badge">
+                  {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
+                </div>
+
+                <div className="weather-sub-metrics-grid">
+                  <div className="metric-pill">
+                    <span className="metric-pill-label">HUMIDITY</span>
+                    <span className="metric-pill-val">{weatherData?.current?.relative_humidity_2m ?? '64'}%</span>
+                  </div>
+                  <div className="metric-pill">
+                    <span className="metric-pill-label">WIND</span>
+                    <span className="metric-pill-val">{weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '12'} MPH</span>
+                  </div>
+                  <div className="metric-pill">
+                    <span className="metric-pill-label">TEMP HI/LO</span>
+                    <span className="metric-pill-val">
+                      ▲{weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '82'}° / ▼{weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '68'}°
+                    </span>
+                  </div>
+                  <div className="metric-pill">
+                    <span className="metric-pill-label">BAROMETER</span>
+                    <span className="metric-pill-val">30.12 inHg</span>
+                  </div>
+                </div>
+
+                {/* 6-Hour Mini-Forecast Strip */}
+                <div className="hourly-strip-container">
+                  {hourlyTimes.map((timeStr, idx) => {
+                    const globalIdx = hourlyStartIdx + idx;
+                    const code = weatherData?.hourly?.weather_code?.[globalIdx] ?? 0;
+                    const temp = weatherData?.hourly?.temperature_2m?.[globalIdx];
+                    const pop = weatherData?.hourly?.precipitation_probability?.[globalIdx] ?? 0;
+                    const label = formatHourLabel(timeStr, idx);
+
+                    return (
+                      <div key={idx} className="hourly-mini-item">
+                        <span className="hourly-mini-time">{label}</span>
+                        <WeatherSvg code={code} className="wx-hr-icon" />
+                        <span className="hourly-mini-temp">{temp !== undefined ? Math.round(temp) : '74'}°</span>
+                        <span className="hourly-mini-pop">{pop}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="hud-glass-badge">
-                <span className="hud-glass-badge-label">PHOTO TAKEN</span>
-                <span className="hud-glass-badge-val">
-                  {formatHumanDate(currentPhoto.date) || 'JULY 24, 2026'}
-                </span>
+
+              {/* 1B: COMMUTER TRANSIT HUB CARD (OFFICIAL MTA GTFS DATASET) */}
+              <div className="matrix-card card-transit-hub">
+                <div className="matrix-card-title-row">
+                  <span className="matrix-card-title" style={{ display: 'flex', alignItems: 'center' }}>
+                    <TransitHubIcon /> COMMUTER TRANSIT HUB
+                  </span>
+                  <span className="matrix-card-tag" style={{ color: 'var(--color-cyan)' }}>
+                    {transitData?.statusNotice || '● LIVE GTFS TELEMETRY'}
+                  </span>
+                </div>
+
+                {/* LIRR Cedarhurst Westbound */}
+                <div className="transit-terminal-block">
+                  <div className="transit-header-row">
+                    <span className="transit-line-title transit-lirr-westbound" style={{ display: 'flex', alignItems: 'center' }}>
+                      <TrainIcon /> LIRR WESTBOUND // CEDARHURST
+                    </span>
+                    <span className="transit-countdown-pill pill-grey">
+                      {transitData?.lirr?.nextWestbound
+                        ? `IN ${String(transitData.lirr.nextWestbound.minsUntil).padStart(2, '0')} MINS`
+                        : 'NO TRAINS'}
+                    </span>
+                  </div>
+
+                  {!transitData?.lirr?.upcomingWestbound || transitData.lirr.upcomingWestbound.length === 0 ? (
+                    <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
+                      <span style={{ color: '#C0C0C0', fontSize: '0.68rem', fontWeight: '700' }}>
+                        // NO UPCOMING WESTBOUND DEPARTURES
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
+                      {transitData.lirr.upcomingWestbound.slice(0, 2).map((item, i) => (
+                        <div key={i} className="transit-upcoming-item">
+                          <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
+                          <span style={{ color: '#C0C0C0' }}>{item.track} • {item.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* LIRR Cedarhurst Eastbound */}
+                <div className="transit-terminal-block">
+                  <div className="transit-header-row">
+                    <span className="transit-line-title transit-lirr-eastbound" style={{ display: 'flex', alignItems: 'center' }}>
+                      <TrainIcon /> LIRR EASTBOUND // CEDARHURST
+                    </span>
+                    <span className="transit-countdown-pill pill-brown">
+                      {transitData?.lirr?.nextEastbound
+                        ? `IN ${String(transitData.lirr.nextEastbound.minsUntil).padStart(2, '0')} MINS`
+                        : 'NO TRAINS'}
+                    </span>
+                  </div>
+
+                  {!transitData?.lirr?.upcomingEastbound || transitData.lirr.upcomingEastbound.length === 0 ? (
+                    <div className="agenda-empty-banner" style={{ margin: '6px 0', padding: '8px 6px' }}>
+                      <span style={{ color: '#E67E22', fontSize: '0.68rem', fontWeight: '700' }}>
+                        // NO UPCOMING EASTBOUND DEPARTURES
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
+                      {transitData.lirr.upcomingEastbound.slice(0, 2).map((item, i) => (
+                        <div key={i} className="transit-upcoming-item">
+                          <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
+                          <span style={{ color: '#E67E22' }}>{item.track} • {item.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* NYC Ferry Section */}
+                <div className="transit-terminal-block">
+                  <div className="transit-header-row">
+                    <span className="transit-line-title transit-ferry" style={{ display: 'flex', alignItems: 'center' }}>
+                      <FerryIcon /> NYC FERRY // ROCKAWAY LANDING
+                    </span>
+                    <span className="transit-countdown-pill pill-purple">
+                      {transitData?.ferry?.nextSailing
+                        ? `IN ${String(transitData.ferry.nextSailing.minsUntil).padStart(2, '0')} MINS`
+                        : 'NO SAILINGS'}
+                    </span>
+                  </div>
+
+                  {!transitData?.ferry?.upcomingSailings || transitData.ferry.upcomingSailings.length === 0 ? (
+                    <div className="agenda-empty-banner" style={{ margin: '6px 0', padding: '8px 6px' }}>
+                      <span style={{ color: '#B15EFF', fontSize: '0.68rem', fontWeight: '700' }}>
+                        // NO UPCOMING FERRY SAILINGS
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
+                      {transitData.ferry.upcomingSailings.slice(0, 2).map((item, i) => (
+                        <div key={i} className="transit-upcoming-item">
+                          <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
+                          <span style={{ color: '#B15EFF' }}>{item.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Photo Layers with Ken Burns Motion Engine */}
-            <div
-              className={layer1Class}
-              style={{ backgroundImage: layer1Url ? `url("${layer1Url}")` : 'url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80")' }}
-            />
-            <div
-              className={layer2Class}
-              style={{ backgroundImage: layer2Url ? `url("${layer2Url}")` : 'none' }}
-            />
-            <div className="photo-overlay-vignette" />
+            </section>
 
-            {/* Bottom Integrated Glass Caption & Controls Footer */}
-            <div className="photo-hero-caption-card">
-              <span className="photo-hero-loc">
-                📍 {currentPhoto.location || 'CEDARHURST HAVEN'}
-              </span>
-              <h2 className="photo-hero-title">
-                {currentPhoto.description || currentPhoto.title || 'SUMMER SUNSET AT ROXBURY BEACH'}
-              </h2>
+            {/* QUADRANT 2: CENTER HERO COLUMN (RECON VISUAL FRAME / PHOTO SLIDESHOW) */}
+            <section className="quadrant-center-col">
+              <div className="matrix-card card-photo-hero">
+                
+                {/* Top Glass Floating Badges */}
+                <div className="photo-hero-top-badges">
+                  <div className="hud-glass-badge">
+                    <span className="hud-glass-badge-label">FRAME / SLIDE</span>
+                    <span className="hud-glass-badge-val">
+                      {String(currentIndex + 1).padStart(2, '0')} / {String(photoList.length || 14).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <div className="hud-glass-badge">
+                    <span className="hud-glass-badge-label">PHOTO TAKEN</span>
+                    <span className="hud-glass-badge-val">
+                      {formatHumanDate(currentPhoto?.date) || 'JULY 24, 2026'}
+                    </span>
+                  </div>
+                </div>
 
-              <div className="photo-hero-progress-track">
+                {/* Photo Layers with Ken Burns Motion Engine */}
                 <div
-                  key={`${currentIndex}-${isPaused}`}
-                  className={`photo-hero-progress-bar ${!isPaused ? 'animating' : ''}`}
-                  style={{ '--slide-duration': `${config.slideDuration || 15}s` }}
+                  className={layer1Class}
+                  style={{ backgroundImage: layer1Url ? `url("${layer1Url}")` : 'url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80")' }}
                 />
+                <div
+                  className={layer2Class}
+                  style={{ backgroundImage: layer2Url ? `url("${layer2Url}")` : 'none' }}
+                />
+                <div className="photo-overlay-vignette" />
+
+                {/* Bottom Integrated Glass Caption & Controls Footer */}
+                <div className="photo-hero-caption-card">
+                  <span className="photo-hero-loc">
+                    📍 {currentPhoto?.location || 'CEDARHURST HAVEN'}
+                  </span>
+                  <h2 className="photo-hero-title">
+                    {currentPhoto?.description || currentPhoto?.title || 'SUMMER SUNSET AT ROXBURY BEACH'}
+                  </h2>
+
+                  <div className="photo-hero-progress-track">
+                    <div
+                      key={`${currentIndex}-${isPaused}`}
+                      className={`photo-hero-progress-bar ${!isPaused ? 'animating' : ''}`}
+                      style={{ '--slide-duration': `${config.slideDuration || 15}s` }}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
 
         {/* QUADRANT 3: RIGHT COLUMN (TACTICAL AGENDA & LOCATION MINI-MAP) */}
         <section className="quadrant-right-col">
@@ -1003,6 +1030,8 @@ export default function Home() {
           <span style={{ color: 'var(--color-cyan)' }}>CYBERPUNK ENGINE v2.0</span>
         </div>
       </footer>
+        </div>
+      </div>
 
       {/* Overlays */}
       <div className="city-matrix-underlay" />
