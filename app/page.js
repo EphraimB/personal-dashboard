@@ -631,7 +631,7 @@ export default function Home() {
             <div className="matrix-header-left">
               <div className="matrix-brand-badge">
                 <span className="matrix-brand-tag">// ARES OS</span>
-                <span className="matrix-brand-title">50" TV COMMAND HUD</span>
+                <span className="matrix-brand-title">DASHBOARD HUD</span>
               </div>
             </div>
 
