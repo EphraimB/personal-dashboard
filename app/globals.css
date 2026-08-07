@@ -3293,50 +3293,192 @@ html, body {
   color: var(--color-text-dim);
 }
 
-/* Fluid Resolution Scaling Engine for 1080p, 720p, and TV Viewports */
+/* ==============================================================================
+   COMPREHENSIVE RESPONSIVE & FLUID VIEWPORT SCALING ENGINE
+   ============================================================================== */
+
+/* 1. Large Laptops & Standard Monitors (1280px - 1920px) */
 @media (max-width: 1920px), (max-height: 1080px) {
   .matrix-header-hud {
-    height: 52px;
+    min-height: 50px;
     padding: 0 14px;
   }
   .matrix-brand-title {
-    font-size: 0.85rem;
+    font-size: clamp(0.75rem, 0.95vw, 0.95rem);
   }
   .matrix-clock-digits {
-    font-size: 2.1rem;
+    font-size: clamp(1.6rem, 2.2vw, 2.3rem);
   }
   .matrix-clock-ampm {
-    font-size: 0.95rem;
+    font-size: clamp(0.8rem, 0.9vw, 1rem);
   }
   .matrix-clock-date {
-    font-size: 0.85rem;
+    font-size: clamp(0.7rem, 0.8vw, 0.88rem);
   }
   .matrix-main-grid {
-    gap: 8px;
-    padding: 4px 10px;
+    gap: clamp(6px, 0.8vw, 10px);
+    padding: clamp(4px, 0.6vh, 8px) clamp(8px, 1vw, 14px);
   }
   .matrix-card {
-    padding: 10px 12px;
+    padding: clamp(8px, 1vw, 12px);
   }
   .matrix-card-title {
-    font-size: 1.1rem;
+    font-size: clamp(0.95rem, 1.2vw, 1.3rem);
   }
   .matrix-card-tag {
-    font-size: 0.78rem;
+    font-size: clamp(0.7rem, 0.8vw, 0.85rem);
   }
 }
 
-@media (max-height: 800px) {
+/* 2. Compact Laptops & Netbooks (max-height: 850px or max-width: 1366px) */
+@media (max-height: 850px), (max-width: 1366px) {
   .matrix-header-hud {
-    height: 44px;
+    min-height: 44px;
+    padding: 0 10px;
   }
   .matrix-clock-digits {
-    font-size: 1.6rem;
+    font-size: clamp(1.4rem, 1.9vw, 1.8rem);
+  }
+  .matrix-main-grid {
+    gap: 6px;
+    padding: 4px 8px;
   }
   .matrix-card {
-    padding: 6px 8px;
+    padding: 8px 10px;
+  }
+  .weather-hero-temp {
+    font-size: clamp(2rem, 3vw, 3.2rem);
+  }
+  .weather-sub-metrics-grid {
+    gap: 4px;
+  }
+  .metric-pill {
+    padding: 3px 6px;
+  }
+  .transit-terminal-block {
+    margin-bottom: 4px;
+    padding-bottom: 4px;
   }
 }
+
+/* 3. Tablets & Small Laptops (max-width: 1024px) */
+@media (max-width: 1024px) {
+  .ares-tv-app {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+  .matrix-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: 
+      "left center"
+      "right center";
+    gap: 10px;
+    padding: 10px;
+    overflow: visible;
+  }
+  .quadrant-left-col {
+    grid-area: left;
+    height: auto;
+  }
+  .quadrant-center-col {
+    grid-area: center;
+    height: auto;
+    min-height: 500px;
+  }
+  .quadrant-right-col {
+    grid-area: right;
+    height: auto;
+  }
+  .card-weather-telemetry,
+  .card-transit-hub,
+  .card-tactical-agenda,
+  .card-location-map,
+  .card-photo-hero {
+    height: auto;
+    min-height: 280px;
+  }
+}
+
+/* 4. Mobile Devices & Portrait Mode (max-width: 768px) */
+@media (max-width: 768px) {
+  .ares-tv-app {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .matrix-header-hud {
+    flex-direction: column;
+    height: auto;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .matrix-header-left,
+  .matrix-clock-center,
+  .matrix-header-right {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+  .matrix-header-right {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .matrix-main-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 10px;
+    height: auto;
+    overflow: visible;
+  }
+  .quadrant-left-col,
+  .quadrant-center-col,
+  .quadrant-right-col {
+    width: 100%;
+    height: auto;
+    gap: 14px;
+  }
+  .card-weather-telemetry,
+  .card-transit-hub,
+  .card-tactical-agenda,
+  .card-location-map,
+  .card-photo-hero {
+    height: auto;
+    min-height: 320px;
+    max-height: none;
+  }
+  .weather-sub-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hourly-strip-container {
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+}
+
+/* 5. Ultra Small Mobile Screens (max-width: 480px) */
+@media (max-width: 480px) {
+  .matrix-clock-digits {
+    font-size: 1.5rem;
+  }
+  .weather-hero-temp {
+    font-size: 2.2rem;
+  }
+  .matrix-card {
+    padding: 10px;
+  }
+  .matrix-card-title {
+    font-size: 0.9rem;
+  }
+  .metric-pill-label {
+    font-size: 0.55rem;
+  }
+  .metric-pill-val {
+    font-size: 0.75rem;
+  }
+}
+
 
 
 
