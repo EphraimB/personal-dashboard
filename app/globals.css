@@ -3306,34 +3306,30 @@ html, body {
 
 /* Mobile Devices & Portrait Mode (max-width: 768px) */
 @media (max-width: 768px) {
-  .hud-viewport-stage {
-    position: relative;
-    width: 100%;
-    height: auto;
-    overflow-y: auto;
-    overflow-x: hidden;
-    display: block;
-  }
-
-  .hud-canvas-scaler {
-    width: 100% !important;
+  html, body {
     height: auto !important;
-    transform: none !important;
-    overflow: visible;
-    box-shadow: none;
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
 
   .ares-tv-app {
-    overflow-y: auto;
-    overflow-x: hidden;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
   }
 
   .matrix-header-hud {
     flex-direction: column;
-    height: auto;
-    min-height: auto;
-    padding: 10px 12px;
-    gap: 8px;
+    height: auto !important;
+    min-height: auto !important;
+    padding: 12px 14px;
+    gap: 10px;
+    flex-shrink: 0;
   }
 
   .matrix-header-left,
@@ -3350,31 +3346,60 @@ html, body {
   }
 
   .matrix-main-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding: 10px;
-    width: 100%;
-    height: auto;
-    overflow: visible;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    padding: 12px !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    flex: none !important;
   }
 
   .quadrant-left-col,
   .quadrant-center-col,
   .quadrant-right-col {
-    width: 100%;
-    height: auto;
-    gap: 14px;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    gap: 16px !important;
+    overflow: visible !important;
+  }
+
+  .matrix-card {
+    height: auto !important;
+    min-height: auto !important;
+    flex: none !important;
+    position: relative !important;
+    overflow: visible !important;
   }
 
   .card-weather-telemetry,
   .card-transit-hub,
   .card-tactical-agenda,
-  .card-location-map,
+  .card-location-map {
+    height: auto !important;
+    min-height: auto !important;
+    flex: none !important;
+    position: relative !important;
+    overflow: visible !important;
+  }
+
   .card-photo-hero {
-    height: auto;
-    min-height: 320px;
-    max-height: none;
+    height: auto !important;
+    min-height: 320px !important;
+    aspect-ratio: 16 / 9 !important;
+    position: relative !important;
+    flex: none !important;
+    overflow: hidden !important;
+  }
+
+  .photo-hero-viewport {
+    position: absolute !important;
+    inset: 0 !important;
   }
 
   .weather-sub-metrics-grid {
@@ -3384,6 +3409,27 @@ html, body {
   .hourly-strip-container {
     overflow-x: auto;
     justify-content: flex-start;
+  }
+
+  .matrix-footer-hud {
+    height: auto !important;
+    min-height: auto !important;
+    padding: 16px 12px !important;
+    position: relative !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    text-align: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  .footer-hotkeys-group {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .footer-sync-info {
+    justify-content: center;
   }
 }
 
