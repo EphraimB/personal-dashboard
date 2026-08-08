@@ -17,47 +17,88 @@ function parseProtobufTime(rawTime) {
 
 // Official MTA GTFS & NYC Ferry Dataset Engine
 
-function getLirrFromGtfs(now) {
+async function getLiveLirrDepartures(now) {
+  const stationId = process.env.LIRR_STATION_ID || '32';
+  const stationName = (process.env.LIRR_STATION_NAME || 'CEDARHURST').toUpperCase();
+  const currentEpochSec = Math.floor(now.getTime() / 1000);
+
+  const TERMINAL_NAMES = {
+    '65': 'FAR ROCKAWAY',
+    '349': 'GRAND CENTRAL',
+    '102': 'GRAND CENTRAL',
+    '105': 'PENN STATION',
+    '1': 'PENN STATION',
+    '8': 'ATLANTIC TERMINAL',
+    '100': 'LONG ISLAND CITY',
+    '94': 'JAMAICA'
+  };
+
   try {
-    const jsonPath = path.join(process.cwd(), 'dashboard', 'gtfs_cedarhurst.json');
-    if (!fs.existsSync(jsonPath)) return null;
+    const url = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/lirr%2Fgtfs-lirr';
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) {
+      throw new Error(`MTA Feed responded with HTTP status ${res.status}`);
+    }
 
-    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-    const departures = data.departures || [];
-
-    const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const arrayBuffer = await res.arrayBuffer();
+    const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(Buffer.from(arrayBuffer));
 
     const westbound = [];
     const eastbound = [];
 
-    for (const d of departures) {
-      let [h, m, s] = d.depTime.split(':').map(Number);
-      if (h >= 24) h = h - 24;
+    for (const entity of feed.entity || []) {
+      if (!entity.tripUpdate || !entity.tripUpdate.stopTimeUpdate) continue;
 
-      const depSec = h * 3600 + m * 60 + s;
-      if (depSec <= nowSec) continue;
+      const trip = entity.tripUpdate.trip;
+      const stopUpdates = entity.tripUpdate.stopTimeUpdate;
 
-      const diffSec = depSec - nowSec;
+      const st = stopUpdates.find(s => s.stopId === stationId || s.stopId?.startsWith(`${stationId}_`));
+      if (!st) continue;
+
+      const rawTime = st.departure?.time || st.arrival?.time;
+      const depEpoch = parseProtobufTime(rawTime);
+      if (!depEpoch || depEpoch <= currentEpochSec) continue;
+
+      const diffSec = depEpoch - currentEpochSec;
       const diffMins = Math.floor(diffSec / 60);
 
-      const depDate = new Date(now);
-      depDate.setHours(h, m, s, 0);
-
+      const depDate = new Date(depEpoch * 1000);
       const timeStr = depDate.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: true
       });
 
-      const headsign = (d.headsign || '').toUpperCase();
-      const isEastbound = headsign.includes('FAR ROCKAWAY');
+      const directionId = trip?.directionId ?? 0;
+      const isEastbound = directionId === 0;
+
+      const lastStopInTrip = stopUpdates[stopUpdates.length - 1]?.stopId;
+      let destination = TERMINAL_NAMES[lastStopInTrip];
+      if (!destination) {
+        destination = isEastbound ? 'FAR ROCKAWAY' : 'GRAND CENTRAL';
+      }
+
+      const rawDelay = st.departure?.delay || st.arrival?.delay || 0;
+      const delaySec = typeof rawDelay === 'number' ? rawDelay : parseProtobufTime(rawDelay);
+      const delayMins = Math.round(delaySec / 60);
+
+      let status = 'ON TIME';
+      if (delayMins > 0) {
+        status = `+${delayMins} MIN DELAY`;
+      } else if (delayMins < -1) {
+        status = `${Math.abs(delayMins)} MIN EARLY`;
+      } else if (diffMins < 4) {
+        status = 'BOARDING';
+      }
 
       const departureObj = {
-        destination: isEastbound ? 'FAR ROCKAWAY' : headsign,
+        destination,
         timeStr,
         minsUntil: diffMins,
         track: isEastbound ? 'TRACK 2' : 'TRACK 1',
-        status: diffMins < 4 ? 'BOARDING' : 'ON TIME'
+        status,
+        delayMins,
+        isLive: true
       };
 
       if (isEastbound) {
@@ -70,12 +111,28 @@ function getLirrFromGtfs(now) {
     westbound.sort((a, b) => a.minsUntil - b.minsUntil);
     eastbound.sort((a, b) => a.minsUntil - b.minsUntil);
 
-    return { westbound, eastbound, totalRecords: data.totalRecords };
+    return {
+      station: `${stationName} STATION`,
+      branch: 'FAR ROCKAWAY BRANCH',
+      isLive: true,
+      statusNotice: '● LIVE GTFS TELEMETRY',
+      westbound,
+      eastbound
+    };
   } catch (e) {
-    console.error('Error reading GTFS LIRR JSON:', e);
-    return null;
+    console.error('Error fetching/parsing LIRR GTFS-RT feed:', e);
+    return {
+      station: `${stationName} STATION`,
+      branch: 'FAR ROCKAWAY BRANCH',
+      isLive: false,
+      statusNotice: '● FEED UNAVAILABLE',
+      westbound: [],
+      eastbound: [],
+      error: e.message || 'MTA Feed unavailable'
+    };
   }
 }
+
 
 async function getFerryDepartures(now) {
   try {
@@ -190,7 +247,7 @@ async function getFerryDepartures(now) {
 export async function GET() {
   try {
     const now = new Date();
-    const lirrData = getLirrFromGtfs(now);
+    const lirrData = await getLiveLirrDepartures(now);
     const ferryData = await getFerryDepartures(now);
 
     const lirrWestbound = lirrData?.westbound || [];
@@ -202,15 +259,17 @@ export async function GET() {
     return NextResponse.json({
       timestamp: now.toISOString(),
       mtaApiKeySet: true,
-      statusNotice: '● LIVE GTFS TELEMETRY',
+      statusNotice: lirrData?.statusNotice || '● LIVE GTFS TELEMETRY',
       lirr: {
-        station: 'CEDARHURST STATION',
-        branch: 'FAR ROCKAWAY BRANCH',
+        station: lirrData?.station || 'CEDARHURST STATION',
+        branch: lirrData?.branch || 'FAR ROCKAWAY BRANCH',
+        isLive: lirrData?.isLive ?? false,
         nextDeparture: nextWestbound || nextEastbound,
         nextWestbound,
         nextEastbound,
         upcomingWestbound: lirrWestbound.slice(0, 3),
-        upcomingEastbound: lirrEastbound.slice(0, 3)
+        upcomingEastbound: lirrEastbound.slice(0, 3),
+        error: lirrData?.error || null
       },
       ferry: ferryData || {
         route: 'ROCKAWAY ROUTE',
@@ -228,3 +287,4 @@ export async function GET() {
     );
   }
 }
+

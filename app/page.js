@@ -753,11 +753,11 @@ export default function Home() {
                   </span>
                 </div>
 
-                {/* LIRR Cedarhurst Westbound */}
+                {/* LIRR Westbound */}
                 <div className="transit-terminal-block">
                   <div className="transit-header-row">
                     <span className="transit-line-title transit-lirr-westbound" style={{ display: 'flex', alignItems: 'center' }}>
-                      <TrainIcon /> LIRR WESTBOUND // CEDARHURST
+                      <TrainIcon /> LIRR WESTBOUND // {transitData?.lirr?.station ? transitData.lirr.station.replace(' STATION', '') : 'CEDARHURST'}
                     </span>
                     <span className="transit-countdown-pill pill-grey">
                       {transitData?.lirr?.nextWestbound
@@ -769,7 +769,7 @@ export default function Home() {
                   {!transitData?.lirr?.upcomingWestbound || transitData.lirr.upcomingWestbound.length === 0 ? (
                     <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
                       <span style={{ color: '#C0C0C0', fontSize: '0.68rem', fontWeight: '700' }}>
-                        // NO UPCOMING WESTBOUND DEPARTURES
+                        {transitData?.lirr?.isLive === false ? '// LIRR FEED UNAVAILABLE' : '// NO UPCOMING WESTBOUND DEPARTURES'}
                       </span>
                     </div>
                   ) : (
@@ -784,11 +784,11 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* LIRR Cedarhurst Eastbound */}
+                {/* LIRR Eastbound */}
                 <div className="transit-terminal-block">
                   <div className="transit-header-row">
                     <span className="transit-line-title transit-lirr-eastbound" style={{ display: 'flex', alignItems: 'center' }}>
-                      <TrainIcon /> LIRR EASTBOUND // CEDARHURST
+                      <TrainIcon /> LIRR EASTBOUND // {transitData?.lirr?.station ? transitData.lirr.station.replace(' STATION', '') : 'CEDARHURST'}
                     </span>
                     <span className="transit-countdown-pill pill-brown">
                       {transitData?.lirr?.nextEastbound
@@ -800,7 +800,7 @@ export default function Home() {
                   {!transitData?.lirr?.upcomingEastbound || transitData.lirr.upcomingEastbound.length === 0 ? (
                     <div className="agenda-empty-banner" style={{ margin: '6px 0', padding: '8px 6px' }}>
                       <span style={{ color: '#E67E22', fontSize: '0.68rem', fontWeight: '700' }}>
-                        // NO UPCOMING EASTBOUND DEPARTURES
+                        {transitData?.lirr?.isLive === false ? '// LIRR FEED UNAVAILABLE' : '// NO UPCOMING EASTBOUND DEPARTURES'}
                       </span>
                     </div>
                   ) : (
