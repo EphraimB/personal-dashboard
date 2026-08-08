@@ -134,10 +134,26 @@ async function getLiveLirrDepartures(now) {
 }
 
 
+let ferryTripMap = null;
+function getFerryTripMap() {
+  if (!ferryTripMap) {
+    try {
+      const jsonPath = path.join(process.cwd(), 'dashboard', 'gtfs_ferry_trips.json');
+      if (fs.existsSync(jsonPath)) {
+        ferryTripMap = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+      }
+    } catch (e) {
+      console.error('Error reading gtfs_ferry_trips.json:', e);
+    }
+  }
+  return ferryTripMap || {};
+}
+
 async function getFerryDepartures(now) {
   const stopId = process.env.FERRY_STOP_ID || '88';
   const terminalName = (process.env.FERRY_TERMINAL_NAME || 'ROCKAWAY LANDING').toUpperCase();
   const currentEpochSec = Math.floor(now.getTime() / 1000);
+  const tripMap = getFerryTripMap();
 
   const TERMINAL_NAMES = {
     '19': 'WALL ST / PIER 11',
@@ -165,12 +181,14 @@ async function getFerryDepartures(now) {
     for (const entity of feed.entity || []) {
       if (!entity.tripUpdate || !entity.tripUpdate.stopTimeUpdate) continue;
 
+      const tripId = entity.tripUpdate.trip?.tripId;
       const stopUpdates = entity.tripUpdate.stopTimeUpdate;
       const st = stopUpdates.find(s => s.stopId === stopId || s.stopId?.startsWith(`${stopId}_`));
-      if (!st) continue;
 
-      const rawTime = st.departure?.time || st.arrival?.time;
-      const depEpoch = parseProtobufTime(rawTime);
+      // Must have valid departure time (pure departures only)
+      if (!st || !st.departure?.time) continue;
+
+      const depEpoch = parseProtobufTime(st.departure.time);
       if (!depEpoch || depEpoch <= currentEpochSec) continue;
 
       const diffSec = depEpoch - currentEpochSec;
@@ -183,10 +201,22 @@ async function getFerryDepartures(now) {
         hour12: true
       });
 
-      const lastStopInTrip = stopUpdates[stopUpdates.length - 1]?.stopId;
-      let destination = TERMINAL_NAMES[lastStopInTrip] || 'WALL ST / PIER 11';
+      let rawDest = tripId ? tripMap[tripId] : null;
+      let destination = '';
+      if (rawDest) {
+        destination = rawDest.replace(/\s*\([^\)]*\)/g, '').replace(/\./g, '').trim().toUpperCase();
+      } else {
+        const lastStopInTrip = stopUpdates[stopUpdates.length - 1]?.stopId;
+        if (lastStopInTrip && lastStopInTrip !== stopId && TERMINAL_NAMES[lastStopInTrip]) {
+          destination = TERMINAL_NAMES[lastStopInTrip];
+        } else {
+          destination = 'WALL ST / PIER 11';
+        }
+      }
 
-      const rawDelay = st.departure?.delay || st.arrival?.delay || 0;
+
+
+      const rawDelay = st.departure?.delay || 0;
       const delaySec = typeof rawDelay === 'number' ? rawDelay : parseProtobufTime(rawDelay);
       const delayMins = Math.round(delaySec / 60);
 
@@ -211,7 +241,8 @@ async function getFerryDepartures(now) {
     upcoming.sort((a, b) => a.minsUntil - b.minsUntil);
 
     const nextSailing = upcoming[0] || null;
-    const upcomingSailings = upcoming.slice(0, 3);
+    const upcomingSailings = upcoming.slice(0, 4);
+
 
     return {
       route: 'ROCKAWAY ROUTE',

@@ -836,7 +836,7 @@ export default function Home() {
                     </div>
                   ) : (
                     <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
-                      {transitData.ferry.upcomingSailings.slice(0, 2).map((item, i) => (
+                      {transitData.ferry.upcomingSailings.slice(0, 3).map((item, i) => (
                         <div key={i} className="transit-upcoming-item">
                           <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
                           <span style={{ color: '#B15EFF' }}>{item.status}</span>
