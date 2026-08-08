@@ -819,7 +819,7 @@ export default function Home() {
                 <div className="transit-terminal-block">
                   <div className="transit-header-row">
                     <span className="transit-line-title transit-ferry" style={{ display: 'flex', alignItems: 'center' }}>
-                      <FerryIcon /> NYC FERRY // ROCKAWAY LANDING
+                      <FerryIcon /> NYC FERRY // {transitData?.ferry?.terminal || 'ROCKAWAY LANDING'}
                     </span>
                     <span className="transit-countdown-pill pill-purple">
                       {transitData?.ferry?.nextSailing
@@ -831,7 +831,7 @@ export default function Home() {
                   {!transitData?.ferry?.upcomingSailings || transitData.ferry.upcomingSailings.length === 0 ? (
                     <div className="agenda-empty-banner" style={{ margin: '6px 0', padding: '8px 6px' }}>
                       <span style={{ color: '#B15EFF', fontSize: '0.68rem', fontWeight: '700' }}>
-                        // NO UPCOMING FERRY SAILINGS
+                        {transitData?.ferry?.isLive === false ? '// FERRY FEED UNAVAILABLE' : '// NO UPCOMING FERRY SAILINGS'}
                       </span>
                     </div>
                   ) : (
