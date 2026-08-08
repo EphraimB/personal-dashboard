@@ -195,7 +195,15 @@ html, body {
   overflow: hidden;
 }
 
-.avatar-corner, .card-corner {
+.avatar-corner {
+  position: fixed !important;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.card-corner {
   position: absolute;
   width: 14px;
   height: 14px;
@@ -1096,7 +1104,15 @@ html, body {
   overflow: hidden;
 }
 
-.avatar-corner, .card-corner {
+.avatar-corner {
+  position: fixed !important;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.card-corner {
   position: absolute;
   width: 14px;
   height: 14px;
