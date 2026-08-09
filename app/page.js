@@ -830,17 +830,19 @@ export default function Home() {
                             fontFamily: 'monospace'
                           }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
-                              <span style={{
-                                background: 'rgba(0, 229, 255, 0.14)',
-                                color: '#00E5FF',
-                                border: '1px solid rgba(0, 229, 255, 0.35)',
-                                borderRadius: '4px',
-                                padding: '1px 6px',
-                                fontWeight: 'bold',
-                                fontSize: 'clamp(0.68rem, 1vh, 0.95rem)'
-                              }}>
-                                {item.model || 'M7 ELECTRIC'}
-                              </span>
+                              {item.model && (
+                                <span style={{
+                                  background: 'rgba(192, 192, 192, 0.15)',
+                                  color: '#C0C0C0',
+                                  border: '1px solid rgba(192, 192, 192, 0.35)',
+                                  borderRadius: '4px',
+                                  padding: '1px 6px',
+                                  fontWeight: 'bold',
+                                  fontSize: 'clamp(0.68rem, 1vh, 0.95rem)'
+                                }}>
+                                  {item.model}
+                                </span>
+                              )}
                               <span style={{ color: '#aaa', fontSize: 'clamp(0.68rem, 1vh, 0.95rem)', fontWeight: '700' }}>{item.carCount || 8} CARS</span>
                               {item.bikesAllowed !== false ? (
                                 <span style={{
@@ -975,17 +977,19 @@ export default function Home() {
                             fontFamily: 'monospace'
                           }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
-                              <span style={{
-                                background: 'rgba(230, 126, 34, 0.15)',
-                                color: '#E67E22',
-                                border: '1px solid rgba(230, 126, 34, 0.35)',
-                                borderRadius: '4px',
-                                padding: '1px 6px',
-                                fontWeight: 'bold',
-                                fontSize: 'clamp(0.68rem, 1vh, 0.95rem)'
-                              }}>
-                                {item.model || 'M7 ELECTRIC'}
-                              </span>
+                              {item.model && (
+                                <span style={{
+                                  background: 'rgba(230, 126, 34, 0.15)',
+                                  color: '#E67E22',
+                                  border: '1px solid rgba(230, 126, 34, 0.35)',
+                                  borderRadius: '4px',
+                                  padding: '1px 6px',
+                                  fontWeight: 'bold',
+                                  fontSize: 'clamp(0.68rem, 1vh, 0.95rem)'
+                                }}>
+                                  {item.model}
+                                </span>
+                              )}
                               <span style={{ color: '#aaa', fontSize: 'clamp(0.68rem, 1vh, 0.95rem)', fontWeight: '700' }}>{item.carCount || 8} CARS</span>
                               {item.bikesAllowed !== false ? (
                                 <span style={{

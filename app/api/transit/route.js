@@ -19,7 +19,7 @@ function parseProtobufTime(rawTime) {
 
 function deriveLirrConsistTelemetry(entity, tripId, st) {
   const vehicleLabel = entity.tripUpdate?.vehicle?.label || entity.tripUpdate?.vehicle?.id || '';
-  let model = 'M7 ELECTRIC';
+  let model = null;
   let carCount = 8;
 
   const leadNum = parseInt(vehicleLabel.split('_')[0], 10);
@@ -33,7 +33,7 @@ function deriveLirrConsistTelemetry(entity, tripId, st) {
     } else if (leadNum < 1000) {
       model = 'C3 DIESEL';
       carCount = 6;
-    } else {
+    } else if (leadNum >= 7000 && leadNum < 9000) {
       model = 'M7 ELECTRIC';
       carCount = 8;
     }
@@ -186,12 +186,13 @@ async function getLiveLirrDepartures(now) {
         const loc = locMap[arr.train_id];
         const consist = loc?.consist;
 
-        let model = 'M7 ELECTRIC';
+        let model = null;
         if (consist?.fleet) {
           const fleetUpper = consist.fleet.toUpperCase();
           if (fleetUpper.includes('DIESEL')) model = 'C3 DIESEL';
           else if (fleetUpper.includes('M9')) model = 'M9 ELECTRIC';
           else if (fleetUpper.includes('M3')) model = 'M3 ELECTRIC';
+          else if (fleetUpper.includes('M7')) model = 'M7 ELECTRIC';
           else model = `${fleetUpper} ELECTRIC`;
         }
 
