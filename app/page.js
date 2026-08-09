@@ -843,7 +843,9 @@ export default function Home() {
                                   {item.model}
                                 </span>
                               )}
-                              <span style={{ color: '#aaa', fontSize: 'clamp(0.68rem, 1vh, 0.95rem)', fontWeight: '700' }}>{item.carCount || 8} CARS</span>
+                              {item.carCount && (
+                                <span style={{ color: '#aaa', fontSize: 'clamp(0.68rem, 1vh, 0.95rem)', fontWeight: '700' }}>{item.carCount} CARS</span>
+                              )}
                               {item.bikesAllowed !== false ? (
                                 <span style={{
                                   background: 'rgba(0, 230, 118, 0.14)',
@@ -990,7 +992,9 @@ export default function Home() {
                                   {item.model}
                                 </span>
                               )}
-                              <span style={{ color: '#aaa', fontSize: 'clamp(0.68rem, 1vh, 0.95rem)', fontWeight: '700' }}>{item.carCount || 8} CARS</span>
+                              {item.carCount && (
+                                <span style={{ color: '#aaa', fontSize: 'clamp(0.68rem, 1vh, 0.95rem)', fontWeight: '700' }}>{item.carCount} CARS</span>
+                              )}
                               {item.bikesAllowed !== false ? (
                                 <span style={{
                                   background: 'rgba(0, 230, 118, 0.14)',

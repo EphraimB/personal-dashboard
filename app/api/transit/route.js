@@ -20,7 +20,7 @@ function parseProtobufTime(rawTime) {
 function deriveLirrConsistTelemetry(entity, tripId, st) {
   const vehicleLabel = entity.tripUpdate?.vehicle?.label || entity.tripUpdate?.vehicle?.id || '';
   let model = null;
-  let carCount = 8;
+  let carCount = null;
 
   const leadNum = parseInt(vehicleLabel.split('_')[0], 10);
   if (!isNaN(leadNum)) {
@@ -196,7 +196,7 @@ async function getLiveLirrDepartures(now) {
           else model = `${fleetUpper} ELECTRIC`;
         }
 
-        const carCount = consist?.actual_len || 8;
+        const carCount = consist?.actual_len || null;
 
         const hasOccupancyData = Boolean(
           consist &&
