@@ -82,6 +82,14 @@ async function getLiveLirrDepartures(now) {
       const delaySec = typeof rawDelay === 'number' ? rawDelay : parseProtobufTime(rawDelay);
       const delayMins = Math.round(delaySec / 60);
 
+      const scheduledEpoch = depEpoch - delaySec;
+      const scheduledDate = new Date(scheduledEpoch * 1000);
+      const scheduledTimeStr = scheduledDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+
       let status = 'ON TIME';
       if (delayMins > 0) {
         status = `+${delayMins} MIN DELAY`;
@@ -94,6 +102,7 @@ async function getLiveLirrDepartures(now) {
       const departureObj = {
         destination,
         timeStr,
+        scheduledTimeStr,
         minsUntil: diffMins,
         track: isEastbound ? 'TRACK 2' : 'TRACK 1',
         status,

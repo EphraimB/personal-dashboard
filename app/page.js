@@ -776,8 +776,20 @@ export default function Home() {
                     <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
                       {transitData.lirr.upcomingWestbound.slice(0, 2).map((item, i) => (
                         <div key={i} className="transit-upcoming-item">
-                          <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
-                          <span style={{ color: '#C0C0C0' }}>{item.track} • {item.status}</span>
+                          <span>
+                            {item.delayMins > 0 ? (
+                              <>
+                                <s style={{ textDecoration: 'line-through', opacity: 0.55, marginRight: '4px' }}>{item.scheduledTimeStr}</s>
+                                <span style={{ color: '#FF5555', fontWeight: '700' }}>{item.timeStr}</span>
+                              </>
+                            ) : (
+                              item.timeStr
+                            )}
+                            {' '}<ArrowIcon /> {item.destination}
+                          </span>
+                          <span style={{ color: '#C0C0C0' }}>
+                            {item.delayMins > 0 ? item.track : `${item.track} • ${item.status}`}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -807,8 +819,20 @@ export default function Home() {
                     <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
                       {transitData.lirr.upcomingEastbound.slice(0, 2).map((item, i) => (
                         <div key={i} className="transit-upcoming-item">
-                          <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
-                          <span style={{ color: '#E67E22' }}>{item.track} • {item.status}</span>
+                          <span>
+                            {item.delayMins > 0 ? (
+                              <>
+                                <s style={{ textDecoration: 'line-through', opacity: 0.55, marginRight: '4px' }}>{item.scheduledTimeStr}</s>
+                                <span style={{ color: '#FF5555', fontWeight: '700' }}>{item.timeStr}</span>
+                              </>
+                            ) : (
+                              item.timeStr
+                            )}
+                            {' '}<ArrowIcon /> {item.destination}
+                          </span>
+                          <span style={{ color: '#E67E22' }}>
+                            {item.delayMins > 0 ? item.track : `${item.track} • ${item.status}`}
+                          </span>
                         </div>
                       ))}
                     </div>
