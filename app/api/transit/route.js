@@ -164,10 +164,11 @@ async function getLiveLirrDepartures(now) {
           destination = isEastbound ? 'FAR ROCKAWAY' : 'GRAND CENTRAL';
         }
 
-        const rawOtp = arr.status?.otp || 0; // minutes late
-        const delayMins = Math.max(0, Math.round(rawOtp));
+        const rawOtpSec = typeof arr.status?.otp === 'number' ? arr.status.otp : 0;
+        const delaySec = Math.max(0, rawOtpSec);
+        const delayMins = delaySec >= 300 ? Math.floor(delaySec / 60) : 0;
 
-        const scheduledEpoch = arr.time - (delayMins * 60);
+        const scheduledEpoch = arr.time - delaySec;
         const scheduledDate = new Date(scheduledEpoch * 1000);
         const scheduledTimeStr = scheduledDate.toLocaleTimeString('en-US', {
           hour: '2-digit',

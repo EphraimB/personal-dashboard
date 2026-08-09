@@ -2983,13 +2983,16 @@ html, body {
 }
 
 .transit-upcoming-item {
-  font-size: clamp(1.15rem, 2.2vh, 2.2rem);
+  font-size: clamp(0.95rem, 1.4vh, 1.45rem);
   font-weight: 800;
   color: #ffffff;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: clamp(6px, 1.2vh, 14px) clamp(10px, 1.2vw, 18px);
+  white-space: nowrap;
+  gap: 8px;
+  overflow: hidden;
+  padding: clamp(6px, 1vh, 12px) clamp(8px, 1vw, 14px);
   background: rgba(0, 0, 0, 0.4);
   border-radius: 4px;
   border-left: 3px solid rgba(255, 255, 255, 0.2);

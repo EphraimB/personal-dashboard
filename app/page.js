@@ -777,7 +777,7 @@ export default function Home() {
                       {transitData.lirr.upcomingWestbound.slice(0, 2).map((item, i) => (
                         <div key={i} style={{ marginBottom: '8px' }}>
                           <div className="transit-upcoming-item">
-                            <span>
+                            <span style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                               {item.delayMins > 0 ? (
                                 <>
                                   <s style={{ textDecoration: 'line-through', opacity: 0.55, marginRight: '4px' }}>{item.scheduledTimeStr}</s>
@@ -788,7 +788,7 @@ export default function Home() {
                               )}
                               {' '}<ArrowIcon /> {item.destination}
                             </span>
-                            <span style={{ color: '#C0C0C0' }}>
+                            <span style={{ color: '#C0C0C0', whiteSpace: 'nowrap', flexShrink: 0 }}>
                               {item.delayMins > 0 ? item.track : `${item.track} • ${item.status}`}
                             </span>
                           </div>
@@ -893,7 +893,7 @@ export default function Home() {
                       {transitData.lirr.upcomingEastbound.slice(0, 2).map((item, i) => (
                         <div key={i} style={{ marginBottom: '8px' }}>
                           <div className="transit-upcoming-item">
-                            <span>
+                            <span style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                               {item.delayMins > 0 ? (
                                 <>
                                   <s style={{ textDecoration: 'line-through', opacity: 0.55, marginRight: '4px' }}>{item.scheduledTimeStr}</s>
@@ -904,7 +904,7 @@ export default function Home() {
                               )}
                               {' '}<ArrowIcon /> {item.destination}
                             </span>
-                            <span style={{ color: '#E67E22' }}>
+                            <span style={{ color: '#E67E22', whiteSpace: 'nowrap', flexShrink: 0 }}>
                               {item.delayMins > 0 ? item.track : `${item.track} • ${item.status}`}
                             </span>
                           </div>
