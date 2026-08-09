@@ -3017,8 +3017,8 @@ html, body {
 }
 
 .transit-card-westbound {
-  border-left: 4px solid var(--color-cyan, #00f0ff);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 3px 0 12px rgba(0, 240, 255, 0.05);
+  border-left: 4px solid #C0C0C0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 3px 0 12px rgba(192, 192, 192, 0.08);
 }
 
 .transit-card-eastbound {
