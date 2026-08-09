@@ -797,60 +797,60 @@ export default function Home() {
                           <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: '6px',
-                            marginTop: '3px',
-                            padding: '3px 6px',
+                            justify: 'space-between',
+                            gap: '8px',
+                            marginTop: 'clamp(3px, 0.6vh, 8px)',
+                            padding: 'clamp(4px, 0.8vh, 10px) clamp(8px, 1vw, 14px)',
                             background: 'rgba(255, 255, 255, 0.03)',
-                            borderRadius: '4px',
-                            border: '1px solid rgba(255, 255, 255, 0.06)',
-                            fontSize: '0.62rem',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            fontSize: 'clamp(0.7rem, 1.1vh, 1.05rem)',
                             fontFamily: 'monospace'
                           }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                               <span style={{
-                                background: 'rgba(0, 229, 255, 0.12)',
+                                background: 'rgba(0, 229, 255, 0.14)',
                                 color: '#00E5FF',
-                                border: '1px solid rgba(0, 229, 255, 0.3)',
-                                borderRadius: '3px',
-                                padding: '0px 4px',
+                                border: '1px solid rgba(0, 229, 255, 0.35)',
+                                borderRadius: '4px',
+                                padding: '1px 6px',
                                 fontWeight: 'bold',
-                                fontSize: '0.58rem'
+                                fontSize: 'clamp(0.68rem, 1vh, 0.95rem)'
                               }}>
                                 {item.model || 'M7 ELECTRIC'}
                               </span>
-                              <span style={{ color: '#888', fontSize: '0.58rem' }}>{item.carCount || 8} CARS</span>
+                              <span style={{ color: '#aaa', fontSize: 'clamp(0.68rem, 1vh, 0.95rem)', fontWeight: '700' }}>{item.carCount || 8} CARS</span>
                               {!item.hasOccupancyData && (
-                                <span style={{ color: '#666', fontSize: '0.56rem', marginLeft: '2px' }}>• NO CROWDING DATA</span>
+                                <span style={{ color: '#777', fontSize: 'clamp(0.62rem, 0.9vh, 0.88rem)', marginLeft: '2px' }}>• NO CROWDING DATA</span>
                               )}
                             </div>
 
                             <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', overflowX: 'auto' }}>
-                              <svg width={(item.cars?.length || 8) * 24 + 10} height="20" viewBox={`0 0 ${(item.cars?.length || 8) * 24 + 10} 20`}>
-                                <path d="M 1 10 L 6 4 L 9 4 L 9 16 L 6 16 Z" fill="#555" stroke="#777" strokeWidth="1" />
+                              <svg style={{ height: 'clamp(22px, 3vh, 36px)', width: 'auto' }} viewBox={`0 0 ${(item.cars?.length || 8) * 26 + 12} 22`}>
+                                <path d="M 1 11 L 7 4 L 10 4 L 10 18 L 7 18 Z" fill="#555" stroke="#777" strokeWidth="1" />
                                 {(item.cars || Array.from({ length: 8 }).map((_, idx) => ({ color: 'rgba(255,255,255,0.06)', riders: null }))).map((car, idx) => {
-                                  const x = 9 + idx * 24;
+                                  const x = 10 + idx * 26;
                                   const isNeutral = !item.hasOccupancyData || car.riders === null;
                                   return (
                                     <g key={idx}>
-                                      {idx > 0 && <line x1={x - 1} y1="10" x2={x} y2="10" stroke="#666" strokeWidth="1.5" />}
+                                      {idx > 0 && <line x1={x - 1} y1="11" x2={x} y2="11" stroke="#666" strokeWidth="1.5" />}
                                       <rect
                                         x={x}
                                         y="3"
-                                        width="22"
-                                        height="14"
+                                        width="24"
+                                        height="16"
                                         rx="2"
                                         fill={isNeutral ? 'rgba(255,255,255,0.05)' : car.color}
                                         fillOpacity={isNeutral ? 1 : 0.88}
                                         stroke={isNeutral ? '#444' : '#111'}
                                         strokeWidth="1"
                                       />
-                                      <rect x={x + 2} y="4.5" width="18" height="2.5" rx="1" fill={isNeutral ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)'} />
+                                      <rect x={x + 2} y="4.5" width="20" height="3" rx="1" fill={isNeutral ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)'} />
                                       <text
-                                        x={x + 11}
-                                        y="13.5"
+                                        x={x + 12}
+                                        y="15"
                                         fill={isNeutral ? '#777' : '#000'}
-                                        fontSize="7.5"
+                                        fontSize="8.5"
                                         fontWeight={isNeutral ? '400' : '900'}
                                         textAnchor="middle"
                                         style={{ fontFamily: 'sans-serif' }}
@@ -914,59 +914,59 @@ export default function Home() {
                             display: 'flex',
                             alignItems: 'center',
                             justify: 'space-between',
-                            gap: '6px',
-                            marginTop: '3px',
-                            padding: '3px 6px',
+                            gap: '8px',
+                            marginTop: 'clamp(3px, 0.6vh, 8px)',
+                            padding: 'clamp(4px, 0.8vh, 10px) clamp(8px, 1vw, 14px)',
                             background: 'rgba(255, 255, 255, 0.03)',
-                            borderRadius: '4px',
-                            border: '1px solid rgba(255, 255, 255, 0.06)',
-                            fontSize: '0.62rem',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            fontSize: 'clamp(0.7rem, 1.1vh, 1.05rem)',
                             fontFamily: 'monospace'
                           }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                               <span style={{
                                 background: 'rgba(230, 126, 34, 0.15)',
                                 color: '#E67E22',
                                 border: '1px solid rgba(230, 126, 34, 0.35)',
-                                borderRadius: '3px',
-                                padding: '0px 4px',
+                                borderRadius: '4px',
+                                padding: '1px 6px',
                                 fontWeight: 'bold',
-                                fontSize: '0.58rem'
+                                fontSize: 'clamp(0.68rem, 1vh, 0.95rem)'
                               }}>
                                 {item.model || 'M7 ELECTRIC'}
                               </span>
-                              <span style={{ color: '#888', fontSize: '0.58rem' }}>{item.carCount || 8} CARS</span>
+                              <span style={{ color: '#aaa', fontSize: 'clamp(0.68rem, 1vh, 0.95rem)', fontWeight: '700' }}>{item.carCount || 8} CARS</span>
                               {!item.hasOccupancyData && (
-                                <span style={{ color: '#666', fontSize: '0.56rem', marginLeft: '2px' }}>• NO CROWDING DATA</span>
+                                <span style={{ color: '#777', fontSize: 'clamp(0.62rem, 0.9vh, 0.88rem)', marginLeft: '2px' }}>• NO CROWDING DATA</span>
                               )}
                             </div>
 
                             <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', overflowX: 'auto' }}>
-                              <svg width={(item.cars?.length || 8) * 24 + 10} height="20" viewBox={`0 0 ${(item.cars?.length || 8) * 24 + 10} 20`}>
-                                <path d="M 1 10 L 6 4 L 9 4 L 9 16 L 6 16 Z" fill="#555" stroke="#777" strokeWidth="1" />
+                              <svg style={{ height: 'clamp(22px, 3vh, 36px)', width: 'auto' }} viewBox={`0 0 ${(item.cars?.length || 8) * 26 + 12} 22`}>
+                                <path d="M 1 11 L 7 4 L 10 4 L 10 18 L 7 18 Z" fill="#555" stroke="#777" strokeWidth="1" />
                                 {(item.cars || Array.from({ length: 8 }).map((_, idx) => ({ color: 'rgba(255,255,255,0.06)', riders: null }))).map((car, idx) => {
-                                  const x = 9 + idx * 24;
+                                  const x = 10 + idx * 26;
                                   const isNeutral = !item.hasOccupancyData || car.riders === null;
                                   return (
                                     <g key={idx}>
-                                      {idx > 0 && <line x1={x - 1} y1="10" x2={x} y2="10" stroke="#666" strokeWidth="1.5" />}
+                                      {idx > 0 && <line x1={x - 1} y1="11" x2={x} y2="11" stroke="#666" strokeWidth="1.5" />}
                                       <rect
                                         x={x}
                                         y="3"
-                                        width="22"
-                                        height="14"
+                                        width="24"
+                                        height="16"
                                         rx="2"
                                         fill={isNeutral ? 'rgba(255,255,255,0.05)' : car.color}
                                         fillOpacity={isNeutral ? 1 : 0.88}
                                         stroke={isNeutral ? '#444' : '#111'}
                                         strokeWidth="1"
                                       />
-                                      <rect x={x + 2} y="4.5" width="18" height="2.5" rx="1" fill={isNeutral ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)'} />
+                                      <rect x={x + 2} y="4.5" width="20" height="3" rx="1" fill={isNeutral ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)'} />
                                       <text
-                                        x={x + 11}
-                                        y="13.5"
+                                        x={x + 12}
+                                        y="15"
                                         fill={isNeutral ? '#777' : '#000'}
-                                        fontSize="7.5"
+                                        fontSize="8.5"
                                         fontWeight={isNeutral ? '400' : '900'}
                                         textAnchor="middle"
                                         style={{ fontFamily: 'sans-serif' }}
