@@ -1077,7 +1077,9 @@ export default function Home() {
                     </span>
                     <span className="transit-countdown-pill pill-purple">
                       {transitData?.ferry?.nextSailing
-                        ? `IN ${String(transitData.ferry.nextSailing.minsUntil).padStart(2, '0')} MINS`
+                        ? (transitData.ferry.nextSailing.isNightBreak
+                            ? `TOMORROW ${transitData.ferry.nextSailing.timeStr}`
+                            : `IN ${String(transitData.ferry.nextSailing.minsUntil).padStart(2, '0')} MINS`)
                         : 'NO SAILINGS'}
                     </span>
                   </div>

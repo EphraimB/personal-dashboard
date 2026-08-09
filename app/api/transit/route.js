@@ -440,6 +440,18 @@ function getFerryTripMap() {
   return ferryTripMap || {};
 }
 
+function getFerryScheduleData() {
+  try {
+    const jsonPath = path.join(process.cwd(), 'dashboard', 'gtfs_ferry_schedule.json');
+    if (fs.existsSync(jsonPath)) {
+      return JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    }
+  } catch (e) {
+    console.error('Error loading gtfs_ferry_schedule.json:', e);
+  }
+  return null;
+}
+
 async function getFerryDepartures(now) {
   const stopId = process.env.FERRY_STOP_ID || '88';
   const terminalName = (process.env.FERRY_TERMINAL_NAME || 'ROCKAWAY LANDING').toUpperCase();
@@ -460,74 +472,155 @@ async function getFerryDepartures(now) {
   try {
     const url = 'https://nycferry.connexionz.net/rtt/public/utility/gtfsrealtime.aspx/tripupdate';
     const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) {
-      throw new Error(`NYC Ferry Feed responded with HTTP status ${res.status}`);
-    }
-
-    const arrayBuffer = await res.arrayBuffer();
-    const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(Buffer.from(arrayBuffer));
 
     const upcoming = [];
 
-    for (const entity of feed.entity || []) {
-      if (!entity.tripUpdate || !entity.tripUpdate.stopTimeUpdate) continue;
+    if (res.ok) {
+      const arrayBuffer = await res.arrayBuffer();
+      const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(Buffer.from(arrayBuffer));
 
-      const tripId = entity.tripUpdate.trip?.tripId;
-      const stopUpdates = entity.tripUpdate.stopTimeUpdate;
-      const st = stopUpdates.find(s => s.stopId === stopId || s.stopId?.startsWith(`${stopId}_`));
+      for (const entity of feed.entity || []) {
+        if (!entity.tripUpdate || !entity.tripUpdate.stopTimeUpdate) continue;
 
-      // Must have valid departure time (pure departures only)
-      if (!st || !st.departure?.time) continue;
+        const tripId = entity.tripUpdate.trip?.tripId;
+        const stopUpdates = entity.tripUpdate.stopTimeUpdate;
+        const st = stopUpdates.find(s => s.stopId === stopId || s.stopId?.startsWith(`${stopId}_`));
 
-      const depEpoch = parseProtobufTime(st.departure.time);
-      if (!depEpoch || depEpoch <= currentEpochSec) continue;
+        if (!st || !st.departure?.time) continue;
 
-      const diffSec = depEpoch - currentEpochSec;
-      const diffMins = Math.floor(diffSec / 60);
+        const depEpoch = parseProtobufTime(st.departure.time);
+        if (!depEpoch || depEpoch <= currentEpochSec) continue;
 
-      const depDate = new Date(depEpoch * 1000);
-      const timeStr = depDate.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
+        const diffSec = depEpoch - currentEpochSec;
+        const diffMins = Math.floor(diffSec / 60);
 
-      let rawDest = tripId ? tripMap[tripId] : null;
-      let destination = '';
-      if (rawDest) {
-        destination = rawDest.replace(/\s*\([^\)]*\)/g, '').replace(/\./g, '').trim().toUpperCase();
-      } else {
-        const lastStopInTrip = stopUpdates[stopUpdates.length - 1]?.stopId;
-        if (lastStopInTrip && lastStopInTrip !== stopId && TERMINAL_NAMES[lastStopInTrip]) {
-          destination = TERMINAL_NAMES[lastStopInTrip];
+        const depDate = new Date(depEpoch * 1000);
+        const timeStr = depDate.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        let rawDest = tripId ? tripMap[tripId] : null;
+        let destination = '';
+        if (rawDest) {
+          destination = rawDest.replace(/\s*\([^\)]*\)/g, '').replace(/\./g, '').trim().toUpperCase();
         } else {
-          destination = 'WALL ST / PIER 11';
+          const lastStopInTrip = stopUpdates[stopUpdates.length - 1]?.stopId;
+          if (lastStopInTrip && lastStopInTrip !== stopId && TERMINAL_NAMES[lastStopInTrip]) {
+            destination = TERMINAL_NAMES[lastStopInTrip];
+          } else {
+            destination = 'WALL ST / PIER 11';
+          }
+        }
+
+        const rawDelay = st.departure?.delay || 0;
+        const delaySec = typeof rawDelay === 'number' ? rawDelay : parseProtobufTime(rawDelay);
+        const delayMins = Math.round(delaySec / 60);
+
+        let status = '● LIVE SATELLITE';
+        if (delayMins > 1) {
+          status = `+${delayMins} MIN DELAY`;
+        } else if (diffMins < 5) {
+          status = 'BOARDING';
+        }
+
+        upcoming.push({
+          destination,
+          timeStr,
+          minsUntil: diffMins,
+          track: 'BEACH 108TH ST',
+          status,
+          delayMins,
+          bikesAllowed: true,
+          isLive: true
+        });
+      }
+    }
+
+    // Fallback/Timetable Engine: Use official static GTFS schedule dataset when live feed is quiet
+    if (upcoming.length === 0) {
+      const scheduleMap = getFerryScheduleData();
+      if (scheduleMap) {
+        const curHour = now.getHours();
+        const curMin = now.getMinutes();
+        const curSec = now.getSeconds();
+        const currentTimeStr = `${String(curHour).padStart(2, '0')}:${String(curMin).padStart(2, '0')}:${String(curSec).padStart(2, '0')}`;
+
+        const dayOfWeek = now.getDay();
+        let dayKey = 'weekday';
+        if (dayOfWeek === 6) dayKey = 'saturday';
+        else if (dayOfWeek === 0) dayKey = 'sunday';
+
+        const todayDepartures = scheduleMap[dayKey] || [];
+        const remainingToday = todayDepartures.filter(d => d.time > currentTimeStr);
+
+        if (remainingToday.length > 0) {
+          remainingToday.slice(0, 4).forEach(d => {
+            const [h, m] = d.time.split(':').map(Number);
+            const depDate = new Date(now);
+            depDate.setHours(h, m, 0, 0);
+
+            const diffSec = Math.floor((depDate.getTime() - now.getTime()) / 1000);
+            const diffMins = Math.floor(diffSec / 60);
+
+            const timeStr = depDate.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            });
+
+            upcoming.push({
+              destination: d.destination || 'WALL ST / PIER 11',
+              timeStr,
+              minsUntil: diffMins,
+              track: 'BEACH 108TH ST',
+              status: 'SCHEDULED',
+              delayMins: 0,
+              bikesAllowed: true,
+              isLive: true
+            });
+          });
+        } else {
+          // Service is on night break. Get tomorrow's first sailing from static GTFS schedule.
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const tomorrowDay = tomorrow.getDay();
+          let tomorrowKey = 'weekday';
+          if (tomorrowDay === 6) tomorrowKey = 'saturday';
+          else if (tomorrowDay === 0) tomorrowKey = 'sunday';
+
+          const tomorrowDepartures = scheduleMap[tomorrowKey] || [];
+          const firstTomorrow = tomorrowDepartures[0];
+
+          if (firstTomorrow) {
+            const [h, m] = firstTomorrow.time.split(':').map(Number);
+            const sailingTime = new Date(tomorrow);
+            sailingTime.setHours(h, m, 0, 0);
+
+            const diffSec = Math.max(0, Math.floor((sailingTime.getTime() - now.getTime()) / 1000));
+            const diffMins = Math.floor(diffSec / 60);
+
+            const timeStr = sailingTime.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            });
+
+            upcoming.push({
+              destination: firstTomorrow.destination || 'WALL ST / PIER 11',
+              timeStr,
+              minsUntil: diffMins,
+              track: 'BEACH 108TH ST',
+              status: 'FIRST SAILING TOMORROW',
+              delayMins: 0,
+              bikesAllowed: true,
+              isNightBreak: true,
+              isLive: true
+            });
+          }
         }
       }
-
-
-
-      const rawDelay = st.departure?.delay || 0;
-      const delaySec = typeof rawDelay === 'number' ? rawDelay : parseProtobufTime(rawDelay);
-      const delayMins = Math.round(delaySec / 60);
-
-      let status = '● LIVE SATELLITE';
-      if (delayMins > 1) {
-        status = `+${delayMins} MIN DELAY`;
-      } else if (diffMins < 5) {
-        status = 'BOARDING';
-      }
-
-      upcoming.push({
-        destination,
-        timeStr,
-        minsUntil: diffMins,
-        track: 'BEACH 108TH ST',
-        status,
-        delayMins,
-        bikesAllowed: true,
-        isLive: true
-      });
     }
 
     upcoming.sort((a, b) => a.minsUntil - b.minsUntil);

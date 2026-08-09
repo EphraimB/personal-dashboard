@@ -1,0 +1,413 @@
+{
+  "weekday": [
+    {
+      "time": "05:05:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "556"
+    },
+    {
+      "time": "05:49:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "557"
+    },
+    {
+      "time": "06:33:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "558"
+    },
+    {
+      "time": "07:15:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "559"
+    },
+    {
+      "time": "07:59:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "560"
+    },
+    {
+      "time": "08:43:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "561"
+    },
+    {
+      "time": "09:52:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "562"
+    },
+    {
+      "time": "11:02:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "563"
+    },
+    {
+      "time": "12:08:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "564"
+    },
+    {
+      "time": "13:14:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "565"
+    },
+    {
+      "time": "14:18:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "566"
+    },
+    {
+      "time": "15:28:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "567"
+    },
+    {
+      "time": "16:12:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "568"
+    },
+    {
+      "time": "16:56:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "569"
+    },
+    {
+      "time": "17:40:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "570"
+    },
+    {
+      "time": "18:21:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "571"
+    },
+    {
+      "time": "19:05:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "572"
+    },
+    {
+      "time": "19:51:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "573"
+    },
+    {
+      "time": "20:35:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "574"
+    }
+  ],
+  "saturday": [
+    {
+      "time": "08:47:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "650"
+    },
+    {
+      "time": "09:37:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "652"
+    },
+    {
+      "time": "10:27:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "656"
+    },
+    {
+      "time": "10:52:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "641"
+    },
+    {
+      "time": "11:00:00",
+      "destination": "LONG ISLAND CITY",
+      "tripId": "1809"
+    },
+    {
+      "time": "11:17:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "666"
+    },
+    {
+      "time": "11:42:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "651"
+    },
+    {
+      "time": "12:07:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "670"
+    },
+    {
+      "time": "12:31:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "654"
+    },
+    {
+      "time": "12:57:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "684"
+    },
+    {
+      "time": "13:23:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "664"
+    },
+    {
+      "time": "13:47:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "686"
+    },
+    {
+      "time": "14:13:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "668"
+    },
+    {
+      "time": "14:30:00",
+      "destination": "LONG ISLAND CITY",
+      "tripId": "1810"
+    },
+    {
+      "time": "14:37:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "688"
+    },
+    {
+      "time": "15:02:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "682"
+    },
+    {
+      "time": "15:27:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "692"
+    },
+    {
+      "time": "15:54:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "685"
+    },
+    {
+      "time": "16:17:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "696"
+    },
+    {
+      "time": "16:44:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "1800"
+    },
+    {
+      "time": "17:07:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "700"
+    },
+    {
+      "time": "17:30:00",
+      "destination": "LONG ISLAND CITY",
+      "tripId": "1811"
+    },
+    {
+      "time": "17:33:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "1801"
+    },
+    {
+      "time": "17:57:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "704"
+    },
+    {
+      "time": "18:25:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "694"
+    },
+    {
+      "time": "18:47:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "705"
+    },
+    {
+      "time": "19:15:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "1802"
+    },
+    {
+      "time": "19:37:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "707"
+    },
+    {
+      "time": "20:04:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "1803"
+    },
+    {
+      "time": "20:27:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "708"
+    },
+    {
+      "time": "21:17:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "709"
+    }
+  ],
+  "sunday": [
+    {
+      "time": "08:47:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "650"
+    },
+    {
+      "time": "09:37:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "652"
+    },
+    {
+      "time": "10:27:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "656"
+    },
+    {
+      "time": "10:52:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "641"
+    },
+    {
+      "time": "11:00:00",
+      "destination": "LONG ISLAND CITY",
+      "tripId": "1809"
+    },
+    {
+      "time": "11:17:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "666"
+    },
+    {
+      "time": "11:42:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "651"
+    },
+    {
+      "time": "12:07:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "670"
+    },
+    {
+      "time": "12:31:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "654"
+    },
+    {
+      "time": "12:57:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "684"
+    },
+    {
+      "time": "13:23:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "664"
+    },
+    {
+      "time": "13:47:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "686"
+    },
+    {
+      "time": "14:13:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "668"
+    },
+    {
+      "time": "14:30:00",
+      "destination": "LONG ISLAND CITY",
+      "tripId": "1810"
+    },
+    {
+      "time": "14:37:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "688"
+    },
+    {
+      "time": "15:02:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "682"
+    },
+    {
+      "time": "15:27:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "692"
+    },
+    {
+      "time": "15:54:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "685"
+    },
+    {
+      "time": "16:17:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "696"
+    },
+    {
+      "time": "16:44:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "1800"
+    },
+    {
+      "time": "17:07:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "700"
+    },
+    {
+      "time": "17:30:00",
+      "destination": "LONG ISLAND CITY",
+      "tripId": "1811"
+    },
+    {
+      "time": "17:33:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "1801"
+    },
+    {
+      "time": "17:57:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "704"
+    },
+    {
+      "time": "18:25:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "694"
+    },
+    {
+      "time": "18:47:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "705"
+    },
+    {
+      "time": "19:15:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "1802"
+    },
+    {
+      "time": "19:37:00",
+      "destination": "FERRY POINT PARK",
+      "tripId": "707"
+    },
+    {
+      "time": "20:04:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "1803"
+    },
+    {
+      "time": "20:27:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "708"
+    },
+    {
+      "time": "21:17:00",
+      "destination": "WALL ST / PIER 11",
+      "tripId": "709"
+    }
+  ]
+}
