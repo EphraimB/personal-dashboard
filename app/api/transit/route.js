@@ -425,22 +425,7 @@ async function getLiveLirrDepartures(now) {
 }
 
 
-let ferryTripMap = null;
-function getFerryTripMap() {
-  if (!ferryTripMap) {
-    try {
-      const jsonPath = path.join(process.cwd(), 'dashboard', 'gtfs_ferry_trips.json');
-      if (fs.existsSync(jsonPath)) {
-        ferryTripMap = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-      }
-    } catch (e) {
-      console.error('Error reading gtfs_ferry_trips.json:', e);
-    }
-  }
-  return ferryTripMap || {};
-}
-
-function getFerryScheduleData() {
+function getFerryDataset() {
   try {
     const jsonPath = path.join(process.cwd(), 'dashboard', 'gtfs_ferry_schedule.json');
     if (fs.existsSync(jsonPath)) {
@@ -449,14 +434,15 @@ function getFerryScheduleData() {
   } catch (e) {
     console.error('Error loading gtfs_ferry_schedule.json:', e);
   }
-  return null;
+  return {};
 }
 
 async function getFerryDepartures(now) {
   const stopId = process.env.FERRY_STOP_ID || '88';
   const terminalName = (process.env.FERRY_TERMINAL_NAME || 'ROCKAWAY LANDING').toUpperCase();
   const currentEpochSec = Math.floor(now.getTime() / 1000);
-  const tripMap = getFerryTripMap();
+  const ferryData = getFerryDataset();
+  const tripMap = ferryData.trips || {};
 
   const TERMINAL_NAMES = {
     '19': 'WALL ST / PIER 11',
@@ -540,7 +526,7 @@ async function getFerryDepartures(now) {
 
     // Fallback/Timetable Engine: Use official static GTFS schedule dataset when live feed is quiet
     if (upcoming.length === 0) {
-      const scheduleMap = getFerryScheduleData();
+      const scheduleMap = ferryData;
       if (scheduleMap) {
         const curHour = now.getHours();
         const curMin = now.getMinutes();
