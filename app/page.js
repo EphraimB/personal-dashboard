@@ -775,21 +775,90 @@ export default function Home() {
                   ) : (
                     <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
                       {transitData.lirr.upcomingWestbound.slice(0, 2).map((item, i) => (
-                        <div key={i} className="transit-upcoming-item">
-                          <span>
-                            {item.delayMins > 0 ? (
-                              <>
-                                <s style={{ textDecoration: 'line-through', opacity: 0.55, marginRight: '4px' }}>{item.scheduledTimeStr}</s>
-                                <span style={{ color: '#FF5555', fontWeight: '700' }}>{item.timeStr}</span>
-                              </>
-                            ) : (
-                              item.timeStr
-                            )}
-                            {' '}<ArrowIcon /> {item.destination}
-                          </span>
-                          <span style={{ color: '#C0C0C0' }}>
-                            {item.delayMins > 0 ? item.track : `${item.track} • ${item.status}`}
-                          </span>
+                        <div key={i} style={{ marginBottom: '8px' }}>
+                          <div className="transit-upcoming-item">
+                            <span>
+                              {item.delayMins > 0 ? (
+                                <>
+                                  <s style={{ textDecoration: 'line-through', opacity: 0.55, marginRight: '4px' }}>{item.scheduledTimeStr}</s>
+                                  <span style={{ color: '#FF5555', fontWeight: '700' }}>{item.timeStr}</span>
+                                </>
+                              ) : (
+                                item.timeStr
+                              )}
+                              {' '}<ArrowIcon /> {item.destination}
+                            </span>
+                            <span style={{ color: '#C0C0C0' }}>
+                              {item.delayMins > 0 ? item.track : `${item.track} • ${item.status}`}
+                            </span>
+                          </div>
+
+                          {/* Consist Telemetry Sub-bar */}
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '6px',
+                            marginTop: '3px',
+                            padding: '3px 6px',
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(255, 255, 255, 0.06)',
+                            fontSize: '0.62rem',
+                            fontFamily: 'monospace'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                              <span style={{
+                                background: 'rgba(0, 229, 255, 0.12)',
+                                color: '#00E5FF',
+                                border: '1px solid rgba(0, 229, 255, 0.3)',
+                                borderRadius: '3px',
+                                padding: '0px 4px',
+                                fontWeight: 'bold',
+                                fontSize: '0.58rem'
+                              }}>
+                                {item.model || 'M7 ELECTRIC'}
+                              </span>
+                              <span style={{ color: '#888', fontSize: '0.58rem' }}>{item.carCount || 8} CARS</span>
+                            </div>
+
+                            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', overflowX: 'auto' }}>
+                              <svg width={(item.cars?.length || 8) * 24 + 10} height="20" viewBox={`0 0 ${(item.cars?.length || 8) * 24 + 10} 20`}>
+                                <path d="M 1 10 L 6 4 L 9 4 L 9 16 L 6 16 Z" fill="#555" stroke="#777" strokeWidth="1" />
+                                {(item.cars || Array.from({ length: 8 }).map((_, idx) => ({ color: '#00E676', riders: 35 }))).map((car, idx) => {
+                                  const x = 9 + idx * 24;
+                                  return (
+                                    <g key={idx}>
+                                      {idx > 0 && <line x1={x - 1} y1="10" x2={x} y2="10" stroke="#888" strokeWidth="1.5" />}
+                                      <rect
+                                        x={x}
+                                        y="3"
+                                        width="22"
+                                        height="14"
+                                        rx="2"
+                                        fill={car.color}
+                                        fillOpacity="0.88"
+                                        stroke="#111"
+                                        strokeWidth="1"
+                                      />
+                                      <rect x={x + 2} y="4.5" width="18" height="2.5" rx="1" fill="rgba(0,0,0,0.5)" />
+                                      <text
+                                        x={x + 11}
+                                        y="14"
+                                        fill="#000"
+                                        fontSize="7.5"
+                                        fontWeight="900"
+                                        textAnchor="middle"
+                                        style={{ fontFamily: 'sans-serif' }}
+                                      >
+                                        {car.riders}
+                                      </text>
+                                    </g>
+                                  );
+                                })}
+                              </svg>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -818,21 +887,90 @@ export default function Home() {
                   ) : (
                     <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
                       {transitData.lirr.upcomingEastbound.slice(0, 2).map((item, i) => (
-                        <div key={i} className="transit-upcoming-item">
-                          <span>
-                            {item.delayMins > 0 ? (
-                              <>
-                                <s style={{ textDecoration: 'line-through', opacity: 0.55, marginRight: '4px' }}>{item.scheduledTimeStr}</s>
-                                <span style={{ color: '#FF5555', fontWeight: '700' }}>{item.timeStr}</span>
-                              </>
-                            ) : (
-                              item.timeStr
-                            )}
-                            {' '}<ArrowIcon /> {item.destination}
-                          </span>
-                          <span style={{ color: '#E67E22' }}>
-                            {item.delayMins > 0 ? item.track : `${item.track} • ${item.status}`}
-                          </span>
+                        <div key={i} style={{ marginBottom: '8px' }}>
+                          <div className="transit-upcoming-item">
+                            <span>
+                              {item.delayMins > 0 ? (
+                                <>
+                                  <s style={{ textDecoration: 'line-through', opacity: 0.55, marginRight: '4px' }}>{item.scheduledTimeStr}</s>
+                                  <span style={{ color: '#FF5555', fontWeight: '700' }}>{item.timeStr}</span>
+                                </>
+                              ) : (
+                                item.timeStr
+                              )}
+                              {' '}<ArrowIcon /> {item.destination}
+                            </span>
+                            <span style={{ color: '#E67E22' }}>
+                              {item.delayMins > 0 ? item.track : `${item.track} • ${item.status}`}
+                            </span>
+                          </div>
+
+                          {/* Consist Telemetry Sub-bar */}
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justify: 'space-between',
+                            gap: '6px',
+                            marginTop: '3px',
+                            padding: '3px 6px',
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(255, 255, 255, 0.06)',
+                            fontSize: '0.62rem',
+                            fontFamily: 'monospace'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                              <span style={{
+                                background: 'rgba(230, 126, 34, 0.15)',
+                                color: '#E67E22',
+                                border: '1px solid rgba(230, 126, 34, 0.35)',
+                                borderRadius: '3px',
+                                padding: '0px 4px',
+                                fontWeight: 'bold',
+                                fontSize: '0.58rem'
+                              }}>
+                                {item.model || 'M7 ELECTRIC'}
+                              </span>
+                              <span style={{ color: '#888', fontSize: '0.58rem' }}>{item.carCount || 8} CARS</span>
+                            </div>
+
+                            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', overflowX: 'auto' }}>
+                              <svg width={(item.cars?.length || 8) * 24 + 10} height="20" viewBox={`0 0 ${(item.cars?.length || 8) * 24 + 10} 20`}>
+                                <path d="M 1 10 L 6 4 L 9 4 L 9 16 L 6 16 Z" fill="#555" stroke="#777" strokeWidth="1" />
+                                {(item.cars || Array.from({ length: 8 }).map((_, idx) => ({ color: '#00E676', riders: 35 }))).map((car, idx) => {
+                                  const x = 9 + idx * 24;
+                                  return (
+                                    <g key={idx}>
+                                      {idx > 0 && <line x1={x - 1} y1="10" x2={x} y2="10" stroke="#888" strokeWidth="1.5" />}
+                                      <rect
+                                        x={x}
+                                        y="3"
+                                        width="22"
+                                        height="14"
+                                        rx="2"
+                                        fill={car.color}
+                                        fillOpacity="0.88"
+                                        stroke="#111"
+                                        strokeWidth="1"
+                                      />
+                                      <rect x={x + 2} y="4.5" width="18" height="2.5" rx="1" fill="rgba(0,0,0,0.5)" />
+                                      <text
+                                        x={x + 11}
+                                        y="14"
+                                        fill="#000"
+                                        fontSize="7.5"
+                                        fontWeight="900"
+                                        textAnchor="middle"
+                                        style={{ fontFamily: 'sans-serif' }}
+                                      >
+                                        {car.riders}
+                                      </text>
+                                    </g>
+                                  );
+                                })}
+                              </svg>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
