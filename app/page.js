@@ -820,38 +820,42 @@ export default function Home() {
                                 {item.model || 'M7 ELECTRIC'}
                               </span>
                               <span style={{ color: '#888', fontSize: '0.58rem' }}>{item.carCount || 8} CARS</span>
+                              {!item.hasOccupancyData && (
+                                <span style={{ color: '#666', fontSize: '0.56rem', marginLeft: '2px' }}>• NO CROWDING DATA</span>
+                              )}
                             </div>
 
                             <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', overflowX: 'auto' }}>
                               <svg width={(item.cars?.length || 8) * 24 + 10} height="20" viewBox={`0 0 ${(item.cars?.length || 8) * 24 + 10} 20`}>
                                 <path d="M 1 10 L 6 4 L 9 4 L 9 16 L 6 16 Z" fill="#555" stroke="#777" strokeWidth="1" />
-                                {(item.cars || Array.from({ length: 8 }).map((_, idx) => ({ color: '#00E676', riders: 35 }))).map((car, idx) => {
+                                {(item.cars || Array.from({ length: 8 }).map((_, idx) => ({ color: 'rgba(255,255,255,0.06)', riders: null }))).map((car, idx) => {
                                   const x = 9 + idx * 24;
+                                  const isNeutral = !item.hasOccupancyData || car.riders === null;
                                   return (
                                     <g key={idx}>
-                                      {idx > 0 && <line x1={x - 1} y1="10" x2={x} y2="10" stroke="#888" strokeWidth="1.5" />}
+                                      {idx > 0 && <line x1={x - 1} y1="10" x2={x} y2="10" stroke="#666" strokeWidth="1.5" />}
                                       <rect
                                         x={x}
                                         y="3"
                                         width="22"
                                         height="14"
                                         rx="2"
-                                        fill={car.color}
-                                        fillOpacity="0.88"
-                                        stroke="#111"
+                                        fill={isNeutral ? 'rgba(255,255,255,0.05)' : car.color}
+                                        fillOpacity={isNeutral ? 1 : 0.88}
+                                        stroke={isNeutral ? '#444' : '#111'}
                                         strokeWidth="1"
                                       />
-                                      <rect x={x + 2} y="4.5" width="18" height="2.5" rx="1" fill="rgba(0,0,0,0.5)" />
+                                      <rect x={x + 2} y="4.5" width="18" height="2.5" rx="1" fill={isNeutral ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)'} />
                                       <text
                                         x={x + 11}
-                                        y="14"
-                                        fill="#000"
+                                        y="13.5"
+                                        fill={isNeutral ? '#777' : '#000'}
                                         fontSize="7.5"
-                                        fontWeight="900"
+                                        fontWeight={isNeutral ? '400' : '900'}
                                         textAnchor="middle"
                                         style={{ fontFamily: 'sans-serif' }}
                                       >
-                                        {car.riders}
+                                        {isNeutral ? '--' : car.riders}
                                       </text>
                                     </g>
                                   );
@@ -932,38 +936,42 @@ export default function Home() {
                                 {item.model || 'M7 ELECTRIC'}
                               </span>
                               <span style={{ color: '#888', fontSize: '0.58rem' }}>{item.carCount || 8} CARS</span>
+                              {!item.hasOccupancyData && (
+                                <span style={{ color: '#666', fontSize: '0.56rem', marginLeft: '2px' }}>• NO CROWDING DATA</span>
+                              )}
                             </div>
 
                             <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', overflowX: 'auto' }}>
                               <svg width={(item.cars?.length || 8) * 24 + 10} height="20" viewBox={`0 0 ${(item.cars?.length || 8) * 24 + 10} 20`}>
                                 <path d="M 1 10 L 6 4 L 9 4 L 9 16 L 6 16 Z" fill="#555" stroke="#777" strokeWidth="1" />
-                                {(item.cars || Array.from({ length: 8 }).map((_, idx) => ({ color: '#00E676', riders: 35 }))).map((car, idx) => {
+                                {(item.cars || Array.from({ length: 8 }).map((_, idx) => ({ color: 'rgba(255,255,255,0.06)', riders: null }))).map((car, idx) => {
                                   const x = 9 + idx * 24;
+                                  const isNeutral = !item.hasOccupancyData || car.riders === null;
                                   return (
                                     <g key={idx}>
-                                      {idx > 0 && <line x1={x - 1} y1="10" x2={x} y2="10" stroke="#888" strokeWidth="1.5" />}
+                                      {idx > 0 && <line x1={x - 1} y1="10" x2={x} y2="10" stroke="#666" strokeWidth="1.5" />}
                                       <rect
                                         x={x}
                                         y="3"
                                         width="22"
                                         height="14"
                                         rx="2"
-                                        fill={car.color}
-                                        fillOpacity="0.88"
-                                        stroke="#111"
+                                        fill={isNeutral ? 'rgba(255,255,255,0.05)' : car.color}
+                                        fillOpacity={isNeutral ? 1 : 0.88}
+                                        stroke={isNeutral ? '#444' : '#111'}
                                         strokeWidth="1"
                                       />
-                                      <rect x={x + 2} y="4.5" width="18" height="2.5" rx="1" fill="rgba(0,0,0,0.5)" />
+                                      <rect x={x + 2} y="4.5" width="18" height="2.5" rx="1" fill={isNeutral ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)'} />
                                       <text
                                         x={x + 11}
-                                        y="14"
-                                        fill="#000"
+                                        y="13.5"
+                                        fill={isNeutral ? '#777' : '#000'}
                                         fontSize="7.5"
-                                        fontWeight="900"
+                                        fontWeight={isNeutral ? '400' : '900'}
                                         textAnchor="middle"
                                         style={{ fontFamily: 'sans-serif' }}
                                       >
-                                        {car.riders}
+                                        {isNeutral ? '--' : car.riders}
                                       </text>
                                     </g>
                                   );

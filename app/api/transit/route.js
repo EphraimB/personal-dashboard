@@ -17,7 +17,7 @@ function parseProtobufTime(rawTime) {
 
 // Official MTA GTFS & NYC Ferry Dataset Engine
 
-function deriveLirrConsistTelemetry(entity, tripId) {
+function deriveLirrConsistTelemetry(entity, tripId, st) {
   const vehicleLabel = entity.tripUpdate?.vehicle?.label || entity.tripUpdate?.vehicle?.id || '';
   let model = 'M7 ELECTRIC';
   let carCount = 8;
@@ -39,40 +39,36 @@ function deriveLirrConsistTelemetry(entity, tripId) {
     }
   }
 
-  let hash = 0;
-  for (let i = 0; i < (tripId || '').length; i++) {
-    hash = (hash << 5) - hash + tripId.charCodeAt(i);
-    hash |= 0;
-  }
-  const seed = Math.abs(hash);
+  const rawOccupancy = st?.occupancyStatus ?? entity.tripUpdate?.occupancyStatus ?? entity.vehicle?.occupancyStatus;
+  const multiCarriage = entity.tripUpdate?.multiCarriageDetails || entity.vehicle?.multiCarriageDetails;
+  const hasOccupancyData = Boolean(rawOccupancy !== undefined || (Array.isArray(multiCarriage) && multiCarriage.length > 0));
 
   const cars = [];
   for (let i = 0; i < carCount; i++) {
-    const carSeed = (seed + (i + 1) * 37) % 100;
-    let riders = 22 + Math.floor((carSeed / 100) * 70);
-    if (i >= 2 && i <= carCount - 3) {
-      riders = Math.min(105, riders + 15);
+    if (hasOccupancyData) {
+      const carriage = Array.isArray(multiCarriage) ? multiCarriage[i] : null;
+      let riders = carriage?.occupancyCount ?? 35;
+      let crowding = 'light';
+      let color = '#00E676';
+      if (riders > 80 || carriage?.occupancyStatus === 'STANDING_ROOM_ONLY') {
+        crowding = 'heavy';
+        color = '#FF1744';
+      } else if (riders > 45 || carriage?.occupancyStatus === 'FEW_SEATS_AVAILABLE') {
+        crowding = 'moderate';
+        color = '#FFD600';
+      }
+      cars.push({ carIndex: i + 1, riders, crowding, color });
+    } else {
+      cars.push({
+        carIndex: i + 1,
+        riders: null,
+        crowding: 'unknown',
+        color: 'rgba(255, 255, 255, 0.06)'
+      });
     }
-
-    let crowding = 'light';
-    let color = '#00E676';
-    if (riders > 80) {
-      crowding = 'heavy';
-      color = '#FF1744';
-    } else if (riders > 45) {
-      crowding = 'moderate';
-      color = '#FFD600';
-    }
-
-    cars.push({
-      carIndex: i + 1,
-      riders,
-      crowding,
-      color
-    });
   }
 
-  return { model, carCount, cars };
+  return { model, carCount, hasOccupancyData, cars };
 }
 
 async function getLiveLirrDepartures(now) {
@@ -158,8 +154,7 @@ async function getLiveLirrDepartures(now) {
         status = 'BOARDING';
       }
 
-      const consist = deriveLirrConsistTelemetry(entity, entity.tripUpdate.trip?.tripId);
-
+      const consist = deriveLirrConsistTelemetry(entity, entity.tripUpdate.trip?.tripId, st);
 
       const departureObj = {
         destination,
@@ -172,6 +167,7 @@ async function getLiveLirrDepartures(now) {
         isLive: true,
         model: consist.model,
         carCount: consist.carCount,
+        hasOccupancyData: consist.hasOccupancyData,
         cars: consist.cars
       };
 
