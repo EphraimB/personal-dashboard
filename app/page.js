@@ -797,8 +797,8 @@ export default function Home() {
                   ) : (
                     <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
                       {transitData.lirr.upcomingWestbound.slice(0, 2).map((item, i) => (
-                        <div key={i} style={{ marginBottom: '8px' }}>
-                          <div className="transit-upcoming-item">
+                        <div key={i} className="transit-departure-card transit-card-westbound">
+                          <div className="transit-card-header">
                             <span style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                               {item.delayMins > 0 ? (
                                 <>
@@ -816,19 +816,7 @@ export default function Home() {
                           </div>
 
                           {/* Consist Telemetry Sub-bar */}
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justify: 'space-between',
-                            gap: '8px',
-                            marginTop: 'clamp(3px, 0.6vh, 8px)',
-                            padding: 'clamp(4px, 0.8vh, 10px) clamp(8px, 1vw, 14px)',
-                            background: 'rgba(255, 255, 255, 0.03)',
-                            borderRadius: '6px',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            fontSize: 'clamp(0.7rem, 1.1vh, 1.05rem)',
-                            fontFamily: 'monospace'
-                          }}>
+                          <div className="transit-card-telemetry">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                               {item.model && (
                                 <span style={{
@@ -946,8 +934,8 @@ export default function Home() {
                   ) : (
                     <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
                       {transitData.lirr.upcomingEastbound.slice(0, 2).map((item, i) => (
-                        <div key={i} style={{ marginBottom: '8px' }}>
-                          <div className="transit-upcoming-item">
+                        <div key={i} className="transit-departure-card transit-card-eastbound">
+                          <div className="transit-card-header">
                             <span style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                               {item.delayMins > 0 ? (
                                 <>
@@ -965,19 +953,7 @@ export default function Home() {
                           </div>
 
                           {/* Consist Telemetry Sub-bar */}
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justify: 'space-between',
-                            gap: '8px',
-                            marginTop: 'clamp(3px, 0.6vh, 8px)',
-                            padding: 'clamp(4px, 0.8vh, 10px) clamp(8px, 1vw, 14px)',
-                            background: 'rgba(255, 255, 255, 0.03)',
-                            borderRadius: '6px',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            fontSize: 'clamp(0.7rem, 1.1vh, 1.05rem)',
-                            fontFamily: 'monospace'
-                          }}>
+                          <div className="transit-card-telemetry">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                               {item.model && (
                                 <span style={{
@@ -1097,8 +1073,8 @@ export default function Home() {
                   ) : (
                     <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
                       {transitData.ferry.upcomingSailings.slice(0, 3).map((item, i) => (
-                        <div key={i} style={{ marginBottom: '6px' }}>
-                          <div className="transit-upcoming-item">
+                        <div key={i} className="transit-departure-card transit-card-ferry">
+                          <div className="transit-card-header">
                             <span style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                               {item.timeStr} <ArrowIcon /> {item.destination}
                             </span>
@@ -1106,19 +1082,7 @@ export default function Home() {
                               {item.status}
                             </span>
                           </div>
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justify: 'space-between',
-                            gap: '8px',
-                            marginTop: 'clamp(2px, 0.4vh, 6px)',
-                            padding: 'clamp(3px, 0.6vh, 6px) clamp(6px, 0.8vw, 10px)',
-                            background: 'rgba(255, 255, 255, 0.03)',
-                            borderRadius: '4px',
-                            border: '1px solid rgba(255, 255, 255, 0.06)',
-                            fontSize: 'clamp(0.68rem, 1vh, 0.92rem)',
-                            fontFamily: 'monospace'
-                          }}>
+                          <div className="transit-card-telemetry">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                               <span style={{
                                 background: 'rgba(177, 94, 255, 0.14)',
