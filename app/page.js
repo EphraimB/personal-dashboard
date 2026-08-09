@@ -112,6 +112,28 @@ function FerryIcon({ className = 'transit-icon' }) {
   );
 }
 
+function BikeIcon({ size = 12, color = '#00E676' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+      <circle cx="5.5" cy="17.5" r="3.5" />
+      <circle cx="18.5" cy="17.5" r="3.5" />
+      <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" fill={color} />
+      <path d="M12 17.5V14l-3-3 4-3 2 3h3" />
+    </svg>
+  );
+}
+
+function BikeProhibitedIcon({ size = 12, color = '#FF1744' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+      <circle cx="5.5" cy="17.5" r="3.5" />
+      <circle cx="18.5" cy="17.5" r="3.5" />
+      <path d="M12 17.5V14l-3-3 4-3 2 3h3" />
+      <line x1="2" y1="2" x2="22" y2="22" stroke={color} strokeWidth="2.5" />
+    </svg>
+  );
+}
+
 function ArrowIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', margin: '0 6px', verticalAlign: 'middle', opacity: 0.8 }}>
@@ -820,6 +842,35 @@ export default function Home() {
                                 {item.model || 'M7 ELECTRIC'}
                               </span>
                               <span style={{ color: '#aaa', fontSize: 'clamp(0.68rem, 1vh, 0.95rem)', fontWeight: '700' }}>{item.carCount || 8} CARS</span>
+                              {item.bikesAllowed !== false ? (
+                                <span style={{
+                                  background: 'rgba(0, 230, 118, 0.14)',
+                                  color: '#00E676',
+                                  border: '1px solid rgba(0, 230, 118, 0.35)',
+                                  borderRadius: '4px',
+                                  padding: '1px 5px',
+                                  fontWeight: 'bold',
+                                  fontSize: 'clamp(0.64rem, 0.95vh, 0.88rem)',
+                                  display: 'inline-flex',
+                                  alignItems: 'center'
+                                }}>
+                                  <BikeIcon size={12} color="#00E676" /> BIKES OK
+                                </span>
+                              ) : (
+                                <span style={{
+                                  background: 'rgba(255, 23, 68, 0.14)',
+                                  color: '#FF1744',
+                                  border: '1px solid rgba(255, 23, 68, 0.35)',
+                                  borderRadius: '4px',
+                                  padding: '1px 5px',
+                                  fontWeight: 'bold',
+                                  fontSize: 'clamp(0.64rem, 0.95vh, 0.88rem)',
+                                  display: 'inline-flex',
+                                  alignItems: 'center'
+                                }}>
+                                  <BikeProhibitedIcon size={12} color="#FF1744" /> NO BIKES
+                                </span>
+                              )}
                               {!item.hasOccupancyData && (
                                 <span style={{ color: '#777', fontSize: 'clamp(0.62rem, 0.9vh, 0.88rem)', marginLeft: '2px' }}>• NO CROWDING DATA</span>
                               )}
@@ -936,6 +987,35 @@ export default function Home() {
                                 {item.model || 'M7 ELECTRIC'}
                               </span>
                               <span style={{ color: '#aaa', fontSize: 'clamp(0.68rem, 1vh, 0.95rem)', fontWeight: '700' }}>{item.carCount || 8} CARS</span>
+                              {item.bikesAllowed !== false ? (
+                                <span style={{
+                                  background: 'rgba(0, 230, 118, 0.14)',
+                                  color: '#00E676',
+                                  border: '1px solid rgba(0, 230, 118, 0.35)',
+                                  borderRadius: '4px',
+                                  padding: '1px 5px',
+                                  fontWeight: 'bold',
+                                  fontSize: 'clamp(0.64rem, 0.95vh, 0.88rem)',
+                                  display: 'inline-flex',
+                                  alignItems: 'center'
+                                }}>
+                                  <BikeIcon size={12} color="#00E676" /> BIKES OK
+                                </span>
+                              ) : (
+                                <span style={{
+                                  background: 'rgba(255, 23, 68, 0.14)',
+                                  color: '#FF1744',
+                                  border: '1px solid rgba(255, 23, 68, 0.35)',
+                                  borderRadius: '4px',
+                                  padding: '1px 5px',
+                                  fontWeight: 'bold',
+                                  fontSize: 'clamp(0.64rem, 0.95vh, 0.88rem)',
+                                  display: 'inline-flex',
+                                  alignItems: 'center'
+                                }}>
+                                  <BikeProhibitedIcon size={12} color="#FF1744" /> NO BIKES
+                                </span>
+                              )}
                               {!item.hasOccupancyData && (
                                 <span style={{ color: '#777', fontSize: 'clamp(0.62rem, 0.9vh, 0.88rem)', marginLeft: '2px' }}>• NO CROWDING DATA</span>
                               )}
@@ -1007,9 +1087,56 @@ export default function Home() {
                   ) : (
                     <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
                       {transitData.ferry.upcomingSailings.slice(0, 3).map((item, i) => (
-                        <div key={i} className="transit-upcoming-item">
-                          <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
-                          <span style={{ color: '#B15EFF' }}>{item.status}</span>
+                        <div key={i} style={{ marginBottom: '6px' }}>
+                          <div className="transit-upcoming-item">
+                            <span style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              {item.timeStr} <ArrowIcon /> {item.destination}
+                            </span>
+                            <span style={{ color: '#B15EFF', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                              {item.status}
+                            </span>
+                          </div>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justify: 'space-between',
+                            gap: '8px',
+                            marginTop: 'clamp(2px, 0.4vh, 6px)',
+                            padding: 'clamp(3px, 0.6vh, 6px) clamp(6px, 0.8vw, 10px)',
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(255, 255, 255, 0.06)',
+                            fontSize: 'clamp(0.68rem, 1vh, 0.92rem)',
+                            fontFamily: 'monospace'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                              <span style={{
+                                background: 'rgba(177, 94, 255, 0.14)',
+                                color: '#B15EFF',
+                                border: '1px solid rgba(177, 94, 255, 0.35)',
+                                borderRadius: '4px',
+                                padding: '1px 5px',
+                                fontWeight: 'bold',
+                                fontSize: 'clamp(0.64rem, 0.95vh, 0.88rem)'
+                              }}>
+                                FERRY VESSEL
+                              </span>
+                              <span style={{
+                                background: 'rgba(0, 230, 118, 0.14)',
+                                color: '#00E676',
+                                border: '1px solid rgba(0, 230, 118, 0.35)',
+                                borderRadius: '4px',
+                                padding: '1px 5px',
+                                fontWeight: 'bold',
+                                fontSize: 'clamp(0.64rem, 0.95vh, 0.88rem)',
+                                display: 'inline-flex',
+                                alignItems: 'center'
+                              }}>
+                                <BikeIcon size={12} color="#00E676" /> BIKES OK
+                              </span>
+                            </div>
+                            <span style={{ color: '#aaa', fontSize: 'clamp(0.62rem, 0.9vh, 0.85rem)' }}>ROCKAWAY ROUTE</span>
+                          </div>
                         </div>
                       ))}
                     </div>

@@ -239,6 +239,21 @@ async function getLiveLirrDepartures(now) {
           });
         }
 
+        let bikesAllowed = true;
+        if (loc?.bike_rule) {
+          bikesAllowed = loc.bike_rule === 'PERMITTED';
+        } else if (loc?.peak_code) {
+          bikesAllowed = loc.peak_code !== 'P';
+        } else {
+          const depDateObj = new Date(arr.time * 1000);
+          const day = depDateObj.getDay();
+          const hour = depDateObj.getHours();
+          if (day >= 1 && day <= 5) {
+            if (isEastbound && (hour >= 16 && hour < 20)) bikesAllowed = false;
+            else if (!isEastbound && (hour >= 6 && hour < 10)) bikesAllowed = false;
+          }
+        }
+
         const trackLabel = arr.track === 'A' ? 'TRACK 1' : (arr.track === 'B' ? 'TRACK 2' : (arr.track ? `TRACK ${arr.track}` : (isEastbound ? 'TRACK 2' : 'TRACK 1')));
 
         const departureObj = {
@@ -253,6 +268,7 @@ async function getLiveLirrDepartures(now) {
           model,
           carCount,
           hasOccupancyData,
+          bikesAllowed,
           cars
         };
 
@@ -348,6 +364,15 @@ async function getLiveLirrDepartures(now) {
 
       const consist = deriveLirrConsistTelemetry(entity, entity.tripUpdate.trip?.tripId, st);
 
+      const depDateObj = new Date(depEpoch * 1000);
+      const day = depDateObj.getDay();
+      const hour = depDateObj.getHours();
+      let bikesAllowed = true;
+      if (day >= 1 && day <= 5) {
+        if (isEastbound && (hour >= 16 && hour < 20)) bikesAllowed = false;
+        else if (!isEastbound && (hour >= 6 && hour < 10)) bikesAllowed = false;
+      }
+
       const departureObj = {
         destination,
         timeStr,
@@ -360,6 +385,7 @@ async function getLiveLirrDepartures(now) {
         model: consist.model,
         carCount: consist.carCount,
         hasOccupancyData: consist.hasOccupancyData,
+        bikesAllowed,
         cars: consist.cars
       };
 
@@ -498,6 +524,7 @@ async function getFerryDepartures(now) {
         track: 'BEACH 108TH ST',
         status,
         delayMins,
+        bikesAllowed: true,
         isLive: true
       });
     }
