@@ -72,27 +72,218 @@ function deriveLirrConsistTelemetry(entity, tripId, st) {
 }
 
 async function getLiveLirrDepartures(now) {
-
   const stationId = process.env.LIRR_STATION_ID || '32';
   const stationName = (process.env.LIRR_STATION_NAME || 'CEDARHURST').toUpperCase();
   const currentEpochSec = Math.floor(now.getTime() / 1000);
 
+  const STATION_CODES = {
+    '32': 'CHT',
+    '65': 'FRY',
+    '349': 'GCT',
+    '105': 'NYK',
+    '8': 'ATL',
+    '94': 'JAM'
+  };
+  const stationCode = STATION_CODES[stationId] || 'CHT';
+
   const TERMINAL_NAMES = {
+    'FRY': 'FAR ROCKAWAY',
+    'GCT': 'GRAND CENTRAL',
+    'NYK': 'PENN STATION',
+    'ATL': 'ATLANTIC TERMINAL',
+    'JAM': 'JAMAICA',
     '65': 'FAR ROCKAWAY',
     '349': 'GRAND CENTRAL',
-    '102': 'GRAND CENTRAL',
     '105': 'PENN STATION',
-    '1': 'PENN STATION',
     '8': 'ATLANTIC TERMINAL',
-    '100': 'LONG ISLAND CITY',
     '94': 'JAMAICA'
   };
 
   try {
+    // 1. Primary Engine: Official MTA TrainTime Backend API (backend-unified.mylirr.org)
+    const arrivalsUrl = `https://backend-unified.mylirr.org/arrivals/${stationCode}`;
+    const res = await fetch(arrivalsUrl, {
+      cache: 'no-store',
+      headers: {
+        'Accept-Version': '3.0',
+        'User-Agent': 'Mozilla/5.0'
+      }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const rawArrivals = data.arrivals || [];
+
+      // Collect train IDs to batch-fetch consist and per-car passenger loading telemetry
+      const trainIds = rawArrivals.map(a => a.train_id).filter(Boolean);
+      let locMap = {};
+
+      if (trainIds.length > 0) {
+        try {
+          const batchUrl = `https://backend-unified.mylirr.org/locations:batch/${trainIds.join(',')}`;
+          const batchRes = await fetch(batchUrl, {
+            cache: 'no-store',
+            headers: {
+              'Accept-Version': '3.0',
+              'User-Agent': 'Mozilla/5.0'
+            }
+          });
+          if (batchRes.ok) {
+            const locs = await batchRes.json();
+            if (Array.isArray(locs)) {
+              locs.forEach(loc => {
+                if (loc.train_id) locMap[loc.train_id] = loc;
+              });
+            }
+          }
+        } catch (e) {
+          console.error('Error batch fetching LIRR locations:', e.message);
+        }
+      }
+
+      const westbound = [];
+      const eastbound = [];
+
+      for (const arr of rawArrivals) {
+        if (!arr.time || arr.time <= currentEpochSec) continue;
+
+        const diffSec = arr.time - currentEpochSec;
+        const diffMins = Math.floor(diffSec / 60);
+
+        const depDate = new Date(arr.time * 1000);
+        const timeStr = depDate.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        const isEastbound = arr.direction === 'E';
+        const lastStop = arr.stops?.[arr.stops.length - 1];
+        let destination = TERMINAL_NAMES[lastStop];
+        if (!destination) {
+          destination = isEastbound ? 'FAR ROCKAWAY' : 'GRAND CENTRAL';
+        }
+
+        const rawOtp = arr.status?.otp || 0; // minutes late
+        const delayMins = Math.max(0, Math.round(rawOtp));
+
+        const scheduledEpoch = arr.time - (delayMins * 60);
+        const scheduledDate = new Date(scheduledEpoch * 1000);
+        const scheduledTimeStr = scheduledDate.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        let status = 'ON TIME';
+        if (delayMins > 0) {
+          status = `+${delayMins} MIN DELAY`;
+        } else if (diffMins < 4) {
+          status = 'BOARDING';
+        }
+
+        const loc = locMap[arr.train_id];
+        const consist = loc?.consist;
+
+        let model = 'M7 ELECTRIC';
+        if (consist?.fleet) {
+          const fleetUpper = consist.fleet.toUpperCase();
+          if (fleetUpper.includes('DIESEL')) model = 'C3 DIESEL';
+          else if (fleetUpper.includes('M9')) model = 'M9 ELECTRIC';
+          else if (fleetUpper.includes('M3')) model = 'M3 ELECTRIC';
+          else model = `${fleetUpper} ELECTRIC`;
+        }
+
+        const carCount = consist?.actual_len || 8;
+
+        const hasOccupancyData = Boolean(
+          consist &&
+          consist.occupancy !== 'NO_DATA' &&
+          Array.isArray(consist.cars) &&
+          consist.cars.some(c => typeof c.passengers === 'number' || (c.loading && c.loading !== 'NO_DATA'))
+        );
+
+        const cars = [];
+        if (consist && Array.isArray(consist.cars)) {
+          consist.cars.forEach((car, idx) => {
+            const riders = typeof car.passengers === 'number' ? car.passengers : null;
+            let color = 'rgba(255, 255, 255, 0.06)';
+            let crowding = 'unknown';
+
+            if (riders !== null) {
+              if (riders > 80 || car.loading === 'HEAVY') {
+                color = '#FF1744';
+                crowding = 'heavy';
+              } else if (riders > 45 || car.loading === 'MODERATE') {
+                color = '#FFD600';
+                crowding = 'moderate';
+              } else {
+                color = '#00E676';
+                crowding = 'light';
+              }
+            } else if (car.loading && car.loading !== 'NO_DATA') {
+              if (car.loading === 'HEAVY') { color = '#FF1744'; crowding = 'heavy'; }
+              else if (car.loading === 'MODERATE') { color = '#FFD600'; crowding = 'moderate'; }
+              else { color = '#00E676'; crowding = 'light'; }
+            }
+
+            cars.push({
+              carIndex: idx + 1,
+              carNumber: car.number || null,
+              riders,
+              loading: car.loading || 'NO_DATA',
+              color,
+              crowding
+            });
+          });
+        }
+
+        const trackLabel = arr.track === 'A' ? 'TRACK 1' : (arr.track === 'B' ? 'TRACK 2' : (arr.track ? `TRACK ${arr.track}` : (isEastbound ? 'TRACK 2' : 'TRACK 1')));
+
+        const departureObj = {
+          destination,
+          timeStr,
+          scheduledTimeStr,
+          minsUntil: diffMins,
+          track: trackLabel,
+          status,
+          delayMins,
+          isLive: true,
+          model,
+          carCount,
+          hasOccupancyData,
+          cars
+        };
+
+        if (isEastbound) {
+          eastbound.push(departureObj);
+        } else {
+          westbound.push(departureObj);
+        }
+      }
+
+      westbound.sort((a, b) => a.minsUntil - b.minsUntil);
+      eastbound.sort((a, b) => a.minsUntil - b.minsUntil);
+
+      return {
+        station: `${stationName} STATION`,
+        branch: 'FAR ROCKAWAY BRANCH',
+        isLive: true,
+        statusNotice: '● LIVE TELEMETRY',
+        westbound,
+        eastbound
+      };
+    }
+  } catch (e) {
+    console.error('MTA TrainTime API error, falling back to GTFS-RT:', e.message);
+  }
+
+  // Fallback Engine: GTFS-RT feed (api-endpoint.mta.info)
+  try {
     const url = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/lirr%2Fgtfs-lirr';
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) {
-      throw new Error(`MTA Feed responded with HTTP status ${res.status}`);
+      throw new Error(`MTA GTFS Feed responded with HTTP status ${res.status}`);
     }
 
     const arrayBuffer = await res.arrayBuffer();
@@ -184,21 +375,23 @@ async function getLiveLirrDepartures(now) {
     return {
       station: `${stationName} STATION`,
       branch: 'FAR ROCKAWAY BRANCH',
-      isLive: true,
-      statusNotice: '● LIVE GTFS TELEMETRY',
-      westbound,
-      eastbound
+      nextWestbound: westbound[0] || null,
+      nextEastbound: eastbound[0] || null,
+      upcomingWestbound: westbound.slice(0, 4),
+      upcomingEastbound: eastbound.slice(0, 4),
+      isLive: true
     };
-  } catch (e) {
-    console.error('Error fetching/parsing LIRR GTFS-RT feed:', e);
+  } catch (err) {
+    console.error('Error fetching live LIRR departures:', err.message);
     return {
       station: `${stationName} STATION`,
       branch: 'FAR ROCKAWAY BRANCH',
+      nextWestbound: null,
+      nextEastbound: null,
+      upcomingWestbound: [],
+      upcomingEastbound: [],
       isLive: false,
-      statusNotice: '● FEED UNAVAILABLE',
-      westbound: [],
-      eastbound: [],
-      error: e.message || 'MTA Feed unavailable'
+      error: err.message
     };
   }
 }
