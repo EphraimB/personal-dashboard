@@ -277,6 +277,22 @@ export default function Home() {
   const [aresSolarClock, setAresSolarClock] = useState('');
   const [lastSyncTime, setLastSyncTime] = useState(() => new Date().toLocaleTimeString('en-US', { hour12: true }));
 
+  // Display Mode Scaling State (TV Mode vs Laptop Mode)
+  const [tvMode, setTvMode] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('ares_display_tv_mode');
+    if (saved !== null) {
+      setTvMode(saved === 'true');
+    }
+  }, []);
+
+  const toggleTvMode = () => {
+    const next = !tvMode;
+    setTvMode(next);
+    localStorage.setItem('ares_display_tv_mode', String(next));
+  };
+
   // Cedarhurst Open-Meteo Live Weather & Forecast Data
   const [weatherData, setWeatherData] = useState(null);
 
@@ -828,7 +844,7 @@ function SunWindowIcon({ isMorning = true }) {
   };
 
   return (
-    <div className={`ares-tv-app tactical-matrix-viewport ${showControls ? 'user-active' : 'user-idle'}`}>
+    <div className={`ares-tv-app tactical-matrix-viewport ${tvMode ? 'display-tv-mode' : 'display-laptop-mode'} ${showControls ? 'user-active' : 'user-idle'}`}>
       {/* Dynamic Background Atmospheric Weather Canvas */}
       <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
 
@@ -881,8 +897,15 @@ function SunWindowIcon({ isMorning = true }) {
           <span className="sol-clock-val">{aresSolarClock || 'SOL 1420 // 14:32'}</span>
         </div>
 
-        {/* Far Right: Status Pill & Last Sync */}
+        {/* Far Right: Mode Toggle Button, Status Pill & Last Sync */}
         <div className="matrix-header-right">
+          <button
+            onClick={toggleTvMode}
+            className={`matrix-display-toggle ${tvMode ? 'mode-tv' : 'mode-laptop'}`}
+            title="Click to toggle between TV Mode (Massive news text) and Laptop Mode (Compact text)"
+          >
+            {tvMode ? '📺 TV MODE' : '💻 LAPTOP MODE'}
+          </button>
           <div className="matrix-status-stack">
             <div className="matrix-status-pill">
               <span className="status-pulse-dot" />

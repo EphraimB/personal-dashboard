@@ -2701,10 +2701,41 @@ html, body {
   white-space: nowrap;
 }
 
+.matrix-display-toggle {
+  font-family: var(--font-title);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.matrix-display-toggle.mode-tv {
+  background: rgba(0, 240, 255, 0.2);
+  color: var(--color-cyan);
+  border: 1px solid var(--color-cyan);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+}
+
+.matrix-display-toggle.mode-laptop {
+  background: rgba(255, 179, 0, 0.15);
+  color: var(--color-gold);
+  border: 1px solid var(--color-gold);
+  box-shadow: 0 0 10px rgba(255, 179, 0, 0.2);
+}
+
+.matrix-display-toggle:hover {
+  transform: scale(1.04);
+}
+
 /* ==============================================================================
    4K TV / ULTRA-LARGE DISPLAY SCALED OVERRIDES (@media min-width: 2000px, min-height: 1200px)
    ============================================================================== */
-@media (min-width: 1700px), (min-height: 960px) {
+@media (min-width: 2000px), (min-height: 1200px) {
   .matrix-header-hud {
     height: auto;
     min-height: 96px;
@@ -2760,27 +2791,6 @@ html, body {
 
   .matrix-last-sync {
     font-size: 1.1rem;
-  }
-
-  /* Large TV Display Stationary Rotating Headline Card Overrides */
-  .ares-tv-app {
-    padding: 80px 0 !important;
-  }
-
-  .perimeter-top, .perimeter-bottom {
-    height: 80px;
-  }
-
-  .headline-tag {
-    font-size: 1.5rem;
-    padding: 6px 16px;
-    border-radius: 8px;
-  }
-
-  .perimeter-card-title {
-    font-size: 2.3rem;
-    font-weight: 800;
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
   }
 }
 
@@ -4093,11 +4103,15 @@ html, body {
 }
 
 /* ==============================================================================
-   STATIONARY ROTATING HEADLINE CARDS (COMPACT LAPTOP BASE)
+   STATIONARY ROTATING HEADLINE CARDS (LAPTOP MODE BASE & TV MODE OVERRIDES)
    ============================================================================== */
 .ares-tv-app {
   padding: 34px 0 !important;
   box-sizing: border-box;
+}
+
+.ares-tv-app.display-tv-mode {
+  padding: 80px 0 !important;
 }
 
 .perimeter-news-frame {
@@ -4116,6 +4130,7 @@ html, body {
   overflow: hidden;
   box-sizing: border-box;
   padding: 0 16px;
+  transition: height 0.3s ease;
 }
 
 .perimeter-top {
@@ -4124,10 +4139,18 @@ html, body {
   border-bottom: 2px solid var(--color-cyan);
 }
 
+.display-tv-mode .perimeter-top {
+  height: 80px;
+}
+
 .perimeter-bottom {
   bottom: 0; left: 0; right: 0;
   height: 34px;
   border-top: 2px solid var(--color-orange);
+}
+
+.display-tv-mode .perimeter-bottom {
+  height: 80px;
 }
 
 /* Stationary Card Wrapper & 600ms Crossfade */
@@ -4139,6 +4162,10 @@ html, body {
   width: 100%;
   max-width: 96%;
   transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.display-tv-mode .perimeter-card-center {
+  gap: 18px;
 }
 
 .perimeter-card-center.fade-in {
@@ -4160,7 +4187,13 @@ html, body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, font-size 0.3s ease;
+}
+
+.display-tv-mode .perimeter-card-title {
+  font-size: 2.3rem;
+  font-weight: 800;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
 }
 
 .perimeter-card-title:hover {
@@ -4178,6 +4211,14 @@ html, body {
   border-radius: 4px;
   white-space: nowrap;
   flex-shrink: 0;
+  transition: font-size 0.3s ease, padding 0.3s ease;
+}
+
+.display-tv-mode .headline-tag {
+  font-size: 1.5rem;
+  padding: 6px 16px;
+  border-radius: 8px;
+  letter-spacing: 1.5px;
 }
 
 .tag-world { background: rgba(0, 240, 255, 0.18); color: var(--color-cyan); border: 1px solid var(--color-cyan); }
