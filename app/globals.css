@@ -2759,11 +2759,11 @@ html, body {
 
 /* 1A: ATMOSPHERIC TELEMETRY CARD */
 .card-weather-telemetry {
-  flex: 0.9;
+  flex: 1.25;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .weather-hero-row {
@@ -3364,6 +3364,131 @@ html, body {
     padding: 16px 20px;
     border-left-width: 5px;
   }
+  /* Outdoor Conditions TV Viewport Height (vh) Distance Reading Scaling */
+  .card-weather-telemetry {
+    flex: 1.35;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: clamp(20px, 2.8vh, 36px);
+    gap: clamp(16px, 2.4vh, 32px);
+  }
+  .outdoor-hero-row {
+    padding: clamp(16px, 2.4vh, 32px);
+    gap: clamp(16px, 2.4vw, 36px);
+  }
+  .outdoor-temp-val {
+    font-size: clamp(4.5rem, 7.8vh, 9.5rem);
+  }
+  .outdoor-temp-unit {
+    font-size: clamp(2.0rem, 3.5vh, 4.2rem);
+  }
+  .outdoor-cond-svg {
+    width: clamp(48px, 6.5vh, 84px);
+    height: clamp(48px, 6.5vh, 84px);
+  }
+  .outdoor-cond-title {
+    font-size: clamp(1.4rem, 2.5vh, 2.8rem);
+  }
+  .outdoor-feels-like {
+    font-size: clamp(1.1rem, 1.8vh, 2.0rem);
+  }
+  .outdoor-stat-label {
+    font-size: clamp(0.85rem, 1.4vh, 1.5rem);
+  }
+  .outdoor-stat-val {
+    font-size: clamp(1.3rem, 2.2vh, 2.5rem);
+  }
+  .outdoor-stat-icon {
+    font-size: clamp(1.4rem, 2.5vh, 2.6rem);
+  }
+  .outdoor-box-hdr {
+    font-size: clamp(0.95rem, 1.6vh, 1.8rem);
+  }
+  .sweat-gauge-wrapper {
+    width: clamp(120px, 14vh, 180px);
+    height: clamp(72px, 8.5vh, 110px);
+  }
+  .sweat-gauge-svg {
+    width: clamp(120px, 14vh, 180px);
+    height: clamp(72px, 8.5vh, 110px);
+  }
+  .sweat-gauge-val {
+    font-size: clamp(1.45rem, 2.8vh, 3.2rem);
+  }
+  .sweat-gauge-desc {
+    font-size: clamp(0.95rem, 1.6vh, 1.8rem);
+  }
+  .sweat-slider-label {
+    font-size: clamp(0.8rem, 1.3vh, 1.4rem);
+  }
+  .uv-title {
+    font-size: clamp(0.9rem, 1.5vh, 1.6rem);
+  }
+  .uv-big-num {
+    font-size: clamp(3.5rem, 6.5vh, 7.5rem);
+  }
+  .uv-sev-tag {
+    font-size: clamp(1.1rem, 1.8vh, 2.0rem);
+  }
+  .outdoor-health-grid {
+    gap: clamp(14px, 2vh, 28px);
+  }
+  .outdoor-subcard {
+    padding: clamp(16px, 2.4vh, 32px);
+    gap: clamp(10px, 1.5vh, 20px);
+  }
+  .outdoor-subcard-title {
+    font-size: clamp(0.95rem, 1.6vh, 1.8rem);
+  }
+  .outdoor-svg-icon {
+    transform: scale(1.35);
+    transform-origin: center;
+  }
+  .subcard-hero-badge {
+    font-size: clamp(2.0rem, 3.5vh, 4.2rem);
+  }
+  .subcard-hero-sub {
+    font-size: clamp(0.85rem, 1.4vh, 1.5rem);
+  }
+  .detail-item-hdr {
+    font-size: clamp(0.85rem, 1.4vh, 1.5rem);
+  }
+  .detail-item-val {
+    font-size: clamp(1.2rem, 2.0vh, 2.2rem);
+  }
+  .detail-item-val-bold {
+    font-size: clamp(1.5rem, 2.6vh, 2.8rem);
+  }
+  .best-time-val {
+    font-size: clamp(1.25rem, 2.2vh, 2.4rem);
+  }
+  .summary-title {
+    font-size: clamp(0.85rem, 1.4vh, 1.5rem);
+  }
+  .summary-p {
+    font-size: clamp(0.95rem, 1.6vh, 1.8rem);
+    line-height: 1.4;
+  }
+  .shield-icon-svg {
+    transform: scale(1.3);
+  }
+  .outdoor-hourly-ticker {
+    padding: clamp(14px, 2.2vh, 28px);
+  }
+  .ticker-label {
+    font-size: clamp(0.9rem, 1.5vh, 1.6rem);
+  }
+  .ticker-wx-svg {
+    width: clamp(32px, 4.5vh, 52px);
+    height: clamp(32px, 4.5vh, 52px);
+  }
+  .ticker-temp {
+    font-size: clamp(1.3rem, 2.2vh, 2.4rem);
+  }
+  .ticker-uv {
+    font-size: clamp(0.9rem, 1.5vh, 1.6rem);
+  }
 }
 
 .map-viewport-container {
@@ -3593,6 +3718,257 @@ html, body {
   .metric-pill-val {
     font-size: 0.75rem;
   }
+}
+
+/* TACTICAL HUD OUTDOOR CONDITIONS & HEALTH PANEL */
+.hud-weather-card {
+  background: rgba(8, 14, 26, 0.95);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(8px, 1.2vh, 16px);
+  padding: clamp(12px, 1.6vh, 22px);
+  overflow-y: auto;
+  flex: 1.2;
+  min-height: 0;
+}
+
+.hud-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hud-header-title {
+  font-family: var(--font-title);
+  font-size: clamp(1.0rem, 1.8vh, 2.0rem);
+  font-weight: 900;
+  color: var(--color-cyan);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.hud-header-location {
+  font-family: var(--font-title);
+  font-size: clamp(0.95rem, 1.6vh, 1.8rem);
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.hud-header-divider {
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-cyan) 0%, rgba(0, 240, 255, 0.2) 100%);
+  width: 100%;
+  margin-top: -4px;
+  margin-bottom: 2px;
+}
+
+/* TIER 2: HERO TELEMETRY ROW */
+.hud-telemetry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+  padding: clamp(8px, 1.4vh, 18px) clamp(12px, 1.5vw, 24px);
+  gap: clamp(8px, 1vw, 20px);
+}
+
+.hud-temp-block {
+  display: flex;
+  align-items: center;
+}
+
+.hud-temp-val {
+  font-family: var(--font-title);
+  font-size: clamp(3.0rem, 6.2vh, 7.5rem);
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.hud-cond-block,
+.hud-feels-block,
+.hud-uv-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-cond-title,
+.hud-feels-title {
+  font-family: var(--font-title);
+  font-size: clamp(1.1rem, 2.2vh, 2.6rem);
+  font-weight: 900;
+  color: var(--color-cyan);
+  letter-spacing: 0.5px;
+}
+
+.hud-cond-sub,
+.hud-feels-sub {
+  font-size: clamp(0.85rem, 1.5vh, 1.6rem);
+  font-weight: 800;
+  color: var(--color-text-sub);
+  margin-top: 2px;
+}
+
+.hud-uv-title {
+  font-family: var(--font-title);
+  font-size: clamp(1.3rem, 2.6vh, 3.2rem);
+  font-weight: 900;
+  color: #FFB300;
+}
+
+.hud-uv-sev {
+  font-size: clamp(0.85rem, 1.5vh, 1.6rem);
+  font-weight: 900;
+  color: #FF5722;
+  text-transform: uppercase;
+}
+
+/* TIER 3: COMFORT PROGRESS BOX */
+.hud-comfort-box {
+  background: rgba(0, 240, 255, 0.04);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 8px;
+  padding: clamp(10px, 1.6vh, 20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1vh, 12px);
+}
+
+.hud-comfort-header {
+  font-family: var(--font-title);
+  font-size: clamp(1.1rem, 2.2vh, 2.6rem);
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 1.5px;
+  text-align: center;
+}
+
+.hud-progress-bar-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  width: 100%;
+}
+
+.hud-progress-block {
+  font-size: clamp(1.1rem, 2.2vh, 2.6rem);
+  line-height: 1;
+  transition: all 0.3s ease;
+}
+
+.hud-progress-block.active {
+  color: #00F0FF;
+  text-shadow: 0 0 10px #00F0FF;
+}
+
+.hud-progress-block.inactive {
+  color: rgba(255, 255, 255, 0.15);
+}
+
+/* TIER 4: 2-COLUMN HEALTH SUMMARY ROW */
+.hud-health-summary-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(10px, 1.5vw, 20px);
+}
+
+.hud-summary-col {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+  padding: clamp(10px, 1.6vh, 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hud-col-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-col-icon {
+  font-size: clamp(1.2rem, 2.2vh, 2.5rem);
+}
+
+.hud-col-title {
+  font-family: var(--font-title);
+  font-size: clamp(1.0rem, 1.8vh, 2.0rem);
+  font-weight: 900;
+  color: var(--color-cyan);
+  letter-spacing: 1px;
+}
+
+.hud-col-badge {
+  font-family: var(--font-title);
+  font-size: clamp(1.2rem, 2.2vh, 2.5rem);
+  font-weight: 900;
+  color: #ffffff;
+  margin-left: auto;
+}
+
+.hud-col-sub {
+  font-size: clamp(0.85rem, 1.5vh, 1.6rem);
+  font-weight: 800;
+  color: var(--color-text-sub);
+  letter-spacing: 0.5px;
+}
+
+/* TIER 5: BOTTOM HOURLY FORECAST TICKER */
+.hud-hourly-ticker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+  padding: clamp(8px, 1.4vh, 18px);
+}
+
+.hud-ticker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hud-ticker-item:last-child {
+  border-right: none;
+}
+
+.hud-ticker-time {
+  font-size: clamp(0.85rem, 1.4vh, 1.5rem);
+  font-weight: 800;
+  color: var(--color-cyan);
+}
+
+.hud-ticker-icon {
+  width: clamp(24px, 3.5vh, 40px);
+  height: clamp(24px, 3.5vh, 40px);
+}
+
+.hud-ticker-temp {
+  font-size: clamp(1.1rem, 1.8vh, 2.0rem);
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.hud-ticker-uv {
+  font-size: clamp(0.85rem, 1.4vh, 1.5rem);
+  font-weight: 900;
+  color: #FF5722;
 }
 
 
