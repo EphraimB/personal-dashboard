@@ -176,19 +176,37 @@ async function fetchTravelTimes(lat1, lon1, lat2, lon2, distMiles) {
   };
 }
 
-const LOCAL_VENUE_FALLBACKS = {
-  'ohel regional family center': { lat: 40.5954478, lon: -73.7437604, display_name: 'Ohel Regional Family Center, 156 Beach 9th St, Far Rockaway, NY 11691' },
-  'ohel family center': { lat: 40.5954478, lon: -73.7437604, display_name: 'Ohel Regional Family Center, 156 Beach 9th St, Far Rockaway, NY 11691' },
-  'ohel rebbe': { lat: 40.6896, lon: -73.7381, display_name: 'The Ohel of the Lubavitcher Rebbe, 226-20 Francis Lewis Blvd, Cambria Heights, NY 11411' },
-  'ohel chabad': { lat: 40.6896, lon: -73.7381, display_name: 'The Ohel of the Lubavitcher Rebbe, 226-20 Francis Lewis Blvd, Cambria Heights, NY 11411' },
-  'the ohel': { lat: 40.6896, lon: -73.7381, display_name: 'The Ohel of the Lubavitcher Rebbe, 226-20 Francis Lewis Blvd, Cambria Heights, NY 11411' },
-  'ohel': { lat: 40.6896, lon: -73.7381, display_name: 'The Ohel of the Lubavitcher Rebbe, 226-20 Francis Lewis Blvd, Cambria Heights, NY 11411' },
-  'temple avodah': { lat: 40.6385, lon: -73.6521, display_name: 'Temple Avodah, 3050 Oceanside Rd, Oceanside, NY 11572' },
-  'temple israel, lawrence': { lat: 40.6174, lon: -73.7296, display_name: 'Temple Israel, 140 Central Ave, Lawrence, NY 11559' },
-  'temple israel': { lat: 40.6174, lon: -73.7296, display_name: 'Temple Israel, Lawrence, NY' },
-  'chelsea piers field house': { lat: 40.7469, lon: -74.0089, display_name: 'Chelsea Piers Field House, New York, NY 10011' },
-  'chelsea piers': { lat: 40.7469, lon: -74.0089, display_name: 'Chelsea Piers, New York, NY' }
-};
+async function geocodePhoton(queryStr) {
+  if (!queryStr) return null;
+  try {
+    const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(queryStr)}&limit=5`;
+    const res = await fetch(photonUrl, {
+      headers: { 'User-Agent': 'PersonalDashboardApp/2.0 (personal-dashboard-app)' },
+      next: { revalidate: 86400 }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.features && data.features.length > 0) {
+        for (const feature of data.features) {
+          const [lon, lat] = feature.geometry.coordinates;
+          const p = feature.properties;
+          const dist = calculateHaversineDistance(HOME_LOCATION.lat, HOME_LOCATION.lon, lat, lon);
+          if (dist <= 60) {
+            const displayName = [p.housenumber, p.street, p.city || p.town, p.state, p.postcode].filter(Boolean).join(', ');
+            return {
+              lat,
+              lon,
+              display_name: displayName || p.name || queryStr
+            };
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Continue to next tier
+  }
+  return null;
+}
 
 async function geocodeUSCensus(addressStr) {
   if (!addressStr || !/\d+/.test(addressStr)) return null;
@@ -196,7 +214,7 @@ async function geocodeUSCensus(addressStr) {
     const cleanQuery = addressStr.replace(/#\w+/g, '').replace(/,?\s*(?:USA|United States)$/i, '').trim();
     const censusUrl = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(cleanQuery)}&benchmark=Public_AR_Current&format=json`;
     const res = await fetch(censusUrl, {
-      headers: { 'User-Agent': 'PersonalDashboard/2.0 (personal-dashboard-app)' },
+      headers: { 'User-Agent': 'PersonalDashboardApp/2.0 (personal-dashboard-app)' },
       next: { revalidate: 86400 }
     });
     if (res.ok) {
@@ -204,6 +222,16 @@ async function geocodeUSCensus(addressStr) {
       const matches = data?.result?.addressMatches || [];
       if (matches.length > 0) {
         const m = matches[0];
+        const matchedAddr = m.matchedAddress || '';
+        
+        // Prevent Census suffix substitution bugs (e.g. converting 'Ave' to 'St')
+        if (/\b(?:ave|avenue)\b/i.test(cleanQuery) && /\b(?:ST|STREET)\b/i.test(matchedAddr)) {
+          return null;
+        }
+        if (/\b(?:st|street)\b/i.test(cleanQuery) && /\b(?:AVE|AVENUE)\b/i.test(matchedAddr)) {
+          return null;
+        }
+
         const coords = m.coordinates;
         return {
           lat: coords.y,
@@ -221,13 +249,21 @@ async function geocodeUSCensus(addressStr) {
 async function performMultiTierGeocode(cleanLoc) {
   const targetAddress = cleanAddressForGeocode(cleanLoc);
 
-  // TIER 1: US Census Bureau Official Geocoder API (Instant, High-Capacity, High-Precision for US Street Addresses)
+  // TIER 1: Photon OpenStreetMap Geocoder (Instant, High-Precision for Actual Street Addresses)
+  if (targetAddress) {
+    const photonMatch = await geocodePhoton(targetAddress);
+    if (photonMatch) return photonMatch;
+  }
+  const photonRawMatch = await geocodePhoton(cleanLoc);
+  if (photonRawMatch) return photonRawMatch;
+
+  // TIER 2: US Census Bureau Official Geocoder API (With Street Suffix Guard)
   const censusMatch = await geocodeUSCensus(targetAddress || cleanLoc);
   if (censusMatch) {
     return censusMatch;
   }
 
-  // TIER 2: OpenStreetMap Nominatim Search (Fallback for Venue Names / Custom Descriptors)
+  // TIER 3: OpenStreetMap Nominatim Search
   const queryCandidates = [];
   queryCandidates.push(cleanLoc);
   if (targetAddress && targetAddress !== cleanLoc) queryCandidates.push(targetAddress);
@@ -259,7 +295,7 @@ async function performMultiTierGeocode(cleanLoc) {
     try {
       const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=us&viewbox=-74.5,40.4,-73.2,41.2&limit=5`;
       const res = await fetch(nominatimUrl, {
-        headers: { 'User-Agent': 'PersonalDashboard/2.0 (personal-dashboard-app)' },
+        headers: { 'User-Agent': 'PersonalDashboardApp/2.0 (personal-dashboard-app)' },
         next: { revalidate: 86400 }
       });
       if (res.ok) {
@@ -284,13 +320,6 @@ async function performMultiTierGeocode(cleanLoc) {
     }
     allCandidateResults.sort((a, b) => a.dist - b.dist);
     return allCandidateResults[0];
-  }
-
-  // TIER 3: Local Venue Fallbacks
-  for (const [key, venue] of Object.entries(LOCAL_VENUE_FALLBACKS)) {
-    if (lowerLoc === key || lowerLoc.includes(key)) {
-      return venue;
-    }
   }
 
   return null;
