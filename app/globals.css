@@ -2761,6 +2761,35 @@ html, body {
   .matrix-last-sync {
     font-size: 1.1rem;
   }
+
+  /* 4K TV News Ticker Enlarged Overrides */
+  .ares-tv-app {
+    padding: 52px 0 !important;
+  }
+
+  .perimeter-top, .perimeter-bottom {
+    height: 52px;
+  }
+
+  .headline-tag {
+    font-size: 1.1rem;
+    padding: 4px 12px;
+    margin-right: 14px;
+    border-radius: 6px;
+  }
+
+  .perimeter-headline-item {
+    font-size: 1.35rem;
+  }
+
+  .perimeter-bullet {
+    margin: 0 16px;
+    font-size: 1.4rem;
+  }
+
+  .track-horizontal {
+    animation-duration: 110s;
+  }
 }
 
 @keyframes statusPulse {
@@ -4141,7 +4170,7 @@ html, body {
 }
 
 .track-horizontal {
-  animation: marqueeHorizontal 55s linear infinite;
+  animation: marqueeHorizontal 75s linear infinite;
 }
 
 .track-horizontal:hover {
