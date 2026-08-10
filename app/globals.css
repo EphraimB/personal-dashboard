@@ -3364,6 +3364,100 @@ html, body {
     padding: 16px 20px;
     border-left-width: 5px;
   }
+  /* Outdoor Conditions TV Viewport Height (vh) Scaling */
+  .card-weather-telemetry {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: clamp(16px, 2.2vh, 28px);
+    gap: clamp(14px, 2vh, 26px);
+  }
+  .outdoor-hero-row {
+    padding: clamp(14px, 2vh, 24px);
+    gap: clamp(14px, 2vw, 28px);
+  }
+  .outdoor-temp-val {
+    font-size: clamp(3.5rem, 5.8vh, 6.5rem);
+  }
+  .outdoor-temp-unit {
+    font-size: clamp(1.6rem, 2.8vh, 3.0rem);
+  }
+  .outdoor-cond-title {
+    font-size: clamp(1.2rem, 2.0vh, 2.2rem);
+  }
+  .outdoor-feels-like {
+    font-size: clamp(0.95rem, 1.5vh, 1.6rem);
+  }
+  .outdoor-stat-label {
+    font-size: clamp(0.75rem, 1.2vh, 1.3rem);
+  }
+  .outdoor-stat-val {
+    font-size: clamp(1.1rem, 1.8vh, 2.0rem);
+  }
+  .outdoor-box-hdr {
+    font-size: clamp(0.85rem, 1.3vh, 1.4rem);
+  }
+  .sweat-gauge-val {
+    font-size: clamp(1.25rem, 2.2vh, 2.4rem);
+  }
+  .sweat-gauge-desc {
+    font-size: clamp(0.85rem, 1.4vh, 1.5rem);
+  }
+  .uv-title {
+    font-size: clamp(0.8rem, 1.3vh, 1.35rem);
+  }
+  .uv-big-num {
+    font-size: clamp(2.8rem, 4.8vh, 5.2rem);
+  }
+  .uv-sev-tag {
+    font-size: clamp(0.9rem, 1.5vh, 1.6rem);
+  }
+  .outdoor-health-grid {
+    gap: clamp(12px, 1.6vh, 22px);
+  }
+  .outdoor-subcard {
+    padding: clamp(14px, 2vh, 24px);
+    gap: clamp(8px, 1.2vh, 16px);
+  }
+  .outdoor-subcard-title {
+    font-size: clamp(0.85rem, 1.3vh, 1.4rem);
+  }
+  .subcard-hero-badge {
+    font-size: clamp(1.6rem, 2.8vh, 3.2rem);
+  }
+  .detail-item-hdr {
+    font-size: clamp(0.75rem, 1.2vh, 1.25rem);
+  }
+  .detail-item-val {
+    font-size: clamp(1.05rem, 1.6vh, 1.8rem);
+  }
+  .best-time-val {
+    font-size: clamp(1.1rem, 1.8vh, 1.9rem);
+  }
+  .summary-title {
+    font-size: clamp(0.75rem, 1.2vh, 1.25rem);
+  }
+  .summary-p {
+    font-size: clamp(0.85rem, 1.4vh, 1.5rem);
+    line-height: 1.4;
+  }
+  .outdoor-hourly-ticker {
+    padding: clamp(12px, 1.8vh, 22px);
+  }
+  .ticker-label {
+    font-size: clamp(0.8rem, 1.3vh, 1.35rem);
+  }
+  .ticker-wx-svg {
+    width: clamp(26px, 3.5vh, 44px);
+    height: clamp(26px, 3.5vh, 44px);
+  }
+  .ticker-temp {
+    font-size: clamp(1.1rem, 1.8vh, 2.0rem);
+  }
+  .ticker-uv {
+    font-size: clamp(0.8rem, 1.3vh, 1.35rem);
+  }
 }
 
 .map-viewport-container {
