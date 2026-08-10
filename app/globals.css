@@ -2764,21 +2764,21 @@ html, body {
 
   /* Large TV Display Stationary Rotating Headline Card Overrides */
   .ares-tv-app {
-    padding: 56px 0 !important;
+    padding: 64px 0 !important;
   }
 
   .perimeter-top, .perimeter-bottom {
-    height: 56px;
+    height: 64px;
   }
 
   .headline-tag {
-    font-size: 1.1rem;
+    font-size: 1.35rem;
     padding: 4px 14px;
     border-radius: 6px;
   }
 
   .perimeter-card-title {
-    font-size: 1.45rem;
+    font-size: 1.85rem;
     font-weight: 800;
   }
 }
@@ -4095,7 +4095,7 @@ html, body {
    STATIONARY ROTATING HEADLINE CARDS (TOP & BOTTOM PERIMETER)
    ============================================================================== */
 .ares-tv-app {
-  padding: 28px 0 !important;
+  padding: 38px 0 !important;
   box-sizing: border-box;
 }
 
@@ -4119,14 +4119,14 @@ html, body {
 
 .perimeter-top {
   top: 0; left: 0; right: 0;
-  height: 28px;
-  border-bottom: 1.5px solid var(--color-cyan);
+  height: 38px;
+  border-bottom: 2px solid var(--color-cyan);
 }
 
 .perimeter-bottom {
   bottom: 0; left: 0; right: 0;
-  height: 28px;
-  border-top: 1.5px solid var(--color-orange);
+  height: 38px;
+  border-top: 2px solid var(--color-orange);
 }
 
 /* Stationary Card Wrapper & 600ms Crossfade */
@@ -4134,7 +4134,7 @@ html, body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   max-width: 96%;
   transition: opacity 0.6s ease, transform 0.6s ease;
@@ -4152,8 +4152,8 @@ html, body {
 
 .perimeter-card-title {
   font-family: var(--font-mono);
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 1.1rem;
+  font-weight: 800;
   color: #ffffff;
   text-decoration: none;
   overflow: hidden;
@@ -4170,10 +4170,10 @@ html, body {
 /* Headline Tags */
 .headline-tag {
   font-family: var(--font-title);
-  font-size: 0.58rem;
+  font-size: 0.85rem;
   font-weight: 900;
   letter-spacing: 1px;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 4px;
   white-space: nowrap;
   flex-shrink: 0;
