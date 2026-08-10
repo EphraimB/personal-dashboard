@@ -765,12 +765,29 @@ function SunWindowIcon({ isMorning = true }) {
   }
   const hourlyTimes = (weatherData?.hourly?.time || ['', '', '', '', '', '']).slice(hourlyStartIdx, hourlyStartIdx + 6);
 
-  const renderHeadlineGroup = (items, fallbackPrefix) => {
-    const list = items && items.length > 0 ? items : [{ title: `${fallbackPrefix}: Live news updating...`, link: '#' }];
+  // Combine World & U.S. for Top Ticker
+  const topNewsList = [];
+  const maxTop = Math.max(newsData.world?.length || 0, newsData.us?.length || 0);
+  for (let i = 0; i < maxTop; i++) {
+    if (newsData.world && newsData.world[i]) topNewsList.push({ ...newsData.world[i], category: 'world', tag: '🌎 WORLD // REUTERS' });
+    if (newsData.us && newsData.us[i]) topNewsList.push({ ...newsData.us[i], category: 'us', tag: '🇺🇸 U.S. // AP NEWS' });
+  }
+
+  // Combine AI & Tech & Science for Bottom Ticker
+  const bottomNewsList = [];
+  const maxBottom = Math.max(newsData.tech?.length || 0, newsData.science?.length || 0);
+  for (let i = 0; i < maxBottom; i++) {
+    if (newsData.tech && newsData.tech[i]) bottomNewsList.push({ ...newsData.tech[i], category: 'tech', tag: '🤖 AI & TECH // TECHCRUNCH' });
+    if (newsData.science && newsData.science[i]) bottomNewsList.push({ ...newsData.science[i], category: 'science', tag: '💻 SCIENCE & COMPUTING // ARS TECHNICA' });
+  }
+
+  const renderCombinedHeadlineGroup = (items, fallbackPrefix) => {
+    const list = items && items.length > 0 ? items : [{ title: `${fallbackPrefix}: Live news updating...`, category: 'world', tag: 'NEWS', link: '#' }];
     return (
       <div className="perimeter-headline-group">
         {list.map((item, idx) => (
           <span key={idx} className="perimeter-headline-item">
+            <span className={`headline-tag tag-${item.category}`}>{item.tag}</span>
             <a href={item.link} target="_blank" rel="noopener noreferrer" className="perimeter-headline-link">
               {item.title}
             </a>
@@ -786,48 +803,24 @@ function SunWindowIcon({ isMorning = true }) {
       {/* Dynamic Background Atmospheric Weather Canvas */}
       <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
 
-      {/* 360-DEGREE 4-SIDE PERIMETER NEWS FRAME */}
+      {/* TOP & BOTTOM HORIZONTAL PERIMETER NEWS TICKERS */}
       <aside className="perimeter-news-frame">
-        {/* TOP: 🌎 REUTERS WORLD */}
+        {/* TOP TICKER: 🌎 WORLD & 🇺🇸 U.S. NEWS */}
         <div className="perimeter-bar perimeter-top">
-          <div className="perimeter-badge badge-world">🌎 WORLD // REUTERS</div>
           <div className="perimeter-marquee-wrapper horizontal-wrapper">
             <div className="perimeter-track track-horizontal">
-              {renderHeadlineGroup(newsData.world, 'Reuters World')}
-              {renderHeadlineGroup(newsData.world, 'Reuters World')}
+              {renderCombinedHeadlineGroup(topNewsList, 'World & U.S. News')}
+              {renderCombinedHeadlineGroup(topNewsList, 'World & U.S. News')}
             </div>
           </div>
         </div>
 
-        {/* RIGHT: 🇺🇸 AP U.S. NEWS */}
-        <div className="perimeter-bar perimeter-right">
-          <div className="perimeter-badge badge-us">🇺🇸 U.S. // AP NEWS</div>
-          <div className="perimeter-marquee-wrapper vertical-wrapper">
-            <div className="perimeter-track track-vertical">
-              {renderHeadlineGroup(newsData.us, 'AP U.S. News')}
-              {renderHeadlineGroup(newsData.us, 'AP U.S. News')}
-            </div>
-          </div>
-        </div>
-
-        {/* BOTTOM: 🤖 TECHCRUNCH AI & TECH */}
+        {/* BOTTOM TICKER: 🤖 AI & TECH & 💻 SCIENCE & COMPUTING */}
         <div className="perimeter-bar perimeter-bottom">
-          <div className="perimeter-badge badge-tech">🤖 AI & TECH // TECHCRUNCH</div>
           <div className="perimeter-marquee-wrapper horizontal-wrapper">
             <div className="perimeter-track track-horizontal">
-              {renderHeadlineGroup(newsData.tech, 'TechCrunch')}
-              {renderHeadlineGroup(newsData.tech, 'TechCrunch')}
-            </div>
-          </div>
-        </div>
-
-        {/* LEFT: 💻 ARS TECHNICA SCIENCE & COMPUTING */}
-        <div className="perimeter-bar perimeter-left">
-          <div className="perimeter-badge badge-science">💻 SCIENCE & COMPUTING // ARS TECHNICA</div>
-          <div className="perimeter-marquee-wrapper vertical-wrapper">
-            <div className="perimeter-track track-vertical">
-              {renderHeadlineGroup(newsData.science, 'Ars Technica')}
-              {renderHeadlineGroup(newsData.science, 'Ars Technica')}
+              {renderCombinedHeadlineGroup(bottomNewsList, 'AI, Tech & Science')}
+              {renderCombinedHeadlineGroup(bottomNewsList, 'AI, Tech & Science')}
             </div>
           </div>
         </div>

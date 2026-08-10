@@ -4072,10 +4072,10 @@ html, body {
 }
 
 /* ==============================================================================
-   360-DEGREE 4-SIDE PERIMETER NEWS FRAME & TICKERS
+   CLEAN HORIZONTAL PERIMETER NEWS TICKERS (TOP & BOTTOM)
    ============================================================================== */
 .ares-tv-app {
-  padding: 26px !important;
+  padding: 26px 0 !important;
   box-sizing: border-box;
 }
 
@@ -4085,10 +4085,9 @@ html, body {
 
 .perimeter-bar {
   position: fixed;
-  background: rgba(4, 6, 12, 0.94);
-  border: 1px solid rgba(0, 240, 255, 0.3);
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
+  background: rgba(4, 6, 12, 0.95);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
   z-index: 99;
   display: flex;
   align-items: center;
@@ -4108,36 +4107,22 @@ html, body {
   border-top: 1.5px solid var(--color-orange);
 }
 
-.perimeter-right {
-  top: 26px; bottom: 26px; right: 0;
-  width: 26px;
-  border-left: 1.5px solid var(--color-gold);
-  flex-direction: column;
-}
-
-.perimeter-left {
-  top: 26px; bottom: 26px; left: 0;
-  width: 26px;
-  border-right: 1.5px solid var(--color-green);
-  flex-direction: column;
-}
-
-/* Badge Headers */
-.perimeter-badge {
+/* Headline Tags */
+.headline-tag {
   font-family: var(--font-title);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 900;
   letter-spacing: 1px;
-  padding: 2px 8px;
-  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-right: 8px;
   white-space: nowrap;
-  z-index: 2;
 }
 
-.badge-world { background: rgba(0, 240, 255, 0.2); color: var(--color-cyan); border-right: 1px solid var(--color-cyan); }
-.badge-us { background: rgba(255, 179, 0, 0.2); color: var(--color-gold); border-bottom: 1px solid var(--color-gold); writing-mode: vertical-rl; transform: rotate(180deg); }
-.badge-tech { background: rgba(255, 87, 34, 0.2); color: var(--color-orange); border-right: 1px solid var(--color-orange); }
-.badge-science { background: rgba(0, 255, 136, 0.2); color: var(--color-green); border-bottom: 1px solid var(--color-green); writing-mode: vertical-rl; }
+.tag-world { background: rgba(0, 240, 255, 0.18); color: var(--color-cyan); border: 1px solid var(--color-cyan); }
+.tag-us { background: rgba(255, 179, 0, 0.18); color: var(--color-gold); border: 1px solid var(--color-gold); }
+.tag-tech { background: rgba(255, 87, 34, 0.18); color: var(--color-orange); border: 1px solid var(--color-orange); }
+.tag-science { background: rgba(0, 255, 136, 0.18); color: var(--color-green); border: 1px solid var(--color-green); }
 
 /* Marquee Tracks & Wrappers */
 .perimeter-marquee-wrapper {
@@ -4149,11 +4134,6 @@ html, body {
   align-items: center;
 }
 
-.vertical-wrapper {
-  flex-direction: column;
-  justify-content: center;
-}
-
 .perimeter-track {
   display: flex;
   white-space: nowrap;
@@ -4161,20 +4141,10 @@ html, body {
 }
 
 .track-horizontal {
-  animation: marqueeHorizontal 50s linear infinite;
+  animation: marqueeHorizontal 55s linear infinite;
 }
 
 .track-horizontal:hover {
-  animation-play-state: paused;
-}
-
-.track-vertical {
-  flex-direction: column;
-  writing-mode: vertical-rl;
-  animation: marqueeVertical 45s linear infinite;
-}
-
-.track-vertical:hover {
   animation-play-state: paused;
 }
 
@@ -4183,20 +4153,10 @@ html, body {
   100% { transform: translateX(-50%); }
 }
 
-@keyframes marqueeVertical {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-50%); }
-}
-
 .perimeter-headline-group {
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
-}
-
-.track-vertical .perimeter-headline-group {
-  display: flex;
-  flex-direction: column;
 }
 
 .perimeter-headline-item {
@@ -4221,7 +4181,7 @@ html, body {
 
 .perimeter-bullet {
   color: var(--color-cyan);
-  margin: 0 8px;
+  margin: 0 10px;
   font-weight: 900;
 }
 
