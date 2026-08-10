@@ -564,6 +564,34 @@ function SunWindowIcon({ isMorning = true }) {
     return () => clearInterval(transitInterval);
   }, []);
 
+  // Live 4-Side News Feeds Polling (/api/news)
+  const [newsData, setNewsData] = useState({
+    world: [],
+    us: [],
+    tech: [],
+    science: []
+  });
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const res = await fetch('/api/news');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.news) {
+            setNewsData(data.news);
+          }
+        }
+      } catch (e) {
+        console.error('News fetch error:', e);
+      }
+    };
+
+    fetchNews();
+    const newsInterval = setInterval(fetchNews, 15 * 60 * 1000); // 15 mins
+    return () => clearInterval(newsInterval);
+  }, []);
+
   // OneDrive & Fallback Photo API Fetcher
   const fetchPhotos = async () => {
     try {
@@ -737,10 +765,73 @@ function SunWindowIcon({ isMorning = true }) {
   }
   const hourlyTimes = (weatherData?.hourly?.time || ['', '', '', '', '', '']).slice(hourlyStartIdx, hourlyStartIdx + 6);
 
+  const renderHeadlineGroup = (items, fallbackPrefix) => {
+    const list = items && items.length > 0 ? items : [{ title: `${fallbackPrefix}: Live news updating...`, link: '#' }];
+    return (
+      <div className="perimeter-headline-group">
+        {list.map((item, idx) => (
+          <span key={idx} className="perimeter-headline-item">
+            <a href={item.link} target="_blank" rel="noopener noreferrer" className="perimeter-headline-link">
+              {item.title}
+            </a>
+            <span className="perimeter-bullet"> • </span>
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className={`ares-tv-app tactical-matrix-viewport ${showControls ? 'user-active' : 'user-idle'}`}>
       {/* Dynamic Background Atmospheric Weather Canvas */}
       <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
+
+      {/* 360-DEGREE 4-SIDE PERIMETER NEWS FRAME */}
+      <aside className="perimeter-news-frame">
+        {/* TOP: 🌎 REUTERS WORLD */}
+        <div className="perimeter-bar perimeter-top">
+          <div className="perimeter-badge badge-world">🌎 WORLD // REUTERS</div>
+          <div className="perimeter-marquee-wrapper horizontal-wrapper">
+            <div className="perimeter-track track-horizontal">
+              {renderHeadlineGroup(newsData.world, 'Reuters World')}
+              {renderHeadlineGroup(newsData.world, 'Reuters World')}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: 🇺🇸 AP U.S. NEWS */}
+        <div className="perimeter-bar perimeter-right">
+          <div className="perimeter-badge badge-us">🇺🇸 U.S. // AP NEWS</div>
+          <div className="perimeter-marquee-wrapper vertical-wrapper">
+            <div className="perimeter-track track-vertical">
+              {renderHeadlineGroup(newsData.us, 'AP U.S. News')}
+              {renderHeadlineGroup(newsData.us, 'AP U.S. News')}
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM: 🤖 TECHCRUNCH AI & TECH */}
+        <div className="perimeter-bar perimeter-bottom">
+          <div className="perimeter-badge badge-tech">🤖 AI & TECH // TECHCRUNCH</div>
+          <div className="perimeter-marquee-wrapper horizontal-wrapper">
+            <div className="perimeter-track track-horizontal">
+              {renderHeadlineGroup(newsData.tech, 'TechCrunch')}
+              {renderHeadlineGroup(newsData.tech, 'TechCrunch')}
+            </div>
+          </div>
+        </div>
+
+        {/* LEFT: 💻 ARS TECHNICA SCIENCE & COMPUTING */}
+        <div className="perimeter-bar perimeter-left">
+          <div className="perimeter-badge badge-science">💻 SCIENCE & COMPUTING // ARS TECHNICA</div>
+          <div className="perimeter-marquee-wrapper vertical-wrapper">
+            <div className="perimeter-track track-vertical">
+              {renderHeadlineGroup(newsData.science, 'Ars Technica')}
+              {renderHeadlineGroup(newsData.science, 'Ars Technica')}
+            </div>
+          </div>
+        </div>
+      </aside>
 
       {/* TOP HUD HEADER BAR */}
       <header className="matrix-header-hud">

@@ -4071,6 +4071,160 @@ html, body {
   color: #FF5722;
 }
 
+/* ==============================================================================
+   360-DEGREE 4-SIDE PERIMETER NEWS FRAME & TICKERS
+   ============================================================================== */
+.ares-tv-app {
+  padding: 26px !important;
+  box-sizing: border-box;
+}
+
+.perimeter-news-frame {
+  pointer-events: auto;
+}
+
+.perimeter-bar {
+  position: fixed;
+  background: rgba(4, 6, 12, 0.94);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.perimeter-top {
+  top: 0; left: 0; right: 0;
+  height: 26px;
+  border-bottom: 1.5px solid var(--color-cyan);
+}
+
+.perimeter-bottom {
+  bottom: 0; left: 0; right: 0;
+  height: 26px;
+  border-top: 1.5px solid var(--color-orange);
+}
+
+.perimeter-right {
+  top: 26px; bottom: 26px; right: 0;
+  width: 26px;
+  border-left: 1.5px solid var(--color-gold);
+  flex-direction: column;
+}
+
+.perimeter-left {
+  top: 26px; bottom: 26px; left: 0;
+  width: 26px;
+  border-right: 1.5px solid var(--color-green);
+  flex-direction: column;
+}
+
+/* Badge Headers */
+.perimeter-badge {
+  font-family: var(--font-title);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.badge-world { background: rgba(0, 240, 255, 0.2); color: var(--color-cyan); border-right: 1px solid var(--color-cyan); }
+.badge-us { background: rgba(255, 179, 0, 0.2); color: var(--color-gold); border-bottom: 1px solid var(--color-gold); writing-mode: vertical-rl; transform: rotate(180deg); }
+.badge-tech { background: rgba(255, 87, 34, 0.2); color: var(--color-orange); border-right: 1px solid var(--color-orange); }
+.badge-science { background: rgba(0, 255, 136, 0.2); color: var(--color-green); border-bottom: 1px solid var(--color-green); writing-mode: vertical-rl; }
+
+/* Marquee Tracks & Wrappers */
+.perimeter-marquee-wrapper {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.vertical-wrapper {
+  flex-direction: column;
+  justify-content: center;
+}
+
+.perimeter-track {
+  display: flex;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.track-horizontal {
+  animation: marqueeHorizontal 50s linear infinite;
+}
+
+.track-horizontal:hover {
+  animation-play-state: paused;
+}
+
+.track-vertical {
+  flex-direction: column;
+  writing-mode: vertical-rl;
+  animation: marqueeVertical 45s linear infinite;
+}
+
+.track-vertical:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marqueeHorizontal {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marqueeVertical {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+.perimeter-headline-group {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.track-vertical .perimeter-headline-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.perimeter-headline-item {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.perimeter-headline-link {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.perimeter-headline-link:hover {
+  color: var(--color-cyan);
+  text-decoration: underline;
+}
+
+.perimeter-bullet {
+  color: var(--color-cyan);
+  margin: 0 8px;
+  font-weight: 900;
+}
+
 
 
 
