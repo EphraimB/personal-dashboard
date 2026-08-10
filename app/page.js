@@ -763,13 +763,15 @@ function SunWindowIcon({ isMorning = true }) {
                 <span className="sol-clock-label">ARES SOLAR TIME</span>
                 <span className="sol-clock-val">{aresSolarClock || 'SOL 1420 // 14:32'}</span>
               </div>
-              <div className="matrix-status-pill">
-                <span className="status-pulse-dot" />
-                <span>SYS: ONLINE (100%)</span>
+              <div className="matrix-status-stack">
+                <div className="matrix-status-pill">
+                  <span className="status-pulse-dot" />
+                  <span>SYS: ONLINE (100%)</span>
+                </div>
+                <div className="matrix-last-sync">
+                  <span>LAST SYNC: {lastSyncTime}</span>
+                </div>
               </div>
-              <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)}>
-                [ ⚙ CONFIG ]
-              </button>
             </div>
           </header>
 
@@ -1430,10 +1432,6 @@ function SunWindowIcon({ isMorning = true }) {
           <span className="hotkey-item"><span className="hotkey-key">[F]</span> FULLSCREEN</span>
           <span className="hotkey-item"><span className="hotkey-key">[SPACE]</span> PAUSE</span>
           <span className="hotkey-item"><span className="hotkey-key">[S]</span> SCANLINES</span>
-          <span className="hotkey-item"><span className="hotkey-key">[M]</span> CONFIG</span>
-        </div>
-        <div className="footer-sync-info">
-          <span>LAST SYNC: {lastSyncTime}</span>
         </div>
       </footer>
 
