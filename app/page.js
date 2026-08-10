@@ -779,161 +779,92 @@ function SunWindowIcon({ isMorning = true }) {
             {/* QUADRANT 1: LEFT COLUMN (WEATHER & COMMUTER TRANSIT HUB) */}
             <section className="quadrant-left-col">
               
-              {/* 1A: OUTDOOR CONDITIONS & TACTICAL HEALTH PANEL */}
-              <div className="matrix-card card-weather-telemetry outdoor-conditions-card">
-                <div className="matrix-card-title-row">
-                  <span className="matrix-card-title">
-                    ⚡ OUTDOOR CONDITIONS
-                  </span>
-                  <span className="matrix-card-tag">{weatherData?.locationLabel || 'CEDARHURST, NY'}</span>
+              {/* 1A: TACTICAL HUD OUTDOOR CONDITIONS PANEL */}
+              <div className="matrix-card card-weather-telemetry outdoor-conditions-card hud-weather-card">
+                {/* TIER 1: HUD HEADER & SOLID DIVIDER BAR */}
+                <div className="hud-card-header">
+                  <span className="hud-header-title">OUTDOOR CONDITIONS</span>
+                  <span className="hud-header-location">{weatherData?.locationLabel || 'CEDARHURST'}</span>
                 </div>
+                <div className="hud-header-divider"></div>
 
-                {/* SECTION 1: TOP HERO METRICS & SWEAT GAUGE ROW */}
-                <div className="outdoor-hero-row">
-                  {/* Left Temp & Condition */}
-                  <div className="outdoor-temp-block">
-                    <div className="outdoor-temp-hero">
-                      <span className="outdoor-temp-val">{weatherData?.currentTemp ?? 84}</span>
-                      <span className="outdoor-temp-unit">°{weatherData?.tempUnit || 'F'}</span>
-                    </div>
-                    <div className="outdoor-cond-group">
-                      <WeatherSvg code={weatherData?.conditionCode ?? 0} className="outdoor-cond-svg" />
-                      <div className="outdoor-cond-text-block">
-                        <span className="outdoor-cond-title">{weatherData?.conditionText || 'SUNNY'}</span>
-                        <span className="outdoor-feels-like">FEELS LIKE {weatherData?.feelsLike ?? 88}°{weatherData?.tempUnit || 'F'}</span>
-                      </div>
-                    </div>
+                {/* TIER 2: HERO TELEMETRY ROW */}
+                <div className="hud-telemetry-row">
+                  <div className="hud-temp-block">
+                    <span className="hud-temp-val">{weatherData?.currentTemp ?? 86}°</span>
                   </div>
-
-                  {/* Center Telemetry Pill Box */}
-                  <div className="outdoor-stats-pill-box">
-                    <div className="outdoor-stat-row">
-                      <span className="outdoor-stat-icon">💧</span>
-                      <div className="outdoor-stat-info">
-                        <span className="outdoor-stat-label">HUMIDITY</span>
-                        <span className="outdoor-stat-val">{weatherData?.humidity ?? 47}%</span>
-                      </div>
-                    </div>
-                    <div className="outdoor-stat-row">
-                      <span className="outdoor-stat-icon">💨</span>
-                      <div className="outdoor-stat-info">
-                        <span className="outdoor-stat-label">WIND</span>
-                        <span className="outdoor-stat-val">{weatherData?.windSpeed ?? 1} MPH</span>
-                      </div>
-                    </div>
-                    <div className="outdoor-stat-row">
-                      <span className="outdoor-stat-icon">⏲️</span>
-                      <div className="outdoor-stat-info">
-                        <span className="outdoor-stat-label">PRESSURE</span>
-                        <span className="outdoor-stat-val">{weatherData?.pressureInHg ?? '30.12'} inHg</span>
-                      </div>
-                    </div>
+                  <div className="hud-cond-block">
+                    <span className="hud-cond-title">{weatherData?.conditionText || 'OVERCAST'}</span>
+                    <span className="hud-cond-sub">HUMIDITY {weatherData?.humidity ?? 34}%</span>
                   </div>
-
-                  {/* Right Sweat Meter Box */}
-                  <div className="outdoor-sweat-box">
-                    <span className="outdoor-box-hdr">TIME OUTSIDE UNTIL YOU'RE SWEATY</span>
-                    <div className="sweat-gauge-flex">
-                      <SweatRadialGauge label={weatherData?.sweatMeter?.label || '18 MIN'} gaugePct={weatherData?.sweatMeter?.gaugePct || 75} />
-                      <p className="sweat-gauge-desc">Based on current temperature, humidity and wind.</p>
-                    </div>
-                    <div className="sweat-slider-bar">
-                      <span className="sweat-slider-label">LESS SWEAT</span>
-                      <div className="sweat-slider-track">
-                        <div className="sweat-slider-fill" style={{ width: `${weatherData?.sweatMeter?.sliderVal || 75}%` }}></div>
-                        <div className="sweat-slider-thumb" style={{ left: `${weatherData?.sweatMeter?.sliderVal || 75}%` }}></div>
-                      </div>
-                      <span className="sweat-slider-label">MORE SWEAT</span>
-                    </div>
+                  <div className="hud-feels-block">
+                    <span className="hud-feels-title">FEELS {weatherData?.feelsLike ?? 88}°</span>
+                    <span className="hud-feels-sub">WIND {weatherData?.windSpeed ?? 8} MPH</span>
                   </div>
-
-                  {/* Far Right UV Index Badge */}
-                  <div className="outdoor-uv-badge-box">
-                    <div className="uv-header-row">
-                      <span className="uv-icon">☀️</span>
-                      <span className="uv-title">UV INDEX</span>
-                    </div>
-                    <div className="uv-big-num">{weatherData?.uvIndex ?? 7}</div>
-                    <div className="uv-sev-tag">{weatherData?.uvSeverity || 'HIGH'}</div>
+                  <div className="hud-uv-block">
+                    <span className="hud-uv-title">UV {weatherData?.uvIndex ?? 7}</span>
+                    <span className="hud-uv-sev">{weatherData?.uvSeverity || 'HIGH'}</span>
                   </div>
                 </div>
 
-                {/* SECTION 2: 3-CARD MIDDLE OUTDOOR HEALTH GRID */}
-                <div className="outdoor-health-grid">
-                  {/* Card 1: Sunscreen */}
-                  <div className="outdoor-subcard card-sunscreen">
-                    <span className="outdoor-subcard-title">SUNSCREEN RECOMMENDATION</span>
-                    <div className="subcard-content-flex">
-                      <SunscreenTubeIcon />
-                      <div className="subcard-info-group">
-                        <div className="subcard-hero-badge">{weatherData?.sunscreen?.spfRating || 'SPF 50'}</div>
-                        <div className="subcard-hero-sub">{weatherData?.sunscreen?.spfTag || 'BROAD SPECTRUM'}</div>
-                        <div className="subcard-detail-item">
-                          <span className="detail-item-hdr">REAPPLY EVERY</span>
-                          <span className="detail-item-val">{weatherData?.sunscreen?.reapplyText || '2 HOURS or after swimming / sweating'}</span>
-                        </div>
-                      </div>
-                    </div>
+                {/* TIER 3: COMFORT PROGRESS BOX */}
+                <div className="hud-comfort-box">
+                  <div className="hud-comfort-header">
+                    {weatherData?.sweatMeter?.mins && weatherData.sweatMeter.mins < 60 
+                      ? `COMFORTABLE FOR ${weatherData.sweatMeter.label}`
+                      : 'COMFORTABLE ALL DAY'}
                   </div>
-
-                  {/* Card 2: Hydration */}
-                  <div className="outdoor-subcard card-hydration">
-                    <span className="outdoor-subcard-title">HYDRATION REMINDER</span>
-                    <div className="subcard-content-flex">
-                      <WaterBottleIcon />
-                      <div className="subcard-info-group">
-                        <div className="subcard-detail-item">
-                          <span className="detail-item-hdr">DRINK</span>
-                          <span className="subcard-hero-badge">{weatherData?.hydration?.waterOz || '25–30 oz'}</span>
-                          <span className="detail-item-sub">OF WATER</span>
-                        </div>
-                        <div className="subcard-detail-item">
-                          <span className="detail-item-hdr">WAIT TIME</span>
-                          <span className="detail-item-val-bold">{weatherData?.hydration?.waitMins || '15 MIN'}</span>
-                          <span className="detail-item-sub">before intense sun exposure</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card 3: Best Time Outside */}
-                  <div className="outdoor-subcard card-best-time">
-                    <span className="outdoor-subcard-title">BEST TIME OUTSIDE</span>
-                    <div className="best-time-rows">
-                      <div className="best-time-item">
-                        <SunWindowIcon isMorning={true} />
-                        <span className="best-time-val">{weatherData?.bestTimeOutside?.morningWindow || 'BEFORE 10 AM'}</span>
-                      </div>
-                      <div className="best-time-item">
-                        <SunWindowIcon isMorning={false} />
-                        <span className="best-time-val">{weatherData?.bestTimeOutside?.eveningWindow || 'AFTER 6 PM'}</span>
-                      </div>
-                    </div>
-                    <div className="today-summary-box">
-                      <div className="summary-text-group">
-                        <span className="summary-title">TODAY'S SUMMARY</span>
-                        <p className="summary-p">{weatherData?.bestTimeOutside?.summaryText || 'Hot and humid with high UV. Limit direct sun exposure, stay hydrated, and reapply sunscreen!'}</p>
-                      </div>
-                      <ShieldCheckIcon />
-                    </div>
+                  <div className="hud-progress-bar-row">
+                    {Array.from({ length: 24 }).map((_, i) => {
+                      const activeThreshold = Math.round((24 * (weatherData?.sweatMeter?.gaugePct || 70)) / 100);
+                      const isActive = i < activeThreshold;
+                      return (
+                        <span 
+                          key={i} 
+                          className={`hud-progress-block ${isActive ? 'active' : 'inactive'}`}
+                        >
+                          {isActive ? '█' : '░'}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* SECTION 3: BOTTOM HOURLY FORECAST TICKER WITH UV */}
-                <div className="outdoor-hourly-ticker">
+                {/* TIER 4: 2-COLUMN HEALTH SUMMARY ROW */}
+                <div className="hud-health-summary-row">
+                  <div className="hud-summary-col">
+                    <div className="hud-col-hdr">
+                      <span className="hud-col-icon">☀</span>
+                      <span className="hud-col-title">SUNSCREEN</span>
+                      <span className="hud-col-badge">{weatherData?.sunscreen?.spfRating || 'SPF 50'}</span>
+                    </div>
+                    <div className="hud-col-sub">REAPPLY IN ~2 HR</div>
+                  </div>
+                  <div className="hud-summary-col">
+                    <div className="hud-col-hdr">
+                      <span className="hud-col-icon">💧</span>
+                      <span className="hud-col-title">WATER</span>
+                      <span className="hud-col-badge">{weatherData?.hydration?.waterOz || '25–30 OZ'}</span>
+                    </div>
+                    <div className="hud-col-sub">DRINK BEFORE HEAVY SWEAT</div>
+                  </div>
+                </div>
+
+                {/* TIER 5: BOTTOM HOURLY FORECAST TICKER */}
+                <div className="hud-hourly-ticker">
                   {(weatherData?.hourlyTicker || [
-                    { label: 'NOW', temp: 84, code: 0, uv: 7 },
-                    { label: '11 AM', temp: 87, code: 0, uv: 7 },
-                    { label: '12 PM', temp: 89, code: 2, uv: 8 },
-                    { label: '1 PM', temp: 90, code: 2, uv: 8 },
-                    { label: '2 PM', temp: 90, code: 0, uv: 8 },
-                    { label: '3 PM', temp: 89, code: 0, uv: 7 }
+                    { label: 'NOW', temp: 86, code: 0, uv: 7 },
+                    { label: '4 PM', temp: 86, code: 0, uv: 6 },
+                    { label: '5 PM', temp: 85, code: 2, uv: 4 },
+                    { label: '6 PM', temp: 82, code: 2, uv: 2 },
+                    { label: '7 PM', temp: 81, code: 0, uv: 1 },
+                    { label: '8 PM', temp: 80, code: 0, uv: 0 }
                   ]).map((item, idx) => (
-                    <div key={idx} className="ticker-hour-item">
-                      <span className="ticker-label">{item.label}</span>
-                      <WeatherSvg code={item.code} className="ticker-wx-svg" />
-                      <span className="ticker-temp">{item.temp}°</span>
-                      <span className="ticker-uv">UV {item.uv}</span>
+                    <div key={idx} className="hud-ticker-item">
+                      <span className="hud-ticker-time">{item.label}</span>
+                      <WeatherSvg code={item.code} className="hud-ticker-icon" />
+                      <span className="hud-ticker-temp">{item.temp}°</span>
+                      <span className="hud-ticker-uv">UV {item.uv}</span>
                     </div>
                   ))}
                 </div>
