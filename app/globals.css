@@ -2789,7 +2789,7 @@ html, body {
   }
 
   .track-horizontal {
-    animation-duration: 130s;
+    animation-duration: 70s;
   }
 }
 
@@ -4171,7 +4171,7 @@ html, body {
 }
 
 .track-horizontal {
-  animation: marqueeHorizontal 85s linear infinite;
+  animation: marqueeHorizontal 105s linear infinite;
 }
 
 .track-horizontal:hover {
