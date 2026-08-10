@@ -1426,14 +1426,7 @@ function SunWindowIcon({ isMorning = true }) {
 
       </main>
 
-      {/* BOTTOM TELEMETRY FOOTER (5vh) */}
-      <footer className="matrix-footer-hud">
-        <div className="footer-hotkeys-group">
-          <span className="hotkey-item"><span className="hotkey-key">[F]</span> FULLSCREEN</span>
-          <span className="hotkey-item"><span className="hotkey-key">[SPACE]</span> PAUSE</span>
-          <span className="hotkey-item"><span className="hotkey-key">[S]</span> SCANLINES</span>
-        </div>
-      </footer>
+
 
       {/* Overlays */}
       <div className="city-matrix-underlay" />
