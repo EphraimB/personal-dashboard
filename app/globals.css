@@ -3602,9 +3602,9 @@ html, body {
   box-shadow: 0 0 25px rgba(0, 240, 255, 0.1);
   display: flex;
   flex-direction: column;
-  gap: clamp(6px, 1.1vh, 12px);
+  gap: clamp(8px, 1.2vh, 14px);
   overflow-y: auto;
-  flex: 1.25;
+  flex: 1.2;
   min-height: 0;
 }
 
@@ -3626,6 +3626,7 @@ html, body {
   border: 1px solid rgba(0, 240, 255, 0.15);
   border-radius: 8px;
   padding: 8px 12px;
+  flex: 0 0 auto;
 }
 
 .outdoor-temp-block {
@@ -3875,8 +3876,9 @@ html, body {
 /* SECTION 2: 3-CARD MIDDLE HEALTH GRID */
 .outdoor-health-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+  flex: 0 0 auto;
 }
 
 .outdoor-subcard {
