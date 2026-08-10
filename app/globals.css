@@ -2759,11 +2759,11 @@ html, body {
 
 /* 1A: ATMOSPHERIC TELEMETRY CARD */
 .card-weather-telemetry {
-  flex: 0.9;
+  flex: 1.25;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .weather-hero-row {
@@ -3602,25 +3602,39 @@ html, body {
   box-shadow: 0 0 25px rgba(0, 240, 255, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: clamp(6px, 1.1vh, 12px);
+  overflow-y: auto;
+  flex: 1.25;
+  min-height: 0;
+}
+
+.outdoor-conditions-card::-webkit-scrollbar {
+  width: 4px;
+}
+.outdoor-conditions-card::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.3);
+  border-radius: 2px;
 }
 
 .outdoor-hero-row {
   display: flex;
-  align-items: stretch;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(6px, 0.8vw, 12px);
+  flex-wrap: wrap;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(0, 240, 255, 0.15);
   border-radius: 8px;
-  padding: 12px;
+  padding: 8px 12px;
 }
 
 .outdoor-temp-block {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
-  min-width: 130px;
+  gap: 2px;
+  flex: 0 0 auto;
+  min-width: 110px;
 }
 
 .outdoor-temp-hero {
@@ -3631,28 +3645,28 @@ html, body {
 
 .outdoor-temp-val {
   font-family: var(--font-title);
-  font-size: clamp(2.5rem, 4vh, 3.8rem);
+  font-size: clamp(2.2rem, 3.8vh, 3.6rem);
   font-weight: 900;
   color: #ffffff;
   letter-spacing: -1px;
 }
 
 .outdoor-temp-unit {
-  font-size: clamp(1.2rem, 1.8vh, 1.6rem);
+  font-size: clamp(1rem, 1.6vh, 1.5rem);
   font-weight: 700;
   color: var(--color-cyan);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .outdoor-cond-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .outdoor-cond-svg {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
 }
 
 .outdoor-cond-text-block {
@@ -3661,14 +3675,14 @@ html, body {
 }
 
 .outdoor-cond-title {
-  font-size: clamp(0.85rem, 1.3vh, 1.1rem);
+  font-size: clamp(0.8rem, 1.2vh, 1rem);
   font-weight: 900;
   color: var(--color-cyan);
   letter-spacing: 0.5px;
 }
 
 .outdoor-feels-like {
-  font-size: clamp(0.7rem, 1.1vh, 0.85rem);
+  font-size: clamp(0.65rem, 1vh, 0.8rem);
   color: var(--color-text-sub);
   font-weight: 600;
 }
@@ -3680,19 +3694,20 @@ html, body {
   background: rgba(0, 240, 255, 0.04);
   border: 1px solid rgba(0, 240, 255, 0.12);
   border-radius: 8px;
-  padding: 10px 14px;
-  min-width: 140px;
-  gap: 6px;
+  padding: 6px 10px;
+  flex: 0 0 auto;
+  min-width: 120px;
+  gap: 4px;
 }
 
 .outdoor-stat-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .outdoor-stat-icon {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
 }
 
 .outdoor-stat-info {
@@ -3701,61 +3716,63 @@ html, body {
 }
 
 .outdoor-stat-label {
-  font-size: 0.65rem;
+  font-size: 0.58rem;
   font-weight: 800;
   color: var(--color-text-dim);
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .outdoor-stat-val {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 900;
   color: #ffffff;
 }
 
 .outdoor-sweat-box {
-  flex: 1;
+  flex: 1 1 180px;
+  min-width: 160px;
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(0, 240, 255, 0.2);
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
 .outdoor-box-hdr {
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 800;
   color: var(--color-cyan);
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
 .sweat-gauge-flex {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 4px 0;
+  gap: 8px;
+  margin: 2px 0;
 }
 
 .sweat-gauge-wrapper {
   position: relative;
-  width: 100px;
-  height: 60px;
+  width: 80px;
+  height: 48px;
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .sweat-gauge-svg {
-  width: 100px;
-  height: 60px;
+  width: 80px;
+  height: 48px;
 }
 
 .sweat-gauge-text-group {
   position: absolute;
-  bottom: 4px;
+  bottom: 2px;
   left: 0;
   right: 0;
   text-align: center;
@@ -3763,35 +3780,35 @@ html, body {
 
 .sweat-gauge-val {
   font-family: var(--font-title);
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   font-weight: 900;
   color: #ffffff;
 }
 
 .sweat-gauge-desc {
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   color: var(--color-text-sub);
-  line-height: 1.35;
-  max-width: 180px;
+  line-height: 1.25;
 }
 
 .sweat-slider-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 4px;
+  gap: 6px;
+  margin-top: 2px;
 }
 
 .sweat-slider-label {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 800;
   color: var(--color-text-dim);
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .sweat-slider-track {
   flex: 1;
-  height: 6px;
+  height: 5px;
   background: linear-gradient(90deg, #00E676 0%, #00F0FF 40%, #FFB300 75%, #FF5722 100%);
   border-radius: 3px;
   position: relative;
@@ -3805,11 +3822,11 @@ html, body {
 .sweat-slider-thumb {
   position: absolute;
   top: -4px;
-  width: 6px;
-  height: 14px;
+  width: 5px;
+  height: 13px;
   background: #ffffff;
   border-radius: 2px;
-  box-shadow: 0 0 8px #ffffff;
+  box-shadow: 0 0 6px #ffffff;
   transform: translateX(-50%);
 }
 
@@ -3817,12 +3834,13 @@ html, body {
   background: rgba(255, 87, 34, 0.08);
   border: 1px solid rgba(255, 87, 34, 0.3);
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 90px;
+  flex: 0 0 auto;
+  min-width: 75px;
 }
 
 .uv-header-row {
@@ -3832,75 +3850,79 @@ html, body {
 }
 
 .uv-title {
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 900;
   color: var(--color-cyan);
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .uv-big-num {
   font-family: var(--font-title);
-  font-size: clamp(2rem, 3.2vh, 3rem);
+  font-size: clamp(1.6rem, 2.8vh, 2.5rem);
   font-weight: 900;
   color: #FFB300;
   line-height: 1;
-  margin: 4px 0;
+  margin: 2px 0;
 }
 
 .uv-sev-tag {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 900;
   color: #FF5722;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 /* SECTION 2: 3-CARD MIDDLE HEALTH GRID */
 .outdoor-health-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
 }
 
 .outdoor-subcard {
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(0, 240, 255, 0.18);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .outdoor-subcard-title {
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 900;
   color: var(--color-cyan);
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
 .subcard-content-flex {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+}
+
+.outdoor-svg-icon {
+  flex-shrink: 0;
 }
 
 .subcard-info-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .subcard-hero-badge {
   font-family: var(--font-title);
-  font-size: 1.4rem;
+  font-size: 1.15rem;
   font-weight: 900;
   color: #ffffff;
   line-height: 1.1;
 }
 
 .subcard-hero-sub {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 800;
   color: var(--color-text-dim);
   letter-spacing: 0.5px;
@@ -3909,38 +3931,38 @@ html, body {
 .subcard-detail-item {
   display: flex;
   flex-direction: column;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .detail-item-hdr {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 800;
   color: var(--color-cyan);
   letter-spacing: 0.5px;
 }
 
 .detail-item-val {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 800;
   color: #ffffff;
 }
 
 .detail-item-val-bold {
   font-family: var(--font-title);
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 900;
   color: #00E676;
 }
 
 .detail-item-sub {
-  font-size: 0.65rem;
+  font-size: 0.58rem;
   color: var(--color-text-dim);
 }
 
 .best-time-rows {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .best-time-item {
@@ -3950,7 +3972,7 @@ html, body {
 
 .best-time-val {
   font-family: var(--font-title);
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   font-weight: 900;
   color: #ffffff;
   letter-spacing: 0.5px;
@@ -3959,11 +3981,15 @@ html, body {
 .today-summary-box {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   background: rgba(0, 240, 255, 0.05);
   border-top: 1px solid rgba(0, 240, 255, 0.15);
-  padding-top: 8px;
-  margin-top: 4px;
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+.shield-icon-svg {
+  flex-shrink: 0;
 }
 
 .summary-text-group {
@@ -3974,16 +4000,16 @@ html, body {
 }
 
 .summary-title {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 900;
   color: var(--color-cyan);
   letter-spacing: 0.5px;
 }
 
 .summary-p {
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   color: var(--color-text-sub);
-  line-height: 1.35;
+  line-height: 1.25;
 }
 
 /* SECTION 3: BOTTOM HOURLY FORECAST TICKER */
@@ -3994,7 +4020,8 @@ html, body {
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(0, 240, 255, 0.15);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 6px 10px;
+  flex-shrink: 0;
 }
 
 .ticker-hour-item {
@@ -4011,25 +4038,25 @@ html, body {
 }
 
 .ticker-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 800;
   color: var(--color-cyan);
   letter-spacing: 0.5px;
 }
 
 .ticker-wx-svg {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
 }
 
 .ticker-temp {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 900;
   color: #ffffff;
 }
 
 .ticker-uv {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 900;
   color: #FF5722;
 }
