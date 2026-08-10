@@ -277,6 +277,9 @@ export default function Home() {
   const [aresSolarClock, setAresSolarClock] = useState('');
   const [lastSyncTime, setLastSyncTime] = useState(() => new Date().toLocaleTimeString('en-US', { hour12: true }));
 
+  // Environment-based Display Scaling Mode ('tv' for 50-inch 4K TV broadcast scaling, 'laptop' for compact view)
+  const isTvMode = (process.env.NEXT_PUBLIC_DISPLAY_MODE || '').toLowerCase() === 'tv';
+
   // Cedarhurst Open-Meteo Live Weather & Forecast Data
   const [weatherData, setWeatherData] = useState(null);
 
@@ -564,6 +567,39 @@ function SunWindowIcon({ isMorning = true }) {
     return () => clearInterval(transitInterval);
   }, []);
 
+  // Live 4-Side News Feeds Polling & Rotating Headline Card State
+  const [newsData, setNewsData] = useState({
+    world: [],
+    us: [],
+    tech: [],
+    science: []
+  });
+
+  const [topNewsIndex, setTopNewsIndex] = useState(0);
+  const [bottomNewsIndex, setBottomNewsIndex] = useState(0);
+  const [topFade, setTopFade] = useState(true);
+  const [bottomFade, setBottomFade] = useState(true);
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const res = await fetch('/api/news');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.news) {
+            setNewsData(data.news);
+          }
+        }
+      } catch (e) {
+        console.error('News fetch error:', e);
+      }
+    };
+
+    fetchNews();
+    const newsInterval = setInterval(fetchNews, 15 * 60 * 1000); // 15 mins
+    return () => clearInterval(newsInterval);
+  }, []);
+
   // OneDrive & Fallback Photo API Fetcher
   const fetchPhotos = async () => {
     try {
@@ -737,10 +773,90 @@ function SunWindowIcon({ isMorning = true }) {
   }
   const hourlyTimes = (weatherData?.hourly?.time || ['', '', '', '', '', '']).slice(hourlyStartIdx, hourlyStartIdx + 6);
 
+  // Combine World & U.S. for Top Ticker Card
+  const topNewsList = [];
+  const maxTop = Math.max(newsData.world?.length || 0, newsData.us?.length || 0);
+  for (let i = 0; i < maxTop; i++) {
+    if (newsData.world && newsData.world[i]) topNewsList.push({ ...newsData.world[i], category: 'world', tag: '🌎 WORLD // REUTERS' });
+    if (newsData.us && newsData.us[i]) topNewsList.push({ ...newsData.us[i], category: 'us', tag: '🇺🇸 U.S. // AP NEWS' });
+  }
+
+  // Combine AI & Tech & Science for Bottom Ticker Card
+  const bottomNewsList = [];
+  const maxBottom = Math.max(newsData.tech?.length || 0, newsData.science?.length || 0);
+  for (let i = 0; i < maxBottom; i++) {
+    if (newsData.tech && newsData.tech[i]) bottomNewsList.push({ ...newsData.tech[i], category: 'tech', tag: '🤖 AI & TECH // TECHCRUNCH' });
+    if (newsData.science && newsData.science[i]) bottomNewsList.push({ ...newsData.science[i], category: 'science', tag: '💻 SCIENCE & COMPUTING // ARS TECHNICA' });
+  }
+
+  // 12-Second Hold Time & 600ms Crossfade Timers
+  const topListLen = topNewsList.length;
+  useEffect(() => {
+    if (!topListLen) return;
+    const interval = setInterval(() => {
+      setTopFade(false);
+      setTimeout(() => {
+        setTopNewsIndex((prev) => (prev + 1) % topListLen);
+        setTopFade(true);
+      }, 600);
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [topListLen]);
+
+  const bottomListLen = bottomNewsList.length;
+  useEffect(() => {
+    if (!bottomListLen) return;
+    const interval = setInterval(() => {
+      setBottomFade(false);
+      setTimeout(() => {
+        setBottomNewsIndex((prev) => (prev + 1) % bottomListLen);
+        setBottomFade(true);
+      }, 600);
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [bottomListLen]);
+
+  const currentTopItem = topNewsList[topNewsIndex % (topListLen || 1)] || {
+    title: 'Reuters World: Live breaking headlines updating...',
+    category: 'world',
+    tag: '🌎 WORLD // REUTERS',
+    link: '#'
+  };
+
+  const currentBottomItem = bottomNewsList[bottomNewsIndex % (bottomListLen || 1)] || {
+    title: 'TechCrunch: Live technology telemetry updating...',
+    category: 'tech',
+    tag: '🤖 AI & TECH // TECHCRUNCH',
+    link: '#'
+  };
+
   return (
-    <div className={`ares-tv-app tactical-matrix-viewport ${showControls ? 'user-active' : 'user-idle'}`}>
+    <div className={`ares-tv-app tactical-matrix-viewport ${isTvMode ? 'display-tv-mode' : 'display-laptop-mode'} ${showControls ? 'user-active' : 'user-idle'}`}>
       {/* Dynamic Background Atmospheric Weather Canvas */}
       <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
+
+      {/* TOP & BOTTOM STATIONARY ROTATING HEADLINE CARDS */}
+      <aside className="perimeter-news-frame">
+        {/* TOP BAR: 🌎 WORLD & 🇺🇸 U.S. NEWS */}
+        <div className="perimeter-bar perimeter-top">
+          <div className={`perimeter-card-center ${topFade ? 'fade-in' : 'fade-out'}`}>
+            <span className={`headline-tag tag-${currentTopItem.category}`}>{currentTopItem.tag}</span>
+            <a href={currentTopItem.link} target="_blank" rel="noopener noreferrer" className="perimeter-card-title">
+              {currentTopItem.title}
+            </a>
+          </div>
+        </div>
+
+        {/* BOTTOM BAR: 🤖 AI & TECH & 💻 SCIENCE & COMPUTING */}
+        <div className="perimeter-bar perimeter-bottom">
+          <div className={`perimeter-card-center ${bottomFade ? 'fade-in' : 'fade-out'}`}>
+            <span className={`headline-tag tag-${currentBottomItem.category}`}>{currentBottomItem.tag}</span>
+            <a href={currentBottomItem.link} target="_blank" rel="noopener noreferrer" className="perimeter-card-title">
+              {currentBottomItem.title}
+            </a>
+          </div>
+        </div>
+      </aside>
 
       {/* TOP HUD HEADER BAR */}
       <header className="matrix-header-hud">

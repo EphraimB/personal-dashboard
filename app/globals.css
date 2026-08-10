@@ -2701,6 +2701,37 @@ html, body {
   white-space: nowrap;
 }
 
+.matrix-display-toggle {
+  font-family: var(--font-title);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.matrix-display-toggle.mode-tv {
+  background: rgba(0, 240, 255, 0.2);
+  color: var(--color-cyan);
+  border: 1px solid var(--color-cyan);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+}
+
+.matrix-display-toggle.mode-laptop {
+  background: rgba(255, 179, 0, 0.15);
+  color: var(--color-gold);
+  border: 1px solid var(--color-gold);
+  box-shadow: 0 0 10px rgba(255, 179, 0, 0.2);
+}
+
+.matrix-display-toggle:hover {
+  transform: scale(1.04);
+}
+
 /* ==============================================================================
    4K TV / ULTRA-LARGE DISPLAY SCALED OVERRIDES (@media min-width: 2000px, min-height: 1200px)
    ============================================================================== */
@@ -4070,6 +4101,130 @@ html, body {
   font-weight: 900;
   color: #FF5722;
 }
+
+/* ==============================================================================
+   STATIONARY ROTATING HEADLINE CARDS (LAPTOP MODE BASE & TV MODE OVERRIDES)
+   ============================================================================== */
+.ares-tv-app {
+  padding: 34px 0 !important;
+  box-sizing: border-box;
+}
+
+.ares-tv-app.display-tv-mode {
+  padding: 80px 0 !important;
+}
+
+.perimeter-news-frame {
+  pointer-events: auto;
+}
+
+.perimeter-bar {
+  position: fixed;
+  background: rgba(4, 6, 12, 0.95);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 0 16px;
+  transition: height 0.3s ease;
+}
+
+.perimeter-top {
+  top: 0; left: 0; right: 0;
+  height: 34px;
+  border-bottom: 2px solid var(--color-cyan);
+}
+
+.display-tv-mode .perimeter-top {
+  height: 80px;
+}
+
+.perimeter-bottom {
+  bottom: 0; left: 0; right: 0;
+  height: 34px;
+  border-top: 2px solid var(--color-orange);
+}
+
+.display-tv-mode .perimeter-bottom {
+  height: 80px;
+}
+
+/* Stationary Card Wrapper & 600ms Crossfade */
+.perimeter-card-center {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 96%;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.display-tv-mode .perimeter-card-center {
+  gap: 18px;
+}
+
+.perimeter-card-center.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.perimeter-card-center.fade-out {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.perimeter-card-title {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.2s ease, font-size 0.3s ease;
+}
+
+.display-tv-mode .perimeter-card-title {
+  font-size: 2.3rem;
+  font-weight: 800;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+}
+
+.perimeter-card-title:hover {
+  color: var(--color-cyan);
+  text-decoration: underline;
+}
+
+/* Headline Tags */
+.headline-tag {
+  font-family: var(--font-title);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: font-size 0.3s ease, padding 0.3s ease;
+}
+
+.display-tv-mode .headline-tag {
+  font-size: 1.5rem;
+  padding: 6px 16px;
+  border-radius: 8px;
+  letter-spacing: 1.5px;
+}
+
+.tag-world { background: rgba(0, 240, 255, 0.18); color: var(--color-cyan); border: 1px solid var(--color-cyan); }
+.tag-us { background: rgba(255, 179, 0, 0.18); color: var(--color-gold); border: 1px solid var(--color-gold); }
+.tag-tech { background: rgba(255, 87, 34, 0.18); color: var(--color-orange); border: 1px solid var(--color-orange); }
+.tag-science { background: rgba(0, 255, 136, 0.18); color: var(--color-green); border: 1px solid var(--color-green); }
 
 
 
