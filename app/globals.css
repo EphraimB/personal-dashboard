@@ -2884,12 +2884,17 @@ html, body {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   overflow-y: auto;
 }
 
 .transit-terminal-block {
-  margin-bottom: 6px;
-  padding-bottom: 6px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-bottom: clamp(4px, 1vh, 12px);
+  padding-bottom: clamp(4px, 1vh, 12px);
   border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
 }
 
@@ -2903,12 +2908,12 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
+  margin-bottom: clamp(4px, 0.8vh, 8px);
 }
 
 .transit-line-title {
   font-family: var(--font-title);
-  font-size: clamp(0.85rem, 0.95vw, 1.05rem);
+  font-size: clamp(0.9rem, 1.4vh, 1.4rem);
   font-weight: 800;
   letter-spacing: 1.2px;
   display: flex;
@@ -2921,10 +2926,10 @@ html, body {
 .transit-ferry { color: #B15EFF; }
 
 .transit-countdown-pill {
-  padding: 2px 8px;
+  padding: clamp(2px, 0.4vh, 6px) clamp(8px, 1vw, 16px);
   border-radius: 12px;
   font-weight: 900;
-  font-size: 0.85rem;
+  font-size: clamp(0.85rem, 1.4vh, 1.35rem);
   letter-spacing: 0.8px;
 }
 
@@ -2951,20 +2956,20 @@ html, body {
 
 .transit-dest-main {
   font-family: var(--font-title);
-  font-size: 1.25rem;
+  font-size: clamp(1.25rem, 2.2vh, 2.2rem);
   font-weight: 900;
   color: #ffffff;
-  margin-bottom: 4px;
+  margin-bottom: clamp(4px, 0.8vh, 8px);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .transit-track-tag {
-  font-size: 0.85rem;
+  font-size: clamp(0.85rem, 1.3vh, 1.25rem);
   font-weight: 700;
   background: rgba(255, 255, 255, 0.1);
-  padding: 3px 8px;
+  padding: clamp(3px, 0.5vh, 6px) clamp(8px, 1vw, 12px);
   border-radius: 4px;
   color: var(--color-cyan);
 }
@@ -2972,19 +2977,84 @@ html, body {
 .transit-upcoming-list {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  justify-content: space-around;
+  gap: clamp(6px, 1vh, 12px);
+  flex: 1;
 }
 
 .transit-upcoming-item {
-  font-size: 1.05rem;
+  font-size: clamp(0.95rem, 1.4vh, 1.45rem);
   font-weight: 800;
   color: #ffffff;
   display: flex;
   justify-content: space-between;
-  padding: 6px 12px;
+  align-items: center;
+  white-space: nowrap;
+  gap: 8px;
+  overflow: hidden;
+  padding: clamp(6px, 1vh, 12px) clamp(8px, 1vw, 14px);
   background: rgba(0, 0, 0, 0.4);
   border-radius: 4px;
-  border-left: 2px solid rgba(255, 255, 255, 0.15);
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Unified Departure Card Styling */
+.transit-departure-card {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.8vh, 8px);
+  padding: clamp(8px, 1.2vh, 14px) clamp(10px, 1.2vw, 16px);
+  background: rgba(10, 14, 24, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease-in-out;
+}
+
+.transit-departure-card:hover {
+  background: rgba(14, 20, 34, 0.85);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.transit-card-westbound {
+  border-left: 4px solid #C0C0C0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 3px 0 12px rgba(192, 192, 192, 0.08);
+}
+
+.transit-card-eastbound {
+  border-left: 4px solid #E67E22;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 3px 0 12px rgba(230, 126, 34, 0.05);
+}
+
+.transit-card-ferry {
+  border-left: 4px solid #B15EFF;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 3px 0 12px rgba(177, 94, 255, 0.05);
+}
+
+.transit-card-header {
+  font-size: clamp(0.95rem, 1.4vh, 1.45rem);
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  white-space: nowrap;
+  gap: 8px;
+  overflow: hidden;
+  padding-bottom: 2px;
+}
+
+.transit-card-telemetry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: clamp(4px, 0.8vh, 8px) clamp(8px, 1vw, 12px);
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: clamp(0.7rem, 1.1vh, 1.05rem);
+  font-family: var(--font-mono, monospace);
 }
 
 /* QUADRANT 2: CENTER HERO COLUMN (PHOTO SLIDESHOW) */
