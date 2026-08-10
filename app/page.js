@@ -564,13 +564,18 @@ function SunWindowIcon({ isMorning = true }) {
     return () => clearInterval(transitInterval);
   }, []);
 
-  // Live 4-Side News Feeds Polling (/api/news)
+  // Live 4-Side News Feeds Polling & Rotating Headline Card State
   const [newsData, setNewsData] = useState({
     world: [],
     us: [],
     tech: [],
     science: []
   });
+
+  const [topNewsIndex, setTopNewsIndex] = useState(0);
+  const [bottomNewsIndex, setBottomNewsIndex] = useState(0);
+  const [topFade, setTopFade] = useState(true);
+  const [bottomFade, setBottomFade] = useState(true);
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -765,7 +770,7 @@ function SunWindowIcon({ isMorning = true }) {
   }
   const hourlyTimes = (weatherData?.hourly?.time || ['', '', '', '', '', '']).slice(hourlyStartIdx, hourlyStartIdx + 6);
 
-  // Combine World & U.S. for Top Ticker
+  // Combine World & U.S. for Top Ticker Card
   const topNewsList = [];
   const maxTop = Math.max(newsData.world?.length || 0, newsData.us?.length || 0);
   for (let i = 0; i < maxTop; i++) {
@@ -773,7 +778,7 @@ function SunWindowIcon({ isMorning = true }) {
     if (newsData.us && newsData.us[i]) topNewsList.push({ ...newsData.us[i], category: 'us', tag: '🇺🇸 U.S. // AP NEWS' });
   }
 
-  // Combine AI & Tech & Science for Bottom Ticker
+  // Combine AI & Tech & Science for Bottom Ticker Card
   const bottomNewsList = [];
   const maxBottom = Math.max(newsData.tech?.length || 0, newsData.science?.length || 0);
   for (let i = 0; i < maxBottom; i++) {
@@ -781,21 +786,45 @@ function SunWindowIcon({ isMorning = true }) {
     if (newsData.science && newsData.science[i]) bottomNewsList.push({ ...newsData.science[i], category: 'science', tag: '💻 SCIENCE & COMPUTING // ARS TECHNICA' });
   }
 
-  const renderCombinedHeadlineGroup = (items, fallbackPrefix) => {
-    const list = items && items.length > 0 ? items : [{ title: `${fallbackPrefix}: Live news updating...`, category: 'world', tag: 'NEWS', link: '#' }];
-    return (
-      <div className="perimeter-headline-group">
-        {list.map((item, idx) => (
-          <span key={idx} className="perimeter-headline-item">
-            <span className={`headline-tag tag-${item.category}`}>{item.tag}</span>
-            <a href={item.link} target="_blank" rel="noopener noreferrer" className="perimeter-headline-link">
-              {item.title}
-            </a>
-            <span className="perimeter-bullet"> • </span>
-          </span>
-        ))}
-      </div>
-    );
+  // 12-Second Hold Time & 600ms Crossfade Timers
+  const topListLen = topNewsList.length;
+  useEffect(() => {
+    if (!topListLen) return;
+    const interval = setInterval(() => {
+      setTopFade(false);
+      setTimeout(() => {
+        setTopNewsIndex((prev) => (prev + 1) % topListLen);
+        setTopFade(true);
+      }, 600);
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [topListLen]);
+
+  const bottomListLen = bottomNewsList.length;
+  useEffect(() => {
+    if (!bottomListLen) return;
+    const interval = setInterval(() => {
+      setBottomFade(false);
+      setTimeout(() => {
+        setBottomNewsIndex((prev) => (prev + 1) % bottomListLen);
+        setBottomFade(true);
+      }, 600);
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [bottomListLen]);
+
+  const currentTopItem = topNewsList[topNewsIndex % (topListLen || 1)] || {
+    title: 'Reuters World: Live breaking headlines updating...',
+    category: 'world',
+    tag: '🌎 WORLD // REUTERS',
+    link: '#'
+  };
+
+  const currentBottomItem = bottomNewsList[bottomNewsIndex % (bottomListLen || 1)] || {
+    title: 'TechCrunch: Live technology telemetry updating...',
+    category: 'tech',
+    tag: '🤖 AI & TECH // TECHCRUNCH',
+    link: '#'
   };
 
   return (
@@ -803,25 +832,25 @@ function SunWindowIcon({ isMorning = true }) {
       {/* Dynamic Background Atmospheric Weather Canvas */}
       <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
 
-      {/* TOP & BOTTOM HORIZONTAL PERIMETER NEWS TICKERS */}
+      {/* TOP & BOTTOM STATIONARY ROTATING HEADLINE CARDS */}
       <aside className="perimeter-news-frame">
-        {/* TOP TICKER: 🌎 WORLD & 🇺🇸 U.S. NEWS */}
+        {/* TOP BAR: 🌎 WORLD & 🇺🇸 U.S. NEWS */}
         <div className="perimeter-bar perimeter-top">
-          <div className="perimeter-marquee-wrapper horizontal-wrapper">
-            <div className="perimeter-track track-horizontal">
-              {renderCombinedHeadlineGroup(topNewsList, 'World & U.S. News')}
-              {renderCombinedHeadlineGroup(topNewsList, 'World & U.S. News')}
-            </div>
+          <div className={`perimeter-card-center ${topFade ? 'fade-in' : 'fade-out'}`}>
+            <span className={`headline-tag tag-${currentTopItem.category}`}>{currentTopItem.tag}</span>
+            <a href={currentTopItem.link} target="_blank" rel="noopener noreferrer" className="perimeter-card-title">
+              {currentTopItem.title}
+            </a>
           </div>
         </div>
 
-        {/* BOTTOM TICKER: 🤖 AI & TECH & 💻 SCIENCE & COMPUTING */}
+        {/* BOTTOM BAR: 🤖 AI & TECH & 💻 SCIENCE & COMPUTING */}
         <div className="perimeter-bar perimeter-bottom">
-          <div className="perimeter-marquee-wrapper horizontal-wrapper">
-            <div className="perimeter-track track-horizontal">
-              {renderCombinedHeadlineGroup(bottomNewsList, 'AI, Tech & Science')}
-              {renderCombinedHeadlineGroup(bottomNewsList, 'AI, Tech & Science')}
-            </div>
+          <div className={`perimeter-card-center ${bottomFade ? 'fade-in' : 'fade-out'}`}>
+            <span className={`headline-tag tag-${currentBottomItem.category}`}>{currentBottomItem.tag}</span>
+            <a href={currentBottomItem.link} target="_blank" rel="noopener noreferrer" className="perimeter-card-title">
+              {currentBottomItem.title}
+            </a>
           </div>
         </div>
       </aside>

@@ -2762,34 +2762,24 @@ html, body {
     font-size: 1.1rem;
   }
 
-  /* Large TV Display News Ticker Overrides (1080p, 1440p, 4K TVs) */
+  /* Large TV Display Stationary Rotating Headline Card Overrides */
   .ares-tv-app {
-    padding: 60px 0 !important;
+    padding: 56px 0 !important;
   }
 
   .perimeter-top, .perimeter-bottom {
-    height: 60px;
+    height: 56px;
   }
 
   .headline-tag {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     padding: 4px 14px;
-    margin-right: 16px;
     border-radius: 6px;
   }
 
-  .perimeter-headline-item {
-    font-size: 1.75rem;
+  .perimeter-card-title {
+    font-size: 1.45rem;
     font-weight: 800;
-  }
-
-  .perimeter-bullet {
-    margin: 0 18px;
-    font-size: 1.8rem;
-  }
-
-  .track-horizontal {
-    animation-duration: 95s;
   }
 }
 
@@ -4102,10 +4092,10 @@ html, body {
 }
 
 /* ==============================================================================
-   CLEAN HORIZONTAL PERIMETER NEWS TICKERS (TOP & BOTTOM)
+   STATIONARY ROTATING HEADLINE CARDS (TOP & BOTTOM PERIMETER)
    ============================================================================== */
 .ares-tv-app {
-  padding: clamp(36px, 4vh, 56px) 0 !important;
+  padding: 28px 0 !important;
   box-sizing: border-box;
 }
 
@@ -4121,100 +4111,78 @@ html, body {
   z-index: 99;
   display: flex;
   align-items: center;
+  justify-content: center;
   overflow: hidden;
   box-sizing: border-box;
+  padding: 0 16px;
 }
 
 .perimeter-top {
   top: 0; left: 0; right: 0;
-  height: clamp(36px, 4vh, 56px);
-  border-bottom: 2px solid var(--color-cyan);
+  height: 28px;
+  border-bottom: 1.5px solid var(--color-cyan);
 }
 
 .perimeter-bottom {
   bottom: 0; left: 0; right: 0;
-  height: clamp(36px, 4vh, 56px);
-  border-top: 2px solid var(--color-orange);
+  height: 28px;
+  border-top: 1.5px solid var(--color-orange);
+}
+
+/* Stationary Card Wrapper & 600ms Crossfade */
+.perimeter-card-center {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 96%;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.perimeter-card-center.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.perimeter-card-center.fade-out {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.perimeter-card-title {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.perimeter-card-title:hover {
+  color: var(--color-cyan);
+  text-decoration: underline;
 }
 
 /* Headline Tags */
 .headline-tag {
   font-family: var(--font-title);
-  font-size: clamp(0.75rem, 1.1vw, 1.2rem);
+  font-size: 0.58rem;
   font-weight: 900;
   letter-spacing: 1px;
-  padding: 3px 10px;
+  padding: 2px 8px;
   border-radius: 4px;
-  margin-right: 12px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tag-world { background: rgba(0, 240, 255, 0.18); color: var(--color-cyan); border: 1px solid var(--color-cyan); }
 .tag-us { background: rgba(255, 179, 0, 0.18); color: var(--color-gold); border: 1px solid var(--color-gold); }
 .tag-tech { background: rgba(255, 87, 34, 0.18); color: var(--color-orange); border: 1px solid var(--color-orange); }
 .tag-science { background: rgba(0, 255, 136, 0.18); color: var(--color-green); border: 1px solid var(--color-green); }
-
-/* Marquee Tracks & Wrappers */
-.perimeter-marquee-wrapper {
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.perimeter-track {
-  display: flex;
-  white-space: nowrap;
-  will-change: transform;
-}
-
-.track-horizontal {
-  animation: marqueeHorizontal 105s linear infinite;
-}
-
-.track-horizontal:hover {
-  animation-play-state: paused;
-}
-
-@keyframes marqueeHorizontal {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-.perimeter-headline-group {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-}
-
-.perimeter-headline-item {
-  display: inline-flex;
-  align-items: center;
-  font-family: var(--font-mono);
-  font-size: clamp(0.95rem, 1.4vw, 1.6rem);
-  font-weight: 800;
-  letter-spacing: 0.5px;
-}
-
-.perimeter-headline-link {
-  color: rgba(255, 255, 255, 0.95);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.perimeter-headline-link:hover {
-  color: var(--color-cyan);
-  text-decoration: underline;
-}
-
-.perimeter-bullet {
-  color: var(--color-cyan);
-  margin: 0 14px;
-  font-size: clamp(1.0rem, 1.5vw, 1.6rem);
-  font-weight: 900;
-}
 
 
 
