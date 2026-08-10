@@ -112,6 +112,28 @@ function FerryIcon({ className = 'transit-icon' }) {
   );
 }
 
+function BikeIcon({ size = 12, color = '#00E676' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+      <circle cx="5.5" cy="17.5" r="3.5" />
+      <circle cx="18.5" cy="17.5" r="3.5" />
+      <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" fill={color} />
+      <path d="M12 17.5V14l-3-3 4-3 2 3h3" />
+    </svg>
+  );
+}
+
+function BikeProhibitedIcon({ size = 12, color = '#FF1744' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+      <circle cx="5.5" cy="17.5" r="3.5" />
+      <circle cx="18.5" cy="17.5" r="3.5" />
+      <path d="M12 17.5V14l-3-3 4-3 2 3h3" />
+      <line x1="2" y1="2" x2="22" y2="22" stroke={color} strokeWidth="2.5" />
+    </svg>
+  );
+}
+
 function ArrowIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', margin: '0 6px', verticalAlign: 'middle', opacity: 0.8 }}>
@@ -753,11 +775,11 @@ export default function Home() {
                   </span>
                 </div>
 
-                {/* LIRR Cedarhurst Westbound */}
+                {/* LIRR Westbound */}
                 <div className="transit-terminal-block">
                   <div className="transit-header-row">
                     <span className="transit-line-title transit-lirr-westbound" style={{ display: 'flex', alignItems: 'center' }}>
-                      <TrainIcon /> LIRR WESTBOUND // CEDARHURST
+                      <TrainIcon /> LIRR WESTBOUND // {transitData?.lirr?.station ? transitData.lirr.station.replace(' STATION', '') : 'CEDARHURST'}
                     </span>
                     <span className="transit-countdown-pill pill-grey">
                       {transitData?.lirr?.nextWestbound
@@ -769,26 +791,132 @@ export default function Home() {
                   {!transitData?.lirr?.upcomingWestbound || transitData.lirr.upcomingWestbound.length === 0 ? (
                     <div className="agenda-empty-banner" style={{ margin: '8px 0', padding: '10px 8px' }}>
                       <span style={{ color: '#C0C0C0', fontSize: '0.68rem', fontWeight: '700' }}>
-                        // NO UPCOMING WESTBOUND DEPARTURES
+                        {transitData?.lirr?.isLive === false ? '// LIRR FEED UNAVAILABLE' : '// NO UPCOMING WESTBOUND DEPARTURES'}
                       </span>
                     </div>
                   ) : (
                     <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
                       {transitData.lirr.upcomingWestbound.slice(0, 2).map((item, i) => (
-                        <div key={i} className="transit-upcoming-item">
-                          <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
-                          <span style={{ color: '#C0C0C0' }}>{item.track} • {item.status}</span>
+                        <div key={i} className="transit-departure-card transit-card-westbound">
+                          <div className="transit-card-header">
+                            <span style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              {item.delayMins > 0 ? (
+                                <>
+                                  <s style={{ textDecoration: 'line-through', opacity: 0.55, marginRight: '4px' }}>{item.scheduledTimeStr}</s>
+                                  <span style={{ color: '#FF5555', fontWeight: '700' }}>{item.timeStr}</span>
+                                </>
+                              ) : (
+                                item.timeStr
+                              )}
+                              {' '}<ArrowIcon /> {item.destination}
+                            </span>
+                            <span style={{ color: '#C0C0C0', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                              {item.delayMins > 0 ? item.track : `${item.track} • ${item.status}`}
+                            </span>
+                          </div>
+
+                          {/* Consist Telemetry Sub-bar */}
+                          <div className="transit-card-telemetry">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                              {item.model && (
+                                <span style={{
+                                  background: 'rgba(192, 192, 192, 0.15)',
+                                  color: '#C0C0C0',
+                                  border: '1px solid rgba(192, 192, 192, 0.35)',
+                                  borderRadius: '4px',
+                                  padding: '1px 6px',
+                                  fontWeight: 'bold',
+                                  fontSize: 'clamp(0.68rem, 1vh, 0.95rem)'
+                                }}>
+                                  {item.model}
+                                </span>
+                              )}
+                              {item.carCount && (
+                                <span style={{ color: '#aaa', fontSize: 'clamp(0.68rem, 1vh, 0.95rem)', fontWeight: '700' }}>{item.carCount} CARS</span>
+                              )}
+                              {item.bikesAllowed !== false ? (
+                                <span style={{
+                                  background: 'rgba(0, 230, 118, 0.14)',
+                                  color: '#00E676',
+                                  border: '1px solid rgba(0, 230, 118, 0.35)',
+                                  borderRadius: '4px',
+                                  padding: '1px 5px',
+                                  fontWeight: 'bold',
+                                  fontSize: 'clamp(0.64rem, 0.95vh, 0.88rem)',
+                                  display: 'inline-flex',
+                                  alignItems: 'center'
+                                }}>
+                                  <BikeIcon size={12} color="#00E676" /> BIKES OK
+                                </span>
+                              ) : (
+                                <span style={{
+                                  background: 'rgba(255, 23, 68, 0.14)',
+                                  color: '#FF1744',
+                                  border: '1px solid rgba(255, 23, 68, 0.35)',
+                                  borderRadius: '4px',
+                                  padding: '1px 5px',
+                                  fontWeight: 'bold',
+                                  fontSize: 'clamp(0.64rem, 0.95vh, 0.88rem)',
+                                  display: 'inline-flex',
+                                  alignItems: 'center'
+                                }}>
+                                  <BikeProhibitedIcon size={12} color="#FF1744" /> NO BIKES
+                                </span>
+                              )}
+                              {!item.hasOccupancyData && (
+                                <span style={{ color: '#777', fontSize: 'clamp(0.62rem, 0.9vh, 0.88rem)', marginLeft: '2px' }}>• NO CROWDING DATA</span>
+                              )}
+                            </div>
+
+                            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', overflowX: 'auto' }}>
+                              <svg style={{ height: 'clamp(22px, 3vh, 36px)', width: 'auto' }} viewBox={`0 0 ${(item.cars?.length || 8) * 26 + 12} 22`}>
+                                <path d="M 1 11 L 7 4 L 10 4 L 10 18 L 7 18 Z" fill="#555" stroke="#777" strokeWidth="1" />
+                                {(item.cars || Array.from({ length: 8 }).map((_, idx) => ({ color: 'rgba(255,255,255,0.06)', riders: null }))).map((car, idx) => {
+                                  const x = 10 + idx * 26;
+                                  const isNeutral = !item.hasOccupancyData || car.riders === null;
+                                  return (
+                                    <g key={idx}>
+                                      {idx > 0 && <line x1={x - 1} y1="11" x2={x} y2="11" stroke="#666" strokeWidth="1.5" />}
+                                      <rect
+                                        x={x}
+                                        y="3"
+                                        width="24"
+                                        height="16"
+                                        rx="2"
+                                        fill={isNeutral ? 'rgba(255,255,255,0.05)' : car.color}
+                                        fillOpacity={isNeutral ? 1 : 0.88}
+                                        stroke={isNeutral ? '#444' : '#111'}
+                                        strokeWidth="1"
+                                      />
+                                      <rect x={x + 2} y="4.5" width="20" height="3" rx="1" fill={isNeutral ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)'} />
+                                      <text
+                                        x={x + 12}
+                                        y="15"
+                                        fill={isNeutral ? '#777' : '#000'}
+                                        fontSize="8.5"
+                                        fontWeight={isNeutral ? '400' : '900'}
+                                        textAnchor="middle"
+                                        style={{ fontFamily: 'sans-serif' }}
+                                      >
+                                        {isNeutral ? '--' : car.riders}
+                                      </text>
+                                    </g>
+                                  );
+                                })}
+                              </svg>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
 
-                {/* LIRR Cedarhurst Eastbound */}
+                {/* LIRR Eastbound */}
                 <div className="transit-terminal-block">
                   <div className="transit-header-row">
                     <span className="transit-line-title transit-lirr-eastbound" style={{ display: 'flex', alignItems: 'center' }}>
-                      <TrainIcon /> LIRR EASTBOUND // CEDARHURST
+                      <TrainIcon /> LIRR EASTBOUND // {transitData?.lirr?.station ? transitData.lirr.station.replace(' STATION', '') : 'CEDARHURST'}
                     </span>
                     <span className="transit-countdown-pill pill-brown">
                       {transitData?.lirr?.nextEastbound
@@ -800,15 +928,121 @@ export default function Home() {
                   {!transitData?.lirr?.upcomingEastbound || transitData.lirr.upcomingEastbound.length === 0 ? (
                     <div className="agenda-empty-banner" style={{ margin: '6px 0', padding: '8px 6px' }}>
                       <span style={{ color: '#E67E22', fontSize: '0.68rem', fontWeight: '700' }}>
-                        // NO UPCOMING EASTBOUND DEPARTURES
+                        {transitData?.lirr?.isLive === false ? '// LIRR FEED UNAVAILABLE' : '// NO UPCOMING EASTBOUND DEPARTURES'}
                       </span>
                     </div>
                   ) : (
                     <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
                       {transitData.lirr.upcomingEastbound.slice(0, 2).map((item, i) => (
-                        <div key={i} className="transit-upcoming-item">
-                          <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
-                          <span style={{ color: '#E67E22' }}>{item.track} • {item.status}</span>
+                        <div key={i} className="transit-departure-card transit-card-eastbound">
+                          <div className="transit-card-header">
+                            <span style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              {item.delayMins > 0 ? (
+                                <>
+                                  <s style={{ textDecoration: 'line-through', opacity: 0.55, marginRight: '4px' }}>{item.scheduledTimeStr}</s>
+                                  <span style={{ color: '#FF5555', fontWeight: '700' }}>{item.timeStr}</span>
+                                </>
+                              ) : (
+                                item.timeStr
+                              )}
+                              {' '}<ArrowIcon /> {item.destination}
+                            </span>
+                            <span style={{ color: '#E67E22', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                              {item.delayMins > 0 ? item.track : `${item.track} • ${item.status}`}
+                            </span>
+                          </div>
+
+                          {/* Consist Telemetry Sub-bar */}
+                          <div className="transit-card-telemetry">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                              {item.model && (
+                                <span style={{
+                                  background: 'rgba(230, 126, 34, 0.15)',
+                                  color: '#E67E22',
+                                  border: '1px solid rgba(230, 126, 34, 0.35)',
+                                  borderRadius: '4px',
+                                  padding: '1px 6px',
+                                  fontWeight: 'bold',
+                                  fontSize: 'clamp(0.68rem, 1vh, 0.95rem)'
+                                }}>
+                                  {item.model}
+                                </span>
+                              )}
+                              {item.carCount && (
+                                <span style={{ color: '#aaa', fontSize: 'clamp(0.68rem, 1vh, 0.95rem)', fontWeight: '700' }}>{item.carCount} CARS</span>
+                              )}
+                              {item.bikesAllowed !== false ? (
+                                <span style={{
+                                  background: 'rgba(0, 230, 118, 0.14)',
+                                  color: '#00E676',
+                                  border: '1px solid rgba(0, 230, 118, 0.35)',
+                                  borderRadius: '4px',
+                                  padding: '1px 5px',
+                                  fontWeight: 'bold',
+                                  fontSize: 'clamp(0.64rem, 0.95vh, 0.88rem)',
+                                  display: 'inline-flex',
+                                  alignItems: 'center'
+                                }}>
+                                  <BikeIcon size={12} color="#00E676" /> BIKES OK
+                                </span>
+                              ) : (
+                                <span style={{
+                                  background: 'rgba(255, 23, 68, 0.14)',
+                                  color: '#FF1744',
+                                  border: '1px solid rgba(255, 23, 68, 0.35)',
+                                  borderRadius: '4px',
+                                  padding: '1px 5px',
+                                  fontWeight: 'bold',
+                                  fontSize: 'clamp(0.64rem, 0.95vh, 0.88rem)',
+                                  display: 'inline-flex',
+                                  alignItems: 'center'
+                                }}>
+                                  <BikeProhibitedIcon size={12} color="#FF1744" /> NO BIKES
+                                </span>
+                              )}
+                              {!item.hasOccupancyData && (
+                                <span style={{ color: '#777', fontSize: 'clamp(0.62rem, 0.9vh, 0.88rem)', marginLeft: '2px' }}>• NO CROWDING DATA</span>
+                              )}
+                            </div>
+
+                            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', overflowX: 'auto' }}>
+                              <svg style={{ height: 'clamp(22px, 3vh, 36px)', width: 'auto' }} viewBox={`0 0 ${(item.cars?.length || 8) * 26 + 12} 22`}>
+                                <path d="M 1 11 L 7 4 L 10 4 L 10 18 L 7 18 Z" fill="#555" stroke="#777" strokeWidth="1" />
+                                {(item.cars || Array.from({ length: 8 }).map((_, idx) => ({ color: 'rgba(255,255,255,0.06)', riders: null }))).map((car, idx) => {
+                                  const x = 10 + idx * 26;
+                                  const isNeutral = !item.hasOccupancyData || car.riders === null;
+                                  return (
+                                    <g key={idx}>
+                                      {idx > 0 && <line x1={x - 1} y1="11" x2={x} y2="11" stroke="#666" strokeWidth="1.5" />}
+                                      <rect
+                                        x={x}
+                                        y="3"
+                                        width="24"
+                                        height="16"
+                                        rx="2"
+                                        fill={isNeutral ? 'rgba(255,255,255,0.05)' : car.color}
+                                        fillOpacity={isNeutral ? 1 : 0.88}
+                                        stroke={isNeutral ? '#444' : '#111'}
+                                        strokeWidth="1"
+                                      />
+                                      <rect x={x + 2} y="4.5" width="20" height="3" rx="1" fill={isNeutral ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)'} />
+                                      <text
+                                        x={x + 12}
+                                        y="15"
+                                        fill={isNeutral ? '#777' : '#000'}
+                                        fontSize="8.5"
+                                        fontWeight={isNeutral ? '400' : '900'}
+                                        textAnchor="middle"
+                                        style={{ fontFamily: 'sans-serif' }}
+                                      >
+                                        {isNeutral ? '--' : car.riders}
+                                      </text>
+                                    </g>
+                                  );
+                                })}
+                              </svg>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -819,11 +1053,13 @@ export default function Home() {
                 <div className="transit-terminal-block">
                   <div className="transit-header-row">
                     <span className="transit-line-title transit-ferry" style={{ display: 'flex', alignItems: 'center' }}>
-                      <FerryIcon /> NYC FERRY // ROCKAWAY LANDING
+                      <FerryIcon /> NYC FERRY // {transitData?.ferry?.terminal || 'ROCKAWAY LANDING'}
                     </span>
                     <span className="transit-countdown-pill pill-purple">
                       {transitData?.ferry?.nextSailing
-                        ? `IN ${String(transitData.ferry.nextSailing.minsUntil).padStart(2, '0')} MINS`
+                        ? (transitData.ferry.nextSailing.isNightBreak
+                            ? `TOMORROW ${transitData.ferry.nextSailing.timeStr}`
+                            : `IN ${String(transitData.ferry.nextSailing.minsUntil).padStart(2, '0')} MINS`)
                         : 'NO SAILINGS'}
                     </span>
                   </div>
@@ -831,15 +1067,50 @@ export default function Home() {
                   {!transitData?.ferry?.upcomingSailings || transitData.ferry.upcomingSailings.length === 0 ? (
                     <div className="agenda-empty-banner" style={{ margin: '6px 0', padding: '8px 6px' }}>
                       <span style={{ color: '#B15EFF', fontSize: '0.68rem', fontWeight: '700' }}>
-                        // NO UPCOMING FERRY SAILINGS
+                        {transitData?.ferry?.isLive === false ? '// FERRY FEED UNAVAILABLE' : '// NO UPCOMING FERRY SAILINGS'}
                       </span>
                     </div>
                   ) : (
                     <div className="transit-upcoming-list" style={{ marginTop: '4px' }}>
-                      {transitData.ferry.upcomingSailings.slice(0, 2).map((item, i) => (
-                        <div key={i} className="transit-upcoming-item">
-                          <span>{item.timeStr} <ArrowIcon /> {item.destination}</span>
-                          <span style={{ color: '#B15EFF' }}>{item.status}</span>
+                      {transitData.ferry.upcomingSailings.slice(0, 3).map((item, i) => (
+                        <div key={i} className="transit-departure-card transit-card-ferry">
+                          <div className="transit-card-header">
+                            <span style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              {item.timeStr} <ArrowIcon /> {item.destination}
+                            </span>
+                            <span style={{ color: '#B15EFF', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                              {item.status}
+                            </span>
+                          </div>
+                          <div className="transit-card-telemetry">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                              <span style={{
+                                background: 'rgba(177, 94, 255, 0.14)',
+                                color: '#B15EFF',
+                                border: '1px solid rgba(177, 94, 255, 0.35)',
+                                borderRadius: '4px',
+                                padding: '1px 5px',
+                                fontWeight: 'bold',
+                                fontSize: 'clamp(0.64rem, 0.95vh, 0.88rem)'
+                              }}>
+                                FERRY VESSEL
+                              </span>
+                              <span style={{
+                                background: 'rgba(0, 230, 118, 0.14)',
+                                color: '#00E676',
+                                border: '1px solid rgba(0, 230, 118, 0.35)',
+                                borderRadius: '4px',
+                                padding: '1px 5px',
+                                fontWeight: 'bold',
+                                fontSize: 'clamp(0.64rem, 0.95vh, 0.88rem)',
+                                display: 'inline-flex',
+                                alignItems: 'center'
+                              }}>
+                                <BikeIcon size={12} color="#00E676" /> BIKES OK
+                              </span>
+                            </div>
+                            <span style={{ color: '#aaa', fontSize: 'clamp(0.62rem, 0.9vh, 0.85rem)' }}>ROCKAWAY ROUTE</span>
+                          </div>
                         </div>
                       ))}
                     </div>

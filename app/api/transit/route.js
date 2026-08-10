@@ -17,47 +17,377 @@ function parseProtobufTime(rawTime) {
 
 // Official MTA GTFS & NYC Ferry Dataset Engine
 
-function getLirrFromGtfs(now) {
+function deriveLirrConsistTelemetry(entity, tripId, st) {
+  const vehicleLabel = entity.tripUpdate?.vehicle?.label || entity.tripUpdate?.vehicle?.id || '';
+  let model = null;
+  let carCount = null;
+
+  const leadNum = parseInt(vehicleLabel.split('_')[0], 10);
+  if (!isNaN(leadNum)) {
+    if (leadNum >= 9000 && leadNum < 9800) {
+      model = 'M9 ELECTRIC';
+      carCount = 8;
+    } else if (leadNum >= 9800) {
+      model = 'M3 ELECTRIC';
+      carCount = 6;
+    } else if (leadNum < 1000) {
+      model = 'C3 DIESEL';
+      carCount = 6;
+    } else if (leadNum >= 7000 && leadNum < 9000) {
+      model = 'M7 ELECTRIC';
+      carCount = 8;
+    }
+  }
+
+  const rawOccupancy = st?.occupancyStatus ?? entity.tripUpdate?.occupancyStatus ?? entity.vehicle?.occupancyStatus;
+  const multiCarriage = entity.tripUpdate?.multiCarriageDetails || entity.vehicle?.multiCarriageDetails;
+  const hasOccupancyData = Boolean(rawOccupancy !== undefined || (Array.isArray(multiCarriage) && multiCarriage.length > 0));
+
+  const cars = [];
+  for (let i = 0; i < carCount; i++) {
+    if (hasOccupancyData) {
+      const carriage = Array.isArray(multiCarriage) ? multiCarriage[i] : null;
+      let riders = carriage?.occupancyCount ?? 35;
+      let crowding = 'light';
+      let color = '#00E676';
+      if (riders > 80 || carriage?.occupancyStatus === 'STANDING_ROOM_ONLY') {
+        crowding = 'heavy';
+        color = '#FF1744';
+      } else if (riders > 45 || carriage?.occupancyStatus === 'FEW_SEATS_AVAILABLE') {
+        crowding = 'moderate';
+        color = '#FFD600';
+      }
+      cars.push({ carIndex: i + 1, riders, crowding, color });
+    } else {
+      cars.push({
+        carIndex: i + 1,
+        riders: null,
+        crowding: 'unknown',
+        color: 'rgba(255, 255, 255, 0.06)'
+      });
+    }
+  }
+
+  return { model, carCount, hasOccupancyData, cars };
+}
+
+async function getLiveLirrDepartures(now) {
+  const stationId = process.env.LIRR_STATION_ID || '32';
+  const stationName = (process.env.LIRR_STATION_NAME || 'CEDARHURST').toUpperCase();
+  const currentEpochSec = Math.floor(now.getTime() / 1000);
+
+  const STATION_CODES = {
+    '32': 'CHT',
+    '65': 'FRY',
+    '349': 'GCT',
+    '105': 'NYK',
+    '8': 'ATL',
+    '94': 'JAM'
+  };
+  const stationCode = STATION_CODES[stationId] || 'CHT';
+
+  const TERMINAL_NAMES = {
+    'FRY': 'FAR ROCKAWAY',
+    'GCT': 'GRAND CENTRAL',
+    'NYK': 'PENN STATION',
+    'ATL': 'ATLANTIC TERMINAL',
+    'JAM': 'JAMAICA',
+    '65': 'FAR ROCKAWAY',
+    '349': 'GRAND CENTRAL',
+    '105': 'PENN STATION',
+    '8': 'ATLANTIC TERMINAL',
+    '94': 'JAMAICA'
+  };
+
   try {
-    const jsonPath = path.join(process.cwd(), 'dashboard', 'gtfs_cedarhurst.json');
-    if (!fs.existsSync(jsonPath)) return null;
+    // 1. Primary Engine: Official MTA TrainTime Backend API (backend-unified.mylirr.org)
+    const arrivalsUrl = `https://backend-unified.mylirr.org/arrivals/${stationCode}`;
+    const res = await fetch(arrivalsUrl, {
+      cache: 'no-store',
+      headers: {
+        'Accept-Version': '3.0',
+        'User-Agent': 'Mozilla/5.0'
+      }
+    });
 
-    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-    const departures = data.departures || [];
+    if (res.ok) {
+      const data = await res.json();
+      const rawArrivals = data.arrivals || [];
 
-    const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+      // Collect train IDs to batch-fetch consist and per-car passenger loading telemetry
+      const trainIds = rawArrivals.map(a => a.train_id).filter(Boolean);
+      let locMap = {};
+
+      if (trainIds.length > 0) {
+        try {
+          const batchUrl = `https://backend-unified.mylirr.org/locations:batch/${trainIds.join(',')}`;
+          const batchRes = await fetch(batchUrl, {
+            cache: 'no-store',
+            headers: {
+              'Accept-Version': '3.0',
+              'User-Agent': 'Mozilla/5.0'
+            }
+          });
+          if (batchRes.ok) {
+            const locs = await batchRes.json();
+            if (Array.isArray(locs)) {
+              locs.forEach(loc => {
+                if (loc.train_id) locMap[loc.train_id] = loc;
+              });
+            }
+          }
+        } catch (e) {
+          console.error('Error batch fetching LIRR locations:', e.message);
+        }
+      }
+
+      const westbound = [];
+      const eastbound = [];
+
+      for (const arr of rawArrivals) {
+        if (!arr.time || arr.time <= currentEpochSec) continue;
+
+        const diffSec = arr.time - currentEpochSec;
+        const diffMins = Math.floor(diffSec / 60);
+
+        const depDate = new Date(arr.time * 1000);
+        const timeStr = depDate.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        const isEastbound = arr.direction === 'E';
+        const lastStop = arr.stops?.[arr.stops.length - 1];
+        let destination = TERMINAL_NAMES[lastStop];
+        if (!destination) {
+          destination = isEastbound ? 'FAR ROCKAWAY' : 'GRAND CENTRAL';
+        }
+
+        const rawOtpSec = typeof arr.status?.otp === 'number' ? arr.status.otp : 0;
+        const delaySec = Math.max(0, rawOtpSec);
+        const delayMins = delaySec >= 300 ? Math.floor(delaySec / 60) : 0;
+
+        const scheduledEpoch = arr.time - delaySec;
+        const scheduledDate = new Date(scheduledEpoch * 1000);
+        const scheduledTimeStr = scheduledDate.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        let status = 'ON TIME';
+        if (delayMins > 0) {
+          status = `+${delayMins} MIN DELAY`;
+        } else if (diffMins < 4) {
+          status = 'BOARDING';
+        }
+
+        const loc = locMap[arr.train_id];
+        const consist = loc?.consist;
+
+        let model = null;
+        if (consist?.fleet) {
+          const fleetUpper = consist.fleet.toUpperCase();
+          if (fleetUpper.includes('DIESEL')) model = 'C3 DIESEL';
+          else if (fleetUpper.includes('M9')) model = 'M9 ELECTRIC';
+          else if (fleetUpper.includes('M3')) model = 'M3 ELECTRIC';
+          else if (fleetUpper.includes('M7')) model = 'M7 ELECTRIC';
+          else model = `${fleetUpper} ELECTRIC`;
+        }
+
+        const carCount = consist?.actual_len || null;
+
+        const hasOccupancyData = Boolean(
+          consist &&
+          consist.occupancy !== 'NO_DATA' &&
+          Array.isArray(consist.cars) &&
+          consist.cars.some(c => typeof c.passengers === 'number' || (c.loading && c.loading !== 'NO_DATA'))
+        );
+
+        const cars = [];
+        if (consist && Array.isArray(consist.cars)) {
+          consist.cars.forEach((car, idx) => {
+            const riders = typeof car.passengers === 'number' ? car.passengers : null;
+            let color = 'rgba(255, 255, 255, 0.06)';
+            let crowding = 'unknown';
+
+            if (riders !== null) {
+              if (riders > 80 || car.loading === 'HEAVY') {
+                color = '#FF1744';
+                crowding = 'heavy';
+              } else if (riders > 45 || car.loading === 'MODERATE') {
+                color = '#FFD600';
+                crowding = 'moderate';
+              } else {
+                color = '#00E676';
+                crowding = 'light';
+              }
+            } else if (car.loading && car.loading !== 'NO_DATA') {
+              if (car.loading === 'HEAVY') { color = '#FF1744'; crowding = 'heavy'; }
+              else if (car.loading === 'MODERATE') { color = '#FFD600'; crowding = 'moderate'; }
+              else { color = '#00E676'; crowding = 'light'; }
+            }
+
+            cars.push({
+              carIndex: idx + 1,
+              carNumber: car.number || null,
+              riders,
+              loading: car.loading || 'NO_DATA',
+              color,
+              crowding
+            });
+          });
+        }
+
+        let bikesAllowed = true;
+        if (loc?.bike_rule) {
+          bikesAllowed = loc.bike_rule === 'PERMITTED';
+        } else if (loc?.peak_code) {
+          bikesAllowed = loc.peak_code !== 'P';
+        } else {
+          const depDateObj = new Date(arr.time * 1000);
+          const day = depDateObj.getDay();
+          const hour = depDateObj.getHours();
+          if (day >= 1 && day <= 5) {
+            if (isEastbound && (hour >= 16 && hour < 20)) bikesAllowed = false;
+            else if (!isEastbound && (hour >= 6 && hour < 10)) bikesAllowed = false;
+          }
+        }
+
+        const trackLabel = arr.track === 'A' ? 'TRACK 1' : (arr.track === 'B' ? 'TRACK 2' : (arr.track ? `TRACK ${arr.track}` : (isEastbound ? 'TRACK 2' : 'TRACK 1')));
+
+        const departureObj = {
+          destination,
+          timeStr,
+          scheduledTimeStr,
+          minsUntil: diffMins,
+          track: trackLabel,
+          status,
+          delayMins,
+          isLive: true,
+          model,
+          carCount,
+          hasOccupancyData,
+          bikesAllowed,
+          cars
+        };
+
+        if (isEastbound) {
+          eastbound.push(departureObj);
+        } else {
+          westbound.push(departureObj);
+        }
+      }
+
+      westbound.sort((a, b) => a.minsUntil - b.minsUntil);
+      eastbound.sort((a, b) => a.minsUntil - b.minsUntil);
+
+      return {
+        station: `${stationName} STATION`,
+        branch: 'FAR ROCKAWAY BRANCH',
+        isLive: true,
+        statusNotice: '● LIVE TELEMETRY',
+        westbound,
+        eastbound
+      };
+    }
+  } catch (e) {
+    console.error('MTA TrainTime API error, falling back to GTFS-RT:', e.message);
+  }
+
+  // Fallback Engine: GTFS-RT feed (api-endpoint.mta.info)
+  try {
+    const url = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/lirr%2Fgtfs-lirr';
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) {
+      throw new Error(`MTA GTFS Feed responded with HTTP status ${res.status}`);
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(Buffer.from(arrayBuffer));
 
     const westbound = [];
     const eastbound = [];
 
-    for (const d of departures) {
-      let [h, m, s] = d.depTime.split(':').map(Number);
-      if (h >= 24) h = h - 24;
+    for (const entity of feed.entity || []) {
+      if (!entity.tripUpdate || !entity.tripUpdate.stopTimeUpdate) continue;
 
-      const depSec = h * 3600 + m * 60 + s;
-      if (depSec <= nowSec) continue;
+      const trip = entity.tripUpdate.trip;
+      const stopUpdates = entity.tripUpdate.stopTimeUpdate;
 
-      const diffSec = depSec - nowSec;
+      const st = stopUpdates.find(s => s.stopId === stationId || s.stopId?.startsWith(`${stationId}_`));
+      if (!st) continue;
+
+      const rawTime = st.departure?.time || st.arrival?.time;
+      const depEpoch = parseProtobufTime(rawTime);
+      if (!depEpoch || depEpoch <= currentEpochSec) continue;
+
+      const diffSec = depEpoch - currentEpochSec;
       const diffMins = Math.floor(diffSec / 60);
 
-      const depDate = new Date(now);
-      depDate.setHours(h, m, s, 0);
-
+      const depDate = new Date(depEpoch * 1000);
       const timeStr = depDate.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: true
       });
 
-      const headsign = (d.headsign || '').toUpperCase();
-      const isEastbound = headsign.includes('FAR ROCKAWAY');
+      const directionId = trip?.directionId ?? 0;
+      const isEastbound = directionId === 0;
+
+      const lastStopInTrip = stopUpdates[stopUpdates.length - 1]?.stopId;
+      let destination = TERMINAL_NAMES[lastStopInTrip];
+      if (!destination) {
+        destination = isEastbound ? 'FAR ROCKAWAY' : 'GRAND CENTRAL';
+      }
+
+      const rawDelay = st.departure?.delay || st.arrival?.delay || 0;
+      const delaySec = typeof rawDelay === 'number' ? rawDelay : parseProtobufTime(rawDelay);
+      const delayMins = Math.round(delaySec / 60);
+
+      const scheduledEpoch = depEpoch - delaySec;
+      const scheduledDate = new Date(scheduledEpoch * 1000);
+      const scheduledTimeStr = scheduledDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+
+      let status = 'ON TIME';
+      if (delayMins > 0) {
+        status = `+${delayMins} MIN DELAY`;
+      } else if (delayMins < -1) {
+        status = `${Math.abs(delayMins)} MIN EARLY`;
+      } else if (diffMins < 4) {
+        status = 'BOARDING';
+      }
+
+      const consist = deriveLirrConsistTelemetry(entity, entity.tripUpdate.trip?.tripId, st);
+
+      const depDateObj = new Date(depEpoch * 1000);
+      const day = depDateObj.getDay();
+      const hour = depDateObj.getHours();
+      let bikesAllowed = true;
+      if (day >= 1 && day <= 5) {
+        if (isEastbound && (hour >= 16 && hour < 20)) bikesAllowed = false;
+        else if (!isEastbound && (hour >= 6 && hour < 10)) bikesAllowed = false;
+      }
 
       const departureObj = {
-        destination: isEastbound ? 'FAR ROCKAWAY' : headsign,
+        destination,
         timeStr,
+        scheduledTimeStr,
         minsUntil: diffMins,
         track: isEastbound ? 'TRACK 2' : 'TRACK 1',
-        status: diffMins < 4 ? 'BOARDING' : 'ON TIME'
+        status,
+        delayMins,
+        isLive: true,
+        model: consist.model,
+        carCount: consist.carCount,
+        hasOccupancyData: consist.hasOccupancyData,
+        bikesAllowed,
+        cars: consist.cars
       };
 
       if (isEastbound) {
@@ -70,127 +400,250 @@ function getLirrFromGtfs(now) {
     westbound.sort((a, b) => a.minsUntil - b.minsUntil);
     eastbound.sort((a, b) => a.minsUntil - b.minsUntil);
 
-    return { westbound, eastbound, totalRecords: data.totalRecords };
-  } catch (e) {
-    console.error('Error reading GTFS LIRR JSON:', e);
-    return null;
+    return {
+      station: `${stationName} STATION`,
+      branch: 'FAR ROCKAWAY BRANCH',
+      nextWestbound: westbound[0] || null,
+      nextEastbound: eastbound[0] || null,
+      upcomingWestbound: westbound.slice(0, 4),
+      upcomingEastbound: eastbound.slice(0, 4),
+      isLive: true
+    };
+  } catch (err) {
+    console.error('Error fetching live LIRR departures:', err.message);
+    return {
+      station: `${stationName} STATION`,
+      branch: 'FAR ROCKAWAY BRANCH',
+      nextWestbound: null,
+      nextEastbound: null,
+      upcomingWestbound: [],
+      upcomingEastbound: [],
+      isLive: false,
+      error: err.message
+    };
   }
 }
 
-async function getFerryDepartures(now) {
+
+function getFerryDataset() {
   try {
-    const jsonPath = path.join(process.cwd(), 'dashboard', 'gtfs_rockaway_ferry.json');
-    if (!fs.existsSync(jsonPath)) return null;
-
-    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-    const departures = data.departures || [];
-
-    const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-    const currentEpochSec = Math.floor(now.getTime() / 1000);
-
-    // Fetch live GTFS-Realtime satellite trip updates dynamically
-    let liveTripUpdates = new Map();
-    try {
-      const url = 'http://nycferry.connexionz.net/rtt/public/utility/gtfsrealtime.aspx/tripupdate';
-      const res = await fetch(url, { cache: 'no-store' });
-      if (res.ok) {
-        const arrayBuffer = await res.arrayBuffer();
-        const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(Buffer.from(arrayBuffer));
-
-        for (const entity of feed.entity) {
-          if (!entity.tripUpdate || !entity.tripUpdate.stopTimeUpdate) continue;
-          const tripId = entity.tripUpdate.trip?.tripId;
-          for (const st of entity.tripUpdate.stopTimeUpdate) {
-            // Stop ID 88 is Rockaway Landing Dock
-            if (st.stopId === '88') {
-              const rawTime = st.departure?.time || st.arrival?.time;
-              const depEpoch = parseProtobufTime(rawTime);
-              if (depEpoch && depEpoch > currentEpochSec) {
-                liveTripUpdates.set(tripId, depEpoch);
-              }
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching live NYC Ferry GTFS-RT:', err);
+    const jsonPath = path.join(process.cwd(), 'dashboard', 'gtfs_ferry_schedule.json');
+    if (fs.existsSync(jsonPath)) {
+      return JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
     }
+  } catch (e) {
+    console.error('Error loading gtfs_ferry_schedule.json:', e);
+  }
+  return {};
+}
+
+async function getFerryDepartures(now) {
+  const stopId = process.env.FERRY_STOP_ID || '88';
+  const terminalName = (process.env.FERRY_TERMINAL_NAME || 'ROCKAWAY LANDING').toUpperCase();
+  const currentEpochSec = Math.floor(now.getTime() / 1000);
+  const ferryData = getFerryDataset();
+  const tripMap = ferryData.trips || {};
+
+  const TERMINAL_NAMES = {
+    '19': 'WALL ST / PIER 11',
+    '20': 'BATTERY PARK CITY',
+    '118': 'WALL ST / PIER 11',
+    '112': 'FERRY POINT PARK',
+    '113': 'FERRY POINT PARK',
+    '114': 'FERRY POINT PARK',
+    '115': 'FERRY POINT PARK',
+    '87': 'SUNSET PARK'
+  };
+
+  try {
+    const url = 'https://nycferry.connexionz.net/rtt/public/utility/gtfsrealtime.aspx/tripupdate';
+    const res = await fetch(url, { cache: 'no-store' });
 
     const upcoming = [];
 
-    for (const d of departures) {
-      let [h, m, s] = d.depTime.split(':').map(Number);
-      let depSec = h * 3600 + m * 60 + s;
-      let status = 'ON SCHEDULE';
-      let depDate = new Date(now);
+    if (res.ok) {
+      const arrayBuffer = await res.arrayBuffer();
+      const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(Buffer.from(arrayBuffer));
 
-      if (liveTripUpdates.has(d.tripId)) {
-        const liveEpoch = liveTripUpdates.get(d.tripId);
-        depDate = new Date(liveEpoch * 1000);
-        const liveDiffSec = liveEpoch - currentEpochSec;
-        if (liveDiffSec <= 0) continue;
+      for (const entity of feed.entity || []) {
+        if (!entity.tripUpdate || !entity.tripUpdate.stopTimeUpdate) continue;
 
-        const diffMins = Math.floor(liveDiffSec / 60);
-        const timeStr = depDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const tripId = entity.tripUpdate.trip?.tripId;
+        const stopUpdates = entity.tripUpdate.stopTimeUpdate;
+        const st = stopUpdates.find(s => s.stopId === stopId || s.stopId?.startsWith(`${stopId}_`));
+
+        if (!st || !st.departure?.time) continue;
+
+        const depEpoch = parseProtobufTime(st.departure.time);
+        if (!depEpoch || depEpoch <= currentEpochSec) continue;
+
+        const diffSec = depEpoch - currentEpochSec;
+        const diffMins = Math.floor(diffSec / 60);
+
+        const depDate = new Date(depEpoch * 1000);
+        const timeStr = depDate.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        let rawDest = tripId ? tripMap[tripId] : null;
+        let destination = '';
+        if (rawDest) {
+          destination = rawDest.replace(/\s*\([^\)]*\)/g, '').replace(/\./g, '').trim().toUpperCase();
+        } else {
+          const lastStopInTrip = stopUpdates[stopUpdates.length - 1]?.stopId;
+          if (lastStopInTrip && lastStopInTrip !== stopId && TERMINAL_NAMES[lastStopInTrip]) {
+            destination = TERMINAL_NAMES[lastStopInTrip];
+          } else {
+            destination = 'WALL ST / PIER 11';
+          }
+        }
+
+        const rawDelay = st.departure?.delay || 0;
+        const delaySec = typeof rawDelay === 'number' ? rawDelay : parseProtobufTime(rawDelay);
+        const delayMins = Math.round(delaySec / 60);
+
+        let status = '● LIVE SATELLITE';
+        if (delayMins > 1) {
+          status = `+${delayMins} MIN DELAY`;
+        } else if (diffMins < 5) {
+          status = 'BOARDING';
+        }
 
         upcoming.push({
-          destination: d.destination,
+          destination,
           timeStr,
           minsUntil: diffMins,
           track: 'BEACH 108TH ST',
-          status: '● LIVE SATELLITE'
+          status,
+          delayMins,
+          bikesAllowed: true,
+          isLive: true
         });
-        continue;
       }
+    }
 
-      if (depSec <= nowSec) continue;
+    // Fallback/Timetable Engine: Use official static GTFS schedule dataset when live feed is quiet
+    if (upcoming.length === 0) {
+      const scheduleMap = ferryData;
+      if (scheduleMap) {
+        const curHour = now.getHours();
+        const curMin = now.getMinutes();
+        const curSec = now.getSeconds();
+        const currentTimeStr = `${String(curHour).padStart(2, '0')}:${String(curMin).padStart(2, '0')}:${String(curSec).padStart(2, '0')}`;
 
-      const diffSec = depSec - nowSec;
-      const diffMins = Math.floor(diffSec / 60);
+        const dayOfWeek = now.getDay();
+        let dayKey = 'weekday';
+        if (dayOfWeek === 6) dayKey = 'saturday';
+        else if (dayOfWeek === 0) dayKey = 'sunday';
 
-      depDate.setHours(h, m, s, 0);
+        const todayDepartures = scheduleMap[dayKey] || [];
+        const remainingToday = todayDepartures.filter(d => d.time > currentTimeStr);
 
-      const timeStr = depDate.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
+        if (remainingToday.length > 0) {
+          remainingToday.slice(0, 4).forEach(d => {
+            const [h, m] = d.time.split(':').map(Number);
+            const depDate = new Date(now);
+            depDate.setHours(h, m, 0, 0);
 
-      if (diffMins < 5) {
-        status = 'BOARDING';
+            const diffSec = Math.floor((depDate.getTime() - now.getTime()) / 1000);
+            const diffMins = Math.floor(diffSec / 60);
+
+            const timeStr = depDate.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            });
+
+            upcoming.push({
+              destination: d.destination || 'WALL ST / PIER 11',
+              timeStr,
+              minsUntil: diffMins,
+              track: 'BEACH 108TH ST',
+              status: 'SCHEDULED',
+              delayMins: 0,
+              bikesAllowed: true,
+              isLive: true
+            });
+          });
+        } else {
+          // Service is on night break. Get tomorrow's first sailing from static GTFS schedule.
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const tomorrowDay = tomorrow.getDay();
+          let tomorrowKey = 'weekday';
+          if (tomorrowDay === 6) tomorrowKey = 'saturday';
+          else if (tomorrowDay === 0) tomorrowKey = 'sunday';
+
+          const tomorrowDepartures = scheduleMap[tomorrowKey] || [];
+          const firstTomorrow = tomorrowDepartures[0];
+
+          if (firstTomorrow) {
+            const [h, m] = firstTomorrow.time.split(':').map(Number);
+            const sailingTime = new Date(tomorrow);
+            sailingTime.setHours(h, m, 0, 0);
+
+            const diffSec = Math.max(0, Math.floor((sailingTime.getTime() - now.getTime()) / 1000));
+            const diffMins = Math.floor(diffSec / 60);
+
+            const timeStr = sailingTime.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            });
+
+            upcoming.push({
+              destination: firstTomorrow.destination || 'WALL ST / PIER 11',
+              timeStr,
+              minsUntil: diffMins,
+              track: 'BEACH 108TH ST',
+              status: 'FIRST SAILING TOMORROW',
+              delayMins: 0,
+              bikesAllowed: true,
+              isNightBreak: true,
+              isLive: true
+            });
+          }
+        }
       }
-
-      upcoming.push({
-        destination: d.destination,
-        timeStr,
-        minsUntil: diffMins,
-        track: 'BEACH 108TH ST',
-        status
-      });
     }
 
     upcoming.sort((a, b) => a.minsUntil - b.minsUntil);
 
     const nextSailing = upcoming[0] || null;
-    const upcomingSailings = upcoming.slice(0, 3);
+    const upcomingSailings = upcoming.slice(0, 4);
+
 
     return {
       route: 'ROCKAWAY ROUTE',
-      terminal: 'ROCKAWAY LANDING',
+      terminal: terminalName,
+      isLive: true,
+      statusNotice: '● LIVE SATELLITE',
       nextSailing,
       upcomingSailings,
       seaState: 'CALM (0.5 FT)'
     };
   } catch (e) {
-    console.error('Error fetching Ferry departures:', e);
-    return null;
+    console.error('Error fetching/parsing NYC Ferry GTFS-RT feed:', e);
+    return {
+      route: 'ROCKAWAY ROUTE',
+      terminal: terminalName,
+      isLive: false,
+      statusNotice: '● FEED UNAVAILABLE',
+      nextSailing: null,
+      upcomingSailings: [],
+      seaState: 'N/A',
+      error: e.message || 'NYC Ferry Feed unavailable'
+    };
   }
 }
+
 
 export async function GET() {
   try {
     const now = new Date();
-    const lirrData = getLirrFromGtfs(now);
+    const lirrData = await getLiveLirrDepartures(now);
     const ferryData = await getFerryDepartures(now);
 
     const lirrWestbound = lirrData?.westbound || [];
@@ -202,15 +655,17 @@ export async function GET() {
     return NextResponse.json({
       timestamp: now.toISOString(),
       mtaApiKeySet: true,
-      statusNotice: '● LIVE GTFS TELEMETRY',
+      statusNotice: lirrData?.statusNotice || '● LIVE GTFS TELEMETRY',
       lirr: {
-        station: 'CEDARHURST STATION',
-        branch: 'FAR ROCKAWAY BRANCH',
+        station: lirrData?.station || 'CEDARHURST STATION',
+        branch: lirrData?.branch || 'FAR ROCKAWAY BRANCH',
+        isLive: lirrData?.isLive ?? false,
         nextDeparture: nextWestbound || nextEastbound,
         nextWestbound,
         nextEastbound,
         upcomingWestbound: lirrWestbound.slice(0, 3),
-        upcomingEastbound: lirrEastbound.slice(0, 3)
+        upcomingEastbound: lirrEastbound.slice(0, 3),
+        error: lirrData?.error || null
       },
       ferry: ferryData || {
         route: 'ROCKAWAY ROUTE',
@@ -228,3 +683,4 @@ export async function GET() {
     );
   }
 }
+
