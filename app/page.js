@@ -744,34 +744,43 @@ function SunWindowIcon({ isMorning = true }) {
 
       {/* TOP HUD HEADER BAR */}
       <header className="matrix-header-hud">
-            <div className="matrix-header-left">
-              <div className="matrix-brand-badge">
-                <span className="matrix-brand-tag">// ARES OS</span>
-                <span className="matrix-brand-title">DASHBOARD HUD</span>
-              </div>
-            </div>
+        <div className="matrix-header-left">
+          <div className="matrix-brand-badge">
+            <span className="matrix-brand-tag">// ARES OS</span>
+            <span className="matrix-brand-title">DASHBOARD HUD</span>
+          </div>
+        </div>
 
-            {/* Center Clock Focal Display */}
-            <div className="matrix-clock-center">
-              <span className="matrix-clock-digits">{clockTime || '05:01:37'}</span>
-              <span className="matrix-clock-ampm">{clockAmPm || 'PM'}</span>
-              <span className="matrix-clock-date">{clockDate || 'WED, JUL 29, 2026'}</span>
-            </div>
+        {/* Clock Time Readout */}
+        <div className="matrix-clock-digits-box">
+          <span className="matrix-clock-digits">{clockTime || '05:01:37'}</span>
+          <span className="matrix-clock-ampm">{clockAmPm || 'PM'}</span>
+        </div>
 
-            <div className="matrix-header-right">
-              <div className="matrix-sol-clock">
-                <span className="sol-clock-label">ARES SOLAR TIME</span>
-                <span className="sol-clock-val">{aresSolarClock || 'SOL 1420 // 14:32'}</span>
-              </div>
-              <div className="matrix-status-pill">
-                <span className="status-pulse-dot" />
-                <span>SYS: ONLINE (100%)</span>
-              </div>
-              <button className="hud-btn config-hud-btn" onClick={() => setIsModalOpen(true)}>
-                [ ⚙ CONFIG ]
-              </button>
+        {/* Date Readout */}
+        <div className="matrix-clock-date-box">
+          <span className="matrix-clock-date">{clockDate || 'WED, JUL 29, 2026'}</span>
+        </div>
+
+        {/* Ares Solar Time (Positioned Between Date & SYS ONLINE) */}
+        <div className="matrix-sol-clock">
+          <span className="sol-clock-label">ARES SOLAR TIME</span>
+          <span className="sol-clock-val">{aresSolarClock || 'SOL 1420 // 14:32'}</span>
+        </div>
+
+        {/* Far Right: Status Pill & Last Sync */}
+        <div className="matrix-header-right">
+          <div className="matrix-status-stack">
+            <div className="matrix-status-pill">
+              <span className="status-pulse-dot" />
+              <span>SYS: ONLINE (100%)</span>
             </div>
-          </header>
+            <div className="matrix-last-sync">
+              <span>LAST SYNC: {lastSyncTime}</span>
+            </div>
+          </div>
+        </div>
+      </header>
 
           {/* MAIN 3-COLUMN TACTICAL MATRIX GRID */}
           <main className="matrix-main-grid">
@@ -1424,18 +1433,7 @@ function SunWindowIcon({ isMorning = true }) {
 
       </main>
 
-      {/* BOTTOM TELEMETRY FOOTER (5vh) */}
-      <footer className="matrix-footer-hud">
-        <div className="footer-hotkeys-group">
-          <span className="hotkey-item"><span className="hotkey-key">[F]</span> FULLSCREEN</span>
-          <span className="hotkey-item"><span className="hotkey-key">[SPACE]</span> PAUSE</span>
-          <span className="hotkey-item"><span className="hotkey-key">[S]</span> SCANLINES</span>
-          <span className="hotkey-item"><span className="hotkey-key">[M]</span> CONFIG</span>
-        </div>
-        <div className="footer-sync-info">
-          <span>LAST SYNC: {lastSyncTime}</span>
-        </div>
-      </footer>
+
 
       {/* Overlays */}
       <div className="city-matrix-underlay" />
