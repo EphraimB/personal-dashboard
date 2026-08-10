@@ -869,10 +869,6 @@ function SunWindowIcon({ isMorning = true }) {
                         <div className="subcard-hero-badge">{weatherData?.sunscreen?.spfRating || 'SPF 50'}</div>
                         <div className="subcard-hero-sub">{weatherData?.sunscreen?.spfTag || 'BROAD SPECTRUM'}</div>
                         <div className="subcard-detail-item">
-                          <span className="detail-item-hdr">HOW MUCH TO APPLY</span>
-                          <span className="detail-item-val">{weatherData?.sunscreen?.dosageText || '1 SHOT GLASS (1 oz / 30 ml)'}</span>
-                        </div>
-                        <div className="subcard-detail-item">
                           <span className="detail-item-hdr">REAPPLY EVERY</span>
                           <span className="detail-item-val">{weatherData?.sunscreen?.reapplyText || '2 HOURS or after swimming / sweating'}</span>
                         </div>

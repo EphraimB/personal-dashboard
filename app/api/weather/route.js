@@ -105,28 +105,23 @@ function calculateOutdoorTelemetry(current, hourly, daily, tempUnit = 'F') {
   // 2. Sunscreen Recommendation
   let spfRating = 'SPF 50';
   let spfTag = 'BROAD SPECTRUM';
-  let dosageText = '1 SHOT GLASS (1 oz / 30 ml)';
   let reapplyText = '2 HOURS or after swimming / sweating';
 
   if (uvIndex >= 8) {
     spfRating = 'SPF 50+';
     spfTag = 'VERY HIGH PROTECTION';
-    dosageText = '1 SHOT GLASS (1 oz / 30 ml)';
     reapplyText = '80 MINS or after sweating';
   } else if (uvIndex >= 6) {
     spfRating = 'SPF 50';
     spfTag = 'BROAD SPECTRUM';
-    dosageText = '1 SHOT GLASS (1 oz / 30 ml)';
     reapplyText = '2 HOURS or after sweating';
   } else if (uvIndex >= 3) {
     spfRating = 'SPF 30';
     spfTag = 'DAILY SUN PROTECTION';
-    dosageText = '1 PALM FULL (0.5 oz / 15 ml)';
     reapplyText = '2 HOURS during outdoor activity';
   } else {
     spfRating = 'SPF 15';
     spfTag = 'LIGHT PROTECTION';
-    dosageText = 'DAILY MOISTURIZER';
     reapplyText = 'REAPPLY AS NEEDED';
   }
 
@@ -220,7 +215,6 @@ function calculateOutdoorTelemetry(current, hourly, daily, tempUnit = 'F') {
     sweatSliderVal,
     spfRating,
     spfTag,
-    dosageText,
     reapplyText,
     waterOz,
     waitMins,
@@ -280,7 +274,6 @@ export async function GET(request) {
       sunscreen: {
         spfRating: telemetry.spfRating,
         spfTag: telemetry.spfTag,
-        dosageText: telemetry.dosageText,
         reapplyText: telemetry.reapplyText
       },
       hydration: {
