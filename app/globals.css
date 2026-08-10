@@ -2762,33 +2762,34 @@ html, body {
     font-size: 1.1rem;
   }
 
-  /* 4K TV News Ticker Enlarged Overrides */
+  /* Large TV Display News Ticker Overrides (1080p, 1440p, 4K TVs) */
   .ares-tv-app {
-    padding: 52px 0 !important;
+    padding: 60px 0 !important;
   }
 
   .perimeter-top, .perimeter-bottom {
-    height: 52px;
+    height: 60px;
   }
 
   .headline-tag {
-    font-size: 1.1rem;
-    padding: 4px 12px;
-    margin-right: 14px;
+    font-size: 1.3rem;
+    padding: 4px 14px;
+    margin-right: 16px;
     border-radius: 6px;
   }
 
   .perimeter-headline-item {
-    font-size: 1.35rem;
+    font-size: 1.75rem;
+    font-weight: 800;
   }
 
   .perimeter-bullet {
-    margin: 0 16px;
-    font-size: 1.4rem;
+    margin: 0 18px;
+    font-size: 1.8rem;
   }
 
   .track-horizontal {
-    animation-duration: 110s;
+    animation-duration: 130s;
   }
 }
 
@@ -4104,7 +4105,7 @@ html, body {
    CLEAN HORIZONTAL PERIMETER NEWS TICKERS (TOP & BOTTOM)
    ============================================================================== */
 .ares-tv-app {
-  padding: 26px 0 !important;
+  padding: clamp(36px, 4vh, 56px) 0 !important;
   box-sizing: border-box;
 }
 
@@ -4126,25 +4127,25 @@ html, body {
 
 .perimeter-top {
   top: 0; left: 0; right: 0;
-  height: 26px;
-  border-bottom: 1.5px solid var(--color-cyan);
+  height: clamp(36px, 4vh, 56px);
+  border-bottom: 2px solid var(--color-cyan);
 }
 
 .perimeter-bottom {
   bottom: 0; left: 0; right: 0;
-  height: 26px;
-  border-top: 1.5px solid var(--color-orange);
+  height: clamp(36px, 4vh, 56px);
+  border-top: 2px solid var(--color-orange);
 }
 
 /* Headline Tags */
 .headline-tag {
   font-family: var(--font-title);
-  font-size: 0.58rem;
+  font-size: clamp(0.75rem, 1.1vw, 1.2rem);
   font-weight: 900;
   letter-spacing: 1px;
-  padding: 1px 6px;
-  border-radius: 3px;
-  margin-right: 8px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  margin-right: 12px;
   white-space: nowrap;
 }
 
@@ -4170,7 +4171,7 @@ html, body {
 }
 
 .track-horizontal {
-  animation: marqueeHorizontal 75s linear infinite;
+  animation: marqueeHorizontal 85s linear infinite;
 }
 
 .track-horizontal:hover {
@@ -4192,13 +4193,13 @@ html, body {
   display: inline-flex;
   align-items: center;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: clamp(0.95rem, 1.4vw, 1.6rem);
+  font-weight: 800;
   letter-spacing: 0.5px;
 }
 
 .perimeter-headline-link {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.95);
   text-decoration: none;
   transition: color 0.2s ease;
 }
@@ -4210,7 +4211,8 @@ html, body {
 
 .perimeter-bullet {
   color: var(--color-cyan);
-  margin: 0 10px;
+  margin: 0 14px;
+  font-size: clamp(1.0rem, 1.5vw, 1.6rem);
   font-weight: 900;
 }
 
