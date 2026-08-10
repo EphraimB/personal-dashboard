@@ -1220,8 +1220,13 @@ export default function Home() {
                     <div className="next-title">{calendarData.upNext.title}</div>
                     <div className="next-time-sub">
                       ⏰ {calendarData.upNext.startTime || 'Scheduled'}
-                      {calendarData.upNext.locationMain && ` • 📍 ${calendarData.upNext.locationMain}`}
+                      {(calendarData.upNext.locationClean || calendarData.upNext.locationMain) && ` • 📍 ${calendarData.upNext.locationClean || calendarData.upNext.locationMain}`}
                     </div>
+                    {calendarData.upNext.description && (
+                      <div className="next-desc-sub">
+                        📝 {calendarData.upNext.description.length > 120 ? `${calendarData.upNext.description.substring(0, 120)}...` : calendarData.upNext.description}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="agenda-empty-banner">
@@ -1241,7 +1246,12 @@ export default function Home() {
                           {evt.isLive && <span style={{ color: 'var(--color-green)' }}>● LIVE</span>}
                         </div>
                         <div className="agenda-event-name">{evt.title}</div>
-                        {evt.locationMain && <div className="agenda-event-loc">📍 {evt.locationMain}</div>}
+                        {(evt.locationClean || evt.locationMain) && <div className="agenda-event-loc">📍 {evt.locationClean || evt.locationMain}</div>}
+                        {evt.description && (
+                          <div className="agenda-event-desc">
+                            📝 {evt.description.length > 100 ? `${evt.description.substring(0, 100)}...` : evt.description}
+                          </div>
+                        )}
                       </div>
                     ))}
 
@@ -1264,7 +1274,12 @@ export default function Home() {
                               📅 {displayDate} • ⏰ {displayTime}
                             </div>
                             <div className="agenda-event-name">{e.title}</div>
-                            {e.locationMain && <div className="agenda-event-loc">📍 {e.locationMain}</div>}
+                            {(e.locationClean || e.locationMain) && <div className="agenda-event-loc">📍 {e.locationClean || e.locationMain}</div>}
+                            {e.description && (
+                              <div className="agenda-event-desc">
+                                📝 {e.description.length > 100 ? `${e.description.substring(0, 100)}...` : e.description}
+                              </div>
+                            )}
                           </div>
                         );
                       })
