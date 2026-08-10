@@ -3595,6 +3595,445 @@ html, body {
   }
 }
 
+/* OUTDOOR CONDITIONS & TACTICAL HEALTH PANEL */
+.outdoor-conditions-card {
+  background: rgba(8, 14, 26, 0.95);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.outdoor-hero-row {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.outdoor-temp-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 130px;
+}
+
+.outdoor-temp-hero {
+  display: flex;
+  align-items: flex-start;
+  line-height: 1;
+}
+
+.outdoor-temp-val {
+  font-family: var(--font-title);
+  font-size: clamp(2.5rem, 4vh, 3.8rem);
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -1px;
+}
+
+.outdoor-temp-unit {
+  font-size: clamp(1.2rem, 1.8vh, 1.6rem);
+  font-weight: 700;
+  color: var(--color-cyan);
+  margin-top: 4px;
+}
+
+.outdoor-cond-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.outdoor-cond-svg {
+  width: 32px;
+  height: 32px;
+}
+
+.outdoor-cond-text-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.outdoor-cond-title {
+  font-size: clamp(0.85rem, 1.3vh, 1.1rem);
+  font-weight: 900;
+  color: var(--color-cyan);
+  letter-spacing: 0.5px;
+}
+
+.outdoor-feels-like {
+  font-size: clamp(0.7rem, 1.1vh, 0.85rem);
+  color: var(--color-text-sub);
+  font-weight: 600;
+}
+
+.outdoor-stats-pill-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: rgba(0, 240, 255, 0.04);
+  border: 1px solid rgba(0, 240, 255, 0.12);
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 140px;
+  gap: 6px;
+}
+
+.outdoor-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.outdoor-stat-icon {
+  font-size: 1.1rem;
+}
+
+.outdoor-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.outdoor-stat-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--color-text-dim);
+  letter-spacing: 1px;
+}
+
+.outdoor-stat-val {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.outdoor-sweat-box {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.outdoor-box-hdr {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--color-cyan);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.sweat-gauge-flex {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+}
+
+.sweat-gauge-wrapper {
+  position: relative;
+  width: 100px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sweat-gauge-svg {
+  width: 100px;
+  height: 60px;
+}
+
+.sweat-gauge-text-group {
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.sweat-gauge-val {
+  font-family: var(--font-title);
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.sweat-gauge-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-sub);
+  line-height: 1.35;
+  max-width: 180px;
+}
+
+.sweat-slider-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.sweat-slider-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--color-text-dim);
+  letter-spacing: 0.5px;
+}
+
+.sweat-slider-track {
+  flex: 1;
+  height: 6px;
+  background: linear-gradient(90deg, #00E676 0%, #00F0FF 40%, #FFB300 75%, #FF5722 100%);
+  border-radius: 3px;
+  position: relative;
+}
+
+.sweat-slider-fill {
+  height: 100%;
+  background: transparent;
+}
+
+.sweat-slider-thumb {
+  position: absolute;
+  top: -4px;
+  width: 6px;
+  height: 14px;
+  background: #ffffff;
+  border-radius: 2px;
+  box-shadow: 0 0 8px #ffffff;
+  transform: translateX(-50%);
+}
+
+.outdoor-uv-badge-box {
+  background: rgba(255, 87, 34, 0.08);
+  border: 1px solid rgba(255, 87, 34, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+}
+
+.uv-header-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.uv-title {
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: var(--color-cyan);
+  letter-spacing: 1px;
+}
+
+.uv-big-num {
+  font-family: var(--font-title);
+  font-size: clamp(2rem, 3.2vh, 3rem);
+  font-weight: 900;
+  color: #FFB300;
+  line-height: 1;
+  margin: 4px 0;
+}
+
+.uv-sev-tag {
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #FF5722;
+  letter-spacing: 1px;
+}
+
+/* SECTION 2: 3-CARD MIDDLE HEALTH GRID */
+.outdoor-health-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.outdoor-subcard {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.18);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.outdoor-subcard-title {
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: var(--color-cyan);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.subcard-content-flex {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.subcard-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subcard-hero-badge {
+  font-family: var(--font-title);
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.subcard-hero-sub {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--color-text-dim);
+  letter-spacing: 0.5px;
+}
+
+.subcard-detail-item {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+}
+
+.detail-item-hdr {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--color-cyan);
+  letter-spacing: 0.5px;
+}
+
+.detail-item-val {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.detail-item-val-bold {
+  font-family: var(--font-title);
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #00E676;
+}
+
+.detail-item-sub {
+  font-size: 0.65rem;
+  color: var(--color-text-dim);
+}
+
+.best-time-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.best-time-item {
+  display: flex;
+  align-items: center;
+}
+
+.best-time-val {
+  font-family: var(--font-title);
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.today-summary-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 240, 255, 0.05);
+  border-top: 1px solid rgba(0, 240, 255, 0.15);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.summary-text-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summary-title {
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: var(--color-cyan);
+  letter-spacing: 0.5px;
+}
+
+.summary-p {
+  font-size: 0.72rem;
+  color: var(--color-text-sub);
+  line-height: 1.35;
+}
+
+/* SECTION 3: BOTTOM HOURLY FORECAST TICKER */
+.outdoor-hourly-ticker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.ticker-hour-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ticker-hour-item:last-child {
+  border-right: none;
+}
+
+.ticker-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--color-cyan);
+  letter-spacing: 0.5px;
+}
+
+.ticker-wx-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.ticker-temp {
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.ticker-uv {
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: #FF5722;
+}
+
 
 
 

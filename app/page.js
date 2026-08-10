@@ -419,17 +419,99 @@ export default function Home() {
     setLastSyncTime(`${hrs}:${mins}:${secs}`);
   };
 
-  // Cedarhurst, NY Live Open-Meteo Weather Polling (40.6226 N, -73.7275 W)
+// Vector Outdoor Conditions & Health Graphic Components
+function SunscreenTubeIcon() {
+  return (
+    <svg width="44" height="68" viewBox="0 0 48 72" fill="none" className="outdoor-svg-icon">
+      <path d="M12 20C12 16 16 12 24 12C32 12 36 16 36 20L40 56C40 60 36 64 24 64C12 64 8 60 8 56L12 20Z" fill="url(#sunscreenGrad)" stroke="#FFB300" strokeWidth="2" />
+      <rect x="14" y="6" width="20" height="6" rx="2" fill="#FF5722" />
+      <circle cx="24" cy="34" r="8" fill="#FFB300" opacity="0.3" />
+      <circle cx="24" cy="34" r="5" fill="#FFB300" />
+      <text x="24" y="52" fill="#FFFFFF" fontSize="8.5" fontWeight="900" textAnchor="middle" fontFamily="monospace">SPF 50</text>
+      <defs>
+        <linearGradient id="sunscreenGrad" x1="24" y1="12" x2="24" y2="64" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FF9800" />
+          <stop offset="1" stopColor="#E65100" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+function WaterBottleIcon() {
+  return (
+    <svg width="40" height="72" viewBox="0 0 44 80" fill="none" className="outdoor-svg-icon">
+      <rect x="16" y="4" width="12" height="8" rx="2" fill="#0288D1" />
+      <rect x="18" y="12" width="8" height="4" fill="#03A9F4" />
+      <path d="M10 24C10 18 14 16 22 16C30 16 34 18 34 24L36 68C36 72 32 76 22 76C12 76 8 72 8 68L10 24Z" fill="url(#waterGrad)" stroke="#00F0FF" strokeWidth="2" />
+      <path d="M10 40H34M10 52H34" stroke="#00F0FF" strokeWidth="1" strokeDasharray="2 2" opacity="0.5" />
+      <defs>
+        <linearGradient id="waterGrad" x1="22" y1="16" x2="22" y2="76" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#00E5FF" stopOpacity="0.8" />
+          <stop offset="1" stopColor="#0288D1" stopOpacity="0.9" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+function SweatRadialGauge({ label = '18 MIN', gaugePct = 75 }) {
+  const strokeDashoffset = 180 - (180 * Math.min(100, Math.max(0, gaugePct))) / 100;
+  return (
+    <div className="sweat-gauge-wrapper">
+      <svg width="100" height="60" viewBox="0 0 120 75" className="sweat-gauge-svg">
+        <path d="M 15 65 A 45 45 0 0 1 105 65" fill="none" stroke="rgba(0, 240, 255, 0.15)" strokeWidth="10" strokeLinecap="round" />
+        <path d="M 15 65 A 45 45 0 0 1 105 65" fill="none" stroke="url(#sweatGrad)" strokeWidth="10" strokeLinecap="round" strokeDasharray="180" strokeDashoffset={strokeDashoffset} />
+        <defs>
+          <linearGradient id="sweatGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#00E676" />
+            <stop offset="50%" stopColor="#00F0FF" />
+            <stop offset="85%" stopColor="#FFB300" />
+            <stop offset="100%" stopColor="#FF5722" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div className="sweat-gauge-text-group">
+        <span className="sweat-gauge-val">{label}</span>
+      </div>
+    </div>
+  );
+}
+
+function ShieldCheckIcon() {
+  return (
+    <svg width="32" height="36" viewBox="0 0 36 40" fill="none" className="shield-icon-svg">
+      <path d="M18 3L4 9V19C4 28 10 34 18 37C26 34 32 28 32 19V9L18 3Z" fill="rgba(0, 240, 255, 0.15)" stroke="#00F0FF" strokeWidth="2" />
+      <path d="M12 19L16 23L24 15" stroke="#00E676" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SunWindowIcon({ isMorning = true }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFB300" strokeWidth="2" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+      <path d="M12 4v4M4.93 7.93l2.83 2.83M19.07 7.93l-2.83 2.83M2 18h20" strokeLinecap="round" />
+      <circle cx="12" cy="18" r="5" fill="#FFB300" />
+      {isMorning ? (
+        <path d="M12 10l-2 3h4l-2-3z" fill="#00E676" stroke="none" />
+      ) : (
+        <path d="M12 13l-2-3h4l-2 3z" fill="#FF5722" stroke="none" />
+      )}
+    </svg>
+  );
+}
+
+  // Live Weather Polling (/api/weather)
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        const unitParam = config.tempUnit === 'C' ? '&temperature_unit=celsius&wind_speed_unit=kmh' : '&temperature_unit=fahrenheit&wind_speed_unit=mph';
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=40.6226&longitude=-73.7275&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FNew_York${unitParam}`;
-        const res = await fetch(url);
+        const res = await fetch(`/api/weather?unit=${config.tempUnit || 'F'}`);
         if (res.ok) {
           const data = await res.json();
-          setWeatherData(data);
-          updateSyncTime();
+          if (data.success) {
+            setWeatherData(data);
+            updateSyncTime();
+          }
         }
       } catch (e) {
         console.error('Weather fetch error:', e);
@@ -437,7 +519,7 @@ export default function Home() {
     };
 
     fetchWeather();
-    const wxInterval = setInterval(fetchWeather, 600000); // Poll every 10 mins
+    const wxInterval = setInterval(fetchWeather, 300000); // Poll every 5 mins
     return () => clearInterval(wxInterval);
   }, [config.tempUnit]);
 
@@ -697,70 +779,167 @@ export default function Home() {
             {/* QUADRANT 1: LEFT COLUMN (WEATHER & COMMUTER TRANSIT HUB) */}
             <section className="quadrant-left-col">
               
-              {/* 1A: ATMOSPHERIC TELEMETRY CARD */}
-              <div className="matrix-card card-weather-telemetry">
+              {/* 1A: OUTDOOR CONDITIONS & TACTICAL HEALTH PANEL */}
+              <div className="matrix-card card-weather-telemetry outdoor-conditions-card">
                 <div className="matrix-card-title-row">
                   <span className="matrix-card-title">
-                    ⚡ ATMOSPHERIC TELEMETRY
+                    ⚡ OUTDOOR CONDITIONS
                   </span>
-                  <span className="matrix-card-tag">CEDARHURST, NY</span>
+                  <span className="matrix-card-tag">{weatherData?.locationLabel || 'CEDARHURST, NY'}</span>
                 </div>
 
-                <div className="weather-hero-row">
-                  <div className="weather-hero-temp-group">
-                    <span className="weather-hero-temp">
-                      {weatherData?.current?.temperature_2m !== undefined
-                        ? Math.round(weatherData.current.temperature_2m)
-                        : '74'}
-                    </span>
-                    <span className="weather-hero-unit">°{config.tempUnit || 'F'}</span>
-                  </div>
-                  <WeatherSvg code={weatherData?.current?.weather_code ?? 0} className="weather-hero-icon" />
-                </div>
-
-                <div className="weather-cond-badge">
-                  {getWeatherDescription(weatherData?.current?.weather_code ?? 0)}
-                </div>
-
-                <div className="weather-sub-metrics-grid">
-                  <div className="metric-pill">
-                    <span className="metric-pill-label">HUMIDITY</span>
-                    <span className="metric-pill-val">{weatherData?.current?.relative_humidity_2m ?? '64'}%</span>
-                  </div>
-                  <div className="metric-pill">
-                    <span className="metric-pill-label">WIND</span>
-                    <span className="metric-pill-val">{weatherData?.current?.wind_speed_10m !== undefined ? Math.round(weatherData.current.wind_speed_10m) : '12'} MPH</span>
-                  </div>
-                  <div className="metric-pill">
-                    <span className="metric-pill-label">TEMP HI/LO</span>
-                    <span className="metric-pill-val">
-                      ▲{weatherData?.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_max[0]) : '82'}° / ▼{weatherData?.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(weatherData.daily.temperature_2m_min[0]) : '68'}°
-                    </span>
-                  </div>
-                  <div className="metric-pill">
-                    <span className="metric-pill-label">BAROMETER</span>
-                    <span className="metric-pill-val">30.12 inHg</span>
-                  </div>
-                </div>
-
-                {/* 6-Hour Mini-Forecast Strip */}
-                <div className="hourly-strip-container">
-                  {hourlyTimes.map((timeStr, idx) => {
-                    const globalIdx = hourlyStartIdx + idx;
-                    const code = weatherData?.hourly?.weather_code?.[globalIdx] ?? 0;
-                    const temp = weatherData?.hourly?.temperature_2m?.[globalIdx];
-                    const pop = weatherData?.hourly?.precipitation_probability?.[globalIdx] ?? 0;
-                    const label = formatHourLabel(timeStr, idx);
-
-                    return (
-                      <div key={idx} className="hourly-mini-item">
-                        <span className="hourly-mini-time">{label}</span>
-                        <WeatherSvg code={code} className="wx-hr-icon" />
-                        <span className="hourly-mini-temp">{temp !== undefined ? Math.round(temp) : '74'}°</span>
-                        <span className="hourly-mini-pop">{pop}%</span>
+                {/* SECTION 1: TOP HERO METRICS & SWEAT GAUGE ROW */}
+                <div className="outdoor-hero-row">
+                  {/* Left Temp & Condition */}
+                  <div className="outdoor-temp-block">
+                    <div className="outdoor-temp-hero">
+                      <span className="outdoor-temp-val">{weatherData?.currentTemp ?? 84}</span>
+                      <span className="outdoor-temp-unit">°{weatherData?.tempUnit || 'F'}</span>
+                    </div>
+                    <div className="outdoor-cond-group">
+                      <WeatherSvg code={weatherData?.conditionCode ?? 0} className="outdoor-cond-svg" />
+                      <div className="outdoor-cond-text-block">
+                        <span className="outdoor-cond-title">{weatherData?.conditionText || 'SUNNY'}</span>
+                        <span className="outdoor-feels-like">FEELS LIKE {weatherData?.feelsLike ?? 88}°{weatherData?.tempUnit || 'F'}</span>
                       </div>
-                    );
-                  })}
+                    </div>
+                  </div>
+
+                  {/* Center Telemetry Pill Box */}
+                  <div className="outdoor-stats-pill-box">
+                    <div className="outdoor-stat-row">
+                      <span className="outdoor-stat-icon">💧</span>
+                      <div className="outdoor-stat-info">
+                        <span className="outdoor-stat-label">HUMIDITY</span>
+                        <span className="outdoor-stat-val">{weatherData?.humidity ?? 47}%</span>
+                      </div>
+                    </div>
+                    <div className="outdoor-stat-row">
+                      <span className="outdoor-stat-icon">💨</span>
+                      <div className="outdoor-stat-info">
+                        <span className="outdoor-stat-label">WIND</span>
+                        <span className="outdoor-stat-val">{weatherData?.windSpeed ?? 1} MPH</span>
+                      </div>
+                    </div>
+                    <div className="outdoor-stat-row">
+                      <span className="outdoor-stat-icon">⏲️</span>
+                      <div className="outdoor-stat-info">
+                        <span className="outdoor-stat-label">PRESSURE</span>
+                        <span className="outdoor-stat-val">{weatherData?.pressureInHg ?? '30.12'} inHg</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Sweat Meter Box */}
+                  <div className="outdoor-sweat-box">
+                    <span className="outdoor-box-hdr">TIME OUTSIDE UNTIL YOU'RE SWEATY</span>
+                    <div className="sweat-gauge-flex">
+                      <SweatRadialGauge label={weatherData?.sweatMeter?.label || '18 MIN'} gaugePct={weatherData?.sweatMeter?.gaugePct || 75} />
+                      <p className="sweat-gauge-desc">Based on current temperature, humidity and wind.</p>
+                    </div>
+                    <div className="sweat-slider-bar">
+                      <span className="sweat-slider-label">LESS SWEAT</span>
+                      <div className="sweat-slider-track">
+                        <div className="sweat-slider-fill" style={{ width: `${weatherData?.sweatMeter?.sliderVal || 75}%` }}></div>
+                        <div className="sweat-slider-thumb" style={{ left: `${weatherData?.sweatMeter?.sliderVal || 75}%` }}></div>
+                      </div>
+                      <span className="sweat-slider-label">MORE SWEAT</span>
+                    </div>
+                  </div>
+
+                  {/* Far Right UV Index Badge */}
+                  <div className="outdoor-uv-badge-box">
+                    <div className="uv-header-row">
+                      <span className="uv-icon">☀️</span>
+                      <span className="uv-title">UV INDEX</span>
+                    </div>
+                    <div className="uv-big-num">{weatherData?.uvIndex ?? 7}</div>
+                    <div className="uv-sev-tag">{weatherData?.uvSeverity || 'HIGH'}</div>
+                  </div>
+                </div>
+
+                {/* SECTION 2: 3-CARD MIDDLE OUTDOOR HEALTH GRID */}
+                <div className="outdoor-health-grid">
+                  {/* Card 1: Sunscreen */}
+                  <div className="outdoor-subcard card-sunscreen">
+                    <span className="outdoor-subcard-title">SUNSCREEN RECOMMENDATION</span>
+                    <div className="subcard-content-flex">
+                      <SunscreenTubeIcon />
+                      <div className="subcard-info-group">
+                        <div className="subcard-hero-badge">{weatherData?.sunscreen?.spfRating || 'SPF 50'}</div>
+                        <div className="subcard-hero-sub">{weatherData?.sunscreen?.spfTag || 'BROAD SPECTRUM'}</div>
+                        <div className="subcard-detail-item">
+                          <span className="detail-item-hdr">HOW MUCH TO APPLY</span>
+                          <span className="detail-item-val">{weatherData?.sunscreen?.dosageText || '1 SHOT GLASS (1 oz / 30 ml)'}</span>
+                        </div>
+                        <div className="subcard-detail-item">
+                          <span className="detail-item-hdr">REAPPLY EVERY</span>
+                          <span className="detail-item-val">{weatherData?.sunscreen?.reapplyText || '2 HOURS or after swimming / sweating'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Hydration */}
+                  <div className="outdoor-subcard card-hydration">
+                    <span className="outdoor-subcard-title">HYDRATION REMINDER</span>
+                    <div className="subcard-content-flex">
+                      <WaterBottleIcon />
+                      <div className="subcard-info-group">
+                        <div className="subcard-detail-item">
+                          <span className="detail-item-hdr">DRINK</span>
+                          <span className="subcard-hero-badge">{weatherData?.hydration?.waterOz || '25–30 oz'}</span>
+                          <span className="detail-item-sub">OF WATER</span>
+                        </div>
+                        <div className="subcard-detail-item">
+                          <span className="detail-item-hdr">WAIT TIME</span>
+                          <span className="detail-item-val-bold">{weatherData?.hydration?.waitMins || '15 MIN'}</span>
+                          <span className="detail-item-sub">before intense sun exposure</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Best Time Outside */}
+                  <div className="outdoor-subcard card-best-time">
+                    <span className="outdoor-subcard-title">BEST TIME OUTSIDE</span>
+                    <div className="best-time-rows">
+                      <div className="best-time-item">
+                        <SunWindowIcon isMorning={true} />
+                        <span className="best-time-val">{weatherData?.bestTimeOutside?.morningWindow || 'BEFORE 10 AM'}</span>
+                      </div>
+                      <div className="best-time-item">
+                        <SunWindowIcon isMorning={false} />
+                        <span className="best-time-val">{weatherData?.bestTimeOutside?.eveningWindow || 'AFTER 6 PM'}</span>
+                      </div>
+                    </div>
+                    <div className="today-summary-box">
+                      <div className="summary-text-group">
+                        <span className="summary-title">TODAY'S SUMMARY</span>
+                        <p className="summary-p">{weatherData?.bestTimeOutside?.summaryText || 'Hot and humid with high UV. Limit direct sun exposure, stay hydrated, and reapply sunscreen!'}</p>
+                      </div>
+                      <ShieldCheckIcon />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION 3: BOTTOM HOURLY FORECAST TICKER WITH UV */}
+                <div className="outdoor-hourly-ticker">
+                  {(weatherData?.hourlyTicker || [
+                    { label: 'NOW', temp: 84, code: 0, uv: 7 },
+                    { label: '11 AM', temp: 87, code: 0, uv: 7 },
+                    { label: '12 PM', temp: 89, code: 2, uv: 8 },
+                    { label: '1 PM', temp: 90, code: 2, uv: 8 },
+                    { label: '2 PM', temp: 90, code: 0, uv: 8 },
+                    { label: '3 PM', temp: 89, code: 0, uv: 7 }
+                  ]).map((item, idx) => (
+                    <div key={idx} className="ticker-hour-item">
+                      <span className="ticker-label">{item.label}</span>
+                      <WeatherSvg code={item.code} className="ticker-wx-svg" />
+                      <span className="ticker-temp">{item.temp}°</span>
+                      <span className="ticker-uv">UV {item.uv}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
