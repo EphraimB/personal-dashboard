@@ -102,27 +102,92 @@ function calculateOutdoorTelemetry(current, hourly, daily, tempUnit = 'F', timez
     sweatSliderVal = 15;
   }
 
-  // 2. Sunscreen Recommendation
-  let spfRating = 'SPF 50';
-  let spfTag = 'BROAD SPECTRUM';
-  let reapplyText = '2 HOURS or after swimming / sweating';
+  // 2. Sunscreen Recommendation & Protection Window
+  let uvActiveHours = [];
+  if (hourly?.time && hourly?.uv_index) {
+    const now = new Date();
+    let todayStr = '';
+    try {
+      const isoLocal = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: timezoneStr,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(now);
+      todayStr = isoLocal.substring(0, 10);
+    } catch (e) {
+      todayStr = now.toISOString().substring(0, 10);
+    }
+
+    for (let i = 0; i < hourly.time.length; i++) {
+      const tStr = hourly.time[i];
+      if (typeof tStr === 'string' && tStr.startsWith(todayStr)) {
+        if ((hourly.uv_index[i] ?? 0) >= 3) {
+          const dt = new Date(tStr);
+          uvActiveHours.push(dt.getHours());
+        }
+      }
+    }
+  }
+
+  let windowLabel = '';
+  let activeUntilLabel = '';
+  let maxActiveHour = -1;
+
+  if (uvActiveHours.length > 0) {
+    const startH = Math.min(...uvActiveHours);
+    const endH = Math.max(...uvActiveHours) + 1;
+    maxActiveHour = Math.max(...uvActiveHours);
+
+    const formatH = (h) => {
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const hrs = h % 12 || 12;
+      return `${hrs} ${ampm}`;
+    };
+
+    windowLabel = `NEEDED ${formatH(startH)} – ${formatH(endH)}`;
+    activeUntilLabel = `NEEDED UNTIL ${formatH(endH)}`;
+  }
+
+  let spfRating = 'NOT NEEDED';
+  let spfTag = 'LOW UV EXPOSURE';
+  let reapplyText = 'NOT NEEDED TODAY';
 
   if (uvIndex >= 8) {
     spfRating = 'SPF 50+';
     spfTag = 'VERY HIGH PROTECTION';
-    reapplyText = '80 MINS or after sweating';
+    reapplyText = activeUntilLabel ? `${activeUntilLabel} • REAPPLY 2H` : 'REAPPLY EVERY 2 HOURS';
   } else if (uvIndex >= 6) {
     spfRating = 'SPF 50';
-    spfTag = 'BROAD SPECTRUM';
-    reapplyText = '2 HOURS or after sweating';
+    spfTag = 'HIGH PROTECTION';
+    reapplyText = activeUntilLabel ? `${activeUntilLabel} • REAPPLY 2H` : 'REAPPLY EVERY 2 HOURS';
   } else if (uvIndex >= 3) {
     spfRating = 'SPF 30';
-    spfTag = 'DAILY SUN PROTECTION';
-    reapplyText = '2 HOURS during outdoor activity';
+    spfTag = 'MODERATE PROTECTION';
+    reapplyText = activeUntilLabel ? `${activeUntilLabel} • REAPPLY 2H` : 'REAPPLY EVERY 2 HOURS';
   } else {
-    spfRating = 'SPF 15';
-    spfTag = 'LIGHT PROTECTION';
-    reapplyText = 'REAPPLY AS NEEDED';
+    spfRating = 'NOT NEEDED';
+    spfTag = 'LOW UV EXPOSURE';
+    if (windowLabel) {
+      const now = new Date();
+      let currentHour = now.getHours();
+      try {
+        const hourStr = new Intl.DateTimeFormat('sv-SE', {
+          timeZone: timezoneStr,
+          hour: '2-digit',
+          hour12: false
+        }).format(now);
+        currentHour = parseInt(hourStr, 10);
+      } catch (e) {}
+
+      if (currentHour > maxActiveHour) {
+        reapplyText = 'DONE FOR TODAY (LOW UV)';
+      } else {
+        reapplyText = windowLabel;
+      }
+    } else {
+      reapplyText = 'NOT NEEDED TODAY';
+    }
   }
 
   // 3. Hydration Reminder

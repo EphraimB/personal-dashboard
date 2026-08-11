@@ -946,9 +946,9 @@ function SunWindowIcon({ isMorning = true }) {
                     <div className="hud-col-hdr">
                       <span className="hud-col-icon">☀</span>
                       <span className="hud-col-title">SUNSCREEN</span>
-                      <span className="hud-col-badge">{weatherData?.sunscreen?.spfRating || 'SPF 50'}</span>
+                      <span className="hud-col-badge">{weatherData?.sunscreen?.spfRating || 'NOT NEEDED'}</span>
                     </div>
-                    <div className="hud-col-sub">REAPPLY IN ~2 HR</div>
+                    <div className="hud-col-sub">{weatherData?.sunscreen?.reapplyText || 'NOT NEEDED TODAY'}</div>
                   </div>
                   <div className="hud-summary-col">
                     <div className="hud-col-hdr">
