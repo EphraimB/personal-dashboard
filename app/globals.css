@@ -4096,6 +4096,12 @@ html, body {
   color: #ffffff;
 }
 
+.hud-ticker-pop {
+  font-size: clamp(0.75rem, 1.2vh, 1.3rem);
+  font-weight: 800;
+  color: #00F0FF;
+}
+
 .hud-ticker-uv {
   font-size: clamp(0.85rem, 1.4vh, 1.5rem);
   font-weight: 900;
