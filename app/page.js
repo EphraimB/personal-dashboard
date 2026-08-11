@@ -818,7 +818,7 @@ function SunWindowIcon({ isMorning = true }) {
   return (
     <div className={`ares-tv-app tactical-matrix-viewport ${isTvMode ? 'display-tv-mode' : 'display-laptop-mode'} ${showControls ? 'user-active' : 'user-idle'}`}>
       {/* Dynamic Background Atmospheric Weather Canvas */}
-      <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
+      <WeatherAtmosphereCanvas code={weatherData?.conditionCode ?? 0} />
 
       {/* TOP & BOTTOM STATIONARY ROTATING HEADLINE CARDS */}
       <aside className="perimeter-news-frame">
