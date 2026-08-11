@@ -58,7 +58,7 @@ function getWeatherConditionText(code) {
   }
 }
 
-function calculateOutdoorTelemetry(current, hourly, daily, tempUnit = 'F') {
+function calculateOutdoorTelemetry(current, hourly, daily, tempUnit = 'F', timezoneStr = 'America/New_York') {
   const tempF = tempUnit === 'C' ? (current.temperature_2m * 9/5) + 32 : current.temperature_2m;
   const feelsLikeF = current.apparent_temperature !== undefined 
     ? (tempUnit === 'C' ? (current.apparent_temperature * 9/5) + 32 : current.apparent_temperature)
@@ -172,7 +172,21 @@ function calculateOutdoorTelemetry(current, hourly, daily, tempUnit = 'F') {
   const hourlyTicker = [];
   if (hourly?.time && Array.isArray(hourly.time)) {
     const now = new Date();
-    const currentHourStr = now.toISOString().substring(0, 13); // 'YYYY-MM-DDTHH'
+    let currentHourStr = '';
+    try {
+      const isoLocal = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: timezoneStr,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        hour12: false
+      }).format(now);
+      currentHourStr = isoLocal.substring(0, 13).replace(' ', 'T');
+    } catch (e) {
+      currentHourStr = now.toISOString().substring(0, 13);
+    }
+
     let startIdx = hourly.time.findIndex(t => typeof t === 'string' && t.startsWith(currentHourStr));
     if (startIdx === -1) startIdx = 0;
 
@@ -187,15 +201,17 @@ function calculateOutdoorTelemetry(current, hourly, daily, tempUnit = 'F') {
         const label = i === 0 ? 'NOW' : `${hrs} ${ampm}`;
 
         const rawTemp = hourly.temperature_2m[idx];
-        const tempDisp = Math.round(tempUnit === 'C' ? rawTemp : rawTemp);
-        const code = hourly.weather_code[idx] ?? 0;
-        const hrUv = Math.round(hourly.uv_index?.[idx] ?? uvIndex);
+        const tempDisp = i === 0 ? Math.round(tempF) : Math.round(rawTemp);
+        const code = i === 0 ? (current.weather_code ?? 0) : (hourly.weather_code[idx] ?? 0);
+        const hrUv = i === 0 ? uvIndex : Math.round(hourly.uv_index?.[idx] ?? uvIndex);
+        const pop = Math.round(hourly.precipitation_probability?.[idx] ?? 0);
 
         hourlyTicker.push({
           label,
           temp: tempDisp,
           code,
-          uv: hrUv
+          uv: hrUv,
+          pop
         });
       }
     }
@@ -234,7 +250,7 @@ export async function GET(request) {
 
   try {
     const unitParam = tempUnit === 'C' ? '&temperature_unit=celsius&wind_speed_unit=kmh' : '&temperature_unit=fahrenheit&wind_speed_unit=mph';
-    const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${locationInfo.lat}&longitude=${locationInfo.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,weather_code,wind_speed_10m,uv_index&hourly=temperature_2m,weather_code,precipitation_probability,uv_index&daily=temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset&timezone=America%2FNew_York${unitParam}`;
+    const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${locationInfo.lat}&longitude=${locationInfo.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,weather_code,wind_speed_10m,uv_index&hourly=temperature_2m,weather_code,precipitation_probability,uv_index&daily=temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset&timezone=auto${unitParam}`;
 
     const res = await fetch(apiUrl, { next: { revalidate: 600 } });
     if (!res.ok) {
@@ -245,8 +261,9 @@ export async function GET(request) {
     const current = rawData.current || {};
     const hourly = rawData.hourly || {};
     const daily = rawData.daily || {};
+    const timezoneStr = rawData.timezone || 'America/New_York';
 
-    const telemetry = calculateOutdoorTelemetry(current, hourly, daily, tempUnit);
+    const telemetry = calculateOutdoorTelemetry(current, hourly, daily, tempUnit, timezoneStr);
 
     return NextResponse.json({
       success: true,
