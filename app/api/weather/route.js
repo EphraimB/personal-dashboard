@@ -69,37 +69,37 @@ function calculateOutdoorTelemetry(current, hourly, daily, tempUnit = 'F', timez
   const uvIndex = Math.round(current.uv_index ?? 0);
   const pressureInHg = current.surface_pressure ? (current.surface_pressure * 0.02953).toFixed(2) : '30.12';
 
-  // 1. Sweat Time Estimation & Meter Gauge
+  // 1. Sweat Time Estimation & Meter Gauge (Sweat-free time: 60+ min = 100% comfortable)
   let sweatMins = 60;
   let sweatLabel = '60+ MIN';
-  let sweatGaugePct = 15; // 0-100%
-  let sweatSliderVal = 20;
+  let sweatGaugePct = 100; // 0-100% of remaining comfortable sweat-free time
+  let sweatSliderVal = 100;
 
   if (feelsLikeF >= 95) {
     sweatMins = Math.max(8, Math.round(18 - (feelsLikeF - 95) * 0.8));
-    sweatLabel = `${sweatMins} MIN`;
-    sweatGaugePct = 90;
-    sweatSliderVal = 92;
+    sweatLabel = `~${sweatMins} MIN`;
+    sweatGaugePct = Math.min(100, Math.max(10, Math.round((sweatMins / 60) * 100)));
+    sweatSliderVal = sweatGaugePct;
   } else if (feelsLikeF >= 85) {
     sweatMins = Math.round(30 - (feelsLikeF - 85) * 1.2);
-    sweatLabel = `${sweatMins} MIN`;
-    sweatGaugePct = 75;
-    sweatSliderVal = 78;
+    sweatLabel = `~${sweatMins} MIN`;
+    sweatGaugePct = Math.min(100, Math.max(10, Math.round((sweatMins / 60) * 100)));
+    sweatSliderVal = sweatGaugePct;
   } else if (feelsLikeF >= 78) {
     sweatMins = Math.round(45 - (feelsLikeF - 78) * 2);
-    sweatLabel = `${sweatMins} MIN`;
-    sweatGaugePct = 50;
-    sweatSliderVal = 55;
+    sweatLabel = `~${sweatMins} MIN`;
+    sweatGaugePct = Math.min(100, Math.max(10, Math.round((sweatMins / 60) * 100)));
+    sweatSliderVal = sweatGaugePct;
   } else if (feelsLikeF >= 70) {
     sweatMins = Math.round(60 - (feelsLikeF - 70) * 1.5);
-    sweatLabel = `${sweatMins} MIN`;
-    sweatGaugePct = 35;
-    sweatSliderVal = 35;
+    sweatLabel = `~${sweatMins} MIN`;
+    sweatGaugePct = Math.min(100, Math.max(10, Math.round((sweatMins / 60) * 100)));
+    sweatSliderVal = sweatGaugePct;
   } else {
     sweatMins = 60;
-    sweatLabel = 'NO SWEAT';
-    sweatGaugePct = 15;
-    sweatSliderVal = 15;
+    sweatLabel = '60+ MIN';
+    sweatGaugePct = 100;
+    sweatSliderVal = 100;
   }
 
   // 2. Sunscreen Recommendation & Protection Window

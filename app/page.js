@@ -921,12 +921,12 @@ function SunWindowIcon({ isMorning = true }) {
                 <div className="hud-comfort-box">
                   <div className="hud-comfort-header">
                     {weatherData?.sweatMeter?.mins && weatherData.sweatMeter.mins < 60 
-                      ? `COMFORTABLE FOR ${weatherData.sweatMeter.label}`
-                      : 'COMFORTABLE ALL DAY'}
+                      ? `SWEAT-FREE TIME: ${weatherData.sweatMeter.label}`
+                      : 'SWEAT-FREE TIME: 60+ MIN'}
                   </div>
                   <div className="hud-progress-bar-row">
                     {Array.from({ length: 24 }).map((_, i) => {
-                      const activeThreshold = Math.round((24 * (weatherData?.sweatMeter?.gaugePct || 70)) / 100);
+                      const activeThreshold = Math.round((24 * (weatherData?.sweatMeter?.gaugePct ?? 100)) / 100);
                       const isActive = i < activeThreshold;
                       return (
                         <span 
