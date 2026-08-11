@@ -758,21 +758,6 @@ function SunWindowIcon({ isMorning = true }) {
     activeLayer === 2 ? 'active' : ''
   } ${config.enableKenBurns ? 'kenburns-2' : ''}`;
 
-  // Calculate 6 upcoming hours starting from current local device time (America/New_York)
-  const now = new Date();
-  const localYear = now.getFullYear();
-  const localMonth = String(now.getMonth() + 1).padStart(2, '0');
-  const localDay = String(now.getDate()).padStart(2, '0');
-  const localHour = String(now.getHours()).padStart(2, '0');
-  const currentLocalHourISO = `${localYear}-${localMonth}-${localDay}T${localHour}`;
-
-  let hourlyStartIdx = 0;
-  if (weatherData?.hourly?.time) {
-    const foundIdx = weatherData.hourly.time.findIndex((t) => typeof t === 'string' && t.startsWith(currentLocalHourISO));
-    if (foundIdx !== -1) hourlyStartIdx = foundIdx;
-  }
-  const hourlyTimes = (weatherData?.hourly?.time || ['', '', '', '', '', '']).slice(hourlyStartIdx, hourlyStartIdx + 6);
-
   // Combine World & U.S. for Top Ticker Card
   const topNewsList = [];
   const maxTop = Math.max(newsData.world?.length || 0, newsData.us?.length || 0);
@@ -833,7 +818,7 @@ function SunWindowIcon({ isMorning = true }) {
   return (
     <div className={`ares-tv-app tactical-matrix-viewport ${isTvMode ? 'display-tv-mode' : 'display-laptop-mode'} ${showControls ? 'user-active' : 'user-idle'}`}>
       {/* Dynamic Background Atmospheric Weather Canvas */}
-      <WeatherAtmosphereCanvas code={weatherData?.current?.weather_code ?? 0} />
+      <WeatherAtmosphereCanvas code={weatherData?.conditionCode ?? 0} />
 
       {/* TOP & BOTTOM STATIONARY ROTATING HEADLINE CARDS */}
       <aside className="perimeter-news-frame">
@@ -936,12 +921,12 @@ function SunWindowIcon({ isMorning = true }) {
                 <div className="hud-comfort-box">
                   <div className="hud-comfort-header">
                     {weatherData?.sweatMeter?.mins && weatherData.sweatMeter.mins < 60 
-                      ? `COMFORTABLE FOR ${weatherData.sweatMeter.label}`
-                      : 'COMFORTABLE ALL DAY'}
+                      ? `SWEAT-FREE TIME: ${weatherData.sweatMeter.label}`
+                      : 'SWEAT-FREE TIME: 60+ MIN'}
                   </div>
                   <div className="hud-progress-bar-row">
                     {Array.from({ length: 24 }).map((_, i) => {
-                      const activeThreshold = Math.round((24 * (weatherData?.sweatMeter?.gaugePct || 70)) / 100);
+                      const activeThreshold = Math.round((24 * (weatherData?.sweatMeter?.gaugePct ?? 100)) / 100);
                       const isActive = i < activeThreshold;
                       return (
                         <span 
@@ -961,9 +946,9 @@ function SunWindowIcon({ isMorning = true }) {
                     <div className="hud-col-hdr">
                       <span className="hud-col-icon">☀</span>
                       <span className="hud-col-title">SUNSCREEN</span>
-                      <span className="hud-col-badge">{weatherData?.sunscreen?.spfRating || 'SPF 50'}</span>
+                      <span className="hud-col-badge">{weatherData?.sunscreen?.spfRating || 'NOT NEEDED'}</span>
                     </div>
-                    <div className="hud-col-sub">REAPPLY IN ~2 HR</div>
+                    <div className="hud-col-sub">{weatherData?.sunscreen?.reapplyText || 'NOT NEEDED TODAY'}</div>
                   </div>
                   <div className="hud-summary-col">
                     <div className="hud-col-hdr">
@@ -978,17 +963,18 @@ function SunWindowIcon({ isMorning = true }) {
                 {/* TIER 5: BOTTOM HOURLY FORECAST TICKER */}
                 <div className="hud-hourly-ticker">
                   {(weatherData?.hourlyTicker || [
-                    { label: 'NOW', temp: 86, code: 0, uv: 7 },
-                    { label: '4 PM', temp: 86, code: 0, uv: 6 },
-                    { label: '5 PM', temp: 85, code: 2, uv: 4 },
-                    { label: '6 PM', temp: 82, code: 2, uv: 2 },
-                    { label: '7 PM', temp: 81, code: 0, uv: 1 },
-                    { label: '8 PM', temp: 80, code: 0, uv: 0 }
+                    { label: 'NOW', temp: 86, code: 0, uv: 7, pop: 10 },
+                    { label: '4 PM', temp: 86, code: 0, uv: 6, pop: 10 },
+                    { label: '5 PM', temp: 85, code: 2, uv: 4, pop: 20 },
+                    { label: '6 PM', temp: 82, code: 2, uv: 2, pop: 15 },
+                    { label: '7 PM', temp: 81, code: 0, uv: 1, pop: 5 },
+                    { label: '8 PM', temp: 80, code: 0, uv: 0, pop: 0 }
                   ]).map((item, idx) => (
                     <div key={idx} className="hud-ticker-item">
                       <span className="hud-ticker-time">{item.label}</span>
                       <WeatherSvg code={item.code} className="hud-ticker-icon" />
                       <span className="hud-ticker-temp">{item.temp}°</span>
+                      <span className="hud-ticker-pop">☔ {item.pop ?? 0}%</span>
                       <span className="hud-ticker-uv">UV {item.uv}</span>
                     </div>
                   ))}
