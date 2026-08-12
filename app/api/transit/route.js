@@ -248,10 +248,13 @@ async function getLiveLirrDepartures(now) {
         } else {
           const depDateObj = new Date(arr.time * 1000);
           const day = depDateObj.getDay();
-          const hour = depDateObj.getHours();
           if (day >= 1 && day <= 5) {
-            if (isEastbound && (hour >= 16 && hour < 20)) bikesAllowed = false;
-            else if (!isEastbound && (hour >= 6 && hour < 10)) bikesAllowed = false;
+            const timeInMins = depDateObj.getHours() * 60 + depDateObj.getMinutes();
+            // MTA LIRR Rule: Eastbound peak trains depart NYC Terminals (Penn Station/Grand Central) 4:00 PM – 8:00 PM.
+            // Arriving at Cedarhurst/local stations between ~4:45 PM (1005m) and ~8:45 PM (1245m).
+            // Westbound peak trains arrive NYC Terminals 6:00 AM – 10:00 AM (local departures ~5:15 AM – 9:15 AM).
+            if (isEastbound && (timeInMins >= 1005 && timeInMins <= 1245)) bikesAllowed = false;
+            else if (!isEastbound && (timeInMins >= 315 && timeInMins <= 555)) bikesAllowed = false;
           }
         }
 
@@ -367,11 +370,14 @@ async function getLiveLirrDepartures(now) {
 
       const depDateObj = new Date(depEpoch * 1000);
       const day = depDateObj.getDay();
-      const hour = depDateObj.getHours();
       let bikesAllowed = true;
       if (day >= 1 && day <= 5) {
-        if (isEastbound && (hour >= 16 && hour < 20)) bikesAllowed = false;
-        else if (!isEastbound && (hour >= 6 && hour < 10)) bikesAllowed = false;
+        const timeInMins = depDateObj.getHours() * 60 + depDateObj.getMinutes();
+        // MTA LIRR Rule: Eastbound peak trains depart NYC Terminals (Penn Station/Grand Central) 4:00 PM – 8:00 PM.
+        // Arriving at Cedarhurst/local stations between ~4:45 PM (1005m) and ~8:45 PM (1245m).
+        // Westbound peak trains arrive NYC Terminals 6:00 AM – 10:00 AM (local departures ~5:15 AM – 9:15 AM).
+        if (isEastbound && (timeInMins >= 1005 && timeInMins <= 1245)) bikesAllowed = false;
+        else if (!isEastbound && (timeInMins >= 315 && timeInMins <= 555)) bikesAllowed = false;
       }
 
       const departureObj = {
