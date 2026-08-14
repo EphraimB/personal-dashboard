@@ -58,6 +58,52 @@ function getWeatherConditionText(code) {
   }
 }
 
+function getLocalDayStr(date, timeZone) {
+  try {
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const parts = Object.fromEntries(dtf.formatToParts(date).map(p => [p.type, p.value]));
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  } catch (e) {
+    return date.toISOString().substring(0, 10);
+  }
+}
+
+function getLocalHourStr(date, timeZone) {
+  try {
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      hourCycle: 'h23'
+    });
+    const parts = Object.fromEntries(dtf.formatToParts(date).map(p => [p.type, p.value]));
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}`;
+  } catch (e) {
+    return date.toISOString().substring(0, 13);
+  }
+}
+
+function getLocalHourNumber(date, timeZone) {
+  try {
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hour: '2-digit',
+      hourCycle: 'h23'
+    });
+    const parts = Object.fromEntries(dtf.formatToParts(date).map(p => [p.type, p.value]));
+    return parseInt(parts.hour, 10);
+  } catch (e) {
+    return date.getHours();
+  }
+}
+
 function calculateOutdoorTelemetry(current, hourly, daily, tempUnit = 'F', timezoneStr = 'America/New_York') {
   const tempF = tempUnit === 'C' ? (current.temperature_2m * 9/5) + 32 : current.temperature_2m;
   const feelsLikeF = current.apparent_temperature !== undefined 
@@ -106,25 +152,14 @@ function calculateOutdoorTelemetry(current, hourly, daily, tempUnit = 'F', timez
   let uvActiveHours = [];
   if (hourly?.time && hourly?.uv_index) {
     const now = new Date();
-    let todayStr = '';
-    try {
-      const isoLocal = new Intl.DateTimeFormat('sv-SE', {
-        timeZone: timezoneStr,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      }).format(now);
-      todayStr = isoLocal.substring(0, 10);
-    } catch (e) {
-      todayStr = now.toISOString().substring(0, 10);
-    }
+    const todayStr = getLocalDayStr(now, timezoneStr);
 
     for (let i = 0; i < hourly.time.length; i++) {
       const tStr = hourly.time[i];
       if (typeof tStr === 'string' && tStr.startsWith(todayStr)) {
         if ((hourly.uv_index[i] ?? 0) >= 3) {
-          const dt = new Date(tStr);
-          uvActiveHours.push(dt.getHours());
+          const hrNum = parseInt(tStr.substring(11, 13), 10);
+          uvActiveHours.push(isNaN(hrNum) ? new Date(tStr).getHours() : hrNum);
         }
       }
     }
@@ -170,15 +205,7 @@ function calculateOutdoorTelemetry(current, hourly, daily, tempUnit = 'F', timez
     spfTag = 'LOW UV EXPOSURE';
     if (windowLabel) {
       const now = new Date();
-      let currentHour = now.getHours();
-      try {
-        const hourStr = new Intl.DateTimeFormat('sv-SE', {
-          timeZone: timezoneStr,
-          hour: '2-digit',
-          hour12: false
-        }).format(now);
-        currentHour = parseInt(hourStr, 10);
-      } catch (e) {}
+      const currentHour = getLocalHourNumber(now, timezoneStr);
 
       if (currentHour > maxActiveHour) {
         reapplyText = 'DONE FOR TODAY (LOW UV)';
@@ -237,30 +264,23 @@ function calculateOutdoorTelemetry(current, hourly, daily, tempUnit = 'F', timez
   const hourlyTicker = [];
   if (hourly?.time && Array.isArray(hourly.time)) {
     const now = new Date();
-    let currentHourStr = '';
-    try {
-      const isoLocal = new Intl.DateTimeFormat('sv-SE', {
-        timeZone: timezoneStr,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        hour12: false
-      }).format(now);
-      currentHourStr = isoLocal.substring(0, 13).replace(' ', 'T');
-    } catch (e) {
-      currentHourStr = now.toISOString().substring(0, 13);
-    }
+    const currentHourStr = getLocalHourStr(now, timezoneStr);
 
     let startIdx = hourly.time.findIndex(t => typeof t === 'string' && t.startsWith(currentHourStr));
+    if (startIdx === -1) {
+      startIdx = hourly.time.findIndex(t => typeof t === 'string' && t >= currentHourStr);
+    }
     if (startIdx === -1) startIdx = 0;
 
     for (let i = 0; i < 6; i++) {
       const idx = startIdx + i;
       if (idx < hourly.time.length) {
         const timeIso = hourly.time[idx];
-        const dt = new Date(timeIso);
-        let hrs = dt.getHours();
+        let hrs = parseInt(timeIso.substring(11, 13), 10);
+        if (isNaN(hrs)) {
+          const dt = new Date(timeIso);
+          hrs = dt.getHours();
+        }
         const ampm = hrs >= 12 ? 'PM' : 'AM';
         hrs = hrs % 12 || 12;
         const label = i === 0 ? 'NOW' : `${hrs} ${ampm}`;
@@ -317,7 +337,7 @@ export async function GET(request) {
     const unitParam = tempUnit === 'C' ? '&temperature_unit=celsius&wind_speed_unit=kmh' : '&temperature_unit=fahrenheit&wind_speed_unit=mph';
     const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${locationInfo.lat}&longitude=${locationInfo.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,weather_code,wind_speed_10m,uv_index&hourly=temperature_2m,weather_code,precipitation_probability,uv_index&daily=temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset&timezone=auto${unitParam}`;
 
-    const res = await fetch(apiUrl, { next: { revalidate: 600 } });
+    const res = await fetch(apiUrl, { cache: 'no-store' });
     if (!res.ok) {
       throw new Error(`Open-Meteo responded with status ${res.status}`);
     }
@@ -368,6 +388,12 @@ export async function GET(request) {
         summaryText: telemetry.summaryText
       },
       hourlyTicker: telemetry.hourlyTicker
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (err) {
     console.error('Weather API error:', err);
@@ -378,3 +404,4 @@ export async function GET(request) {
     }, { status: 500 });
   }
 }
+

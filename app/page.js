@@ -508,7 +508,7 @@ function SunWindowIcon({ isMorning = true }) {
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        const res = await fetch(`/api/weather?unit=${config.tempUnit || 'F'}`);
+        const res = await fetch(`/api/weather?unit=${config.tempUnit || 'F'}&_t=${Date.now()}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
